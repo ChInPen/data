@@ -64,7 +64,18 @@ const menu: MenuEntry[] = [
       {
         title: '人員',
         children: [
-          { title: '人員設定', path: 'EmployeeList' },
+          {
+            title: '人員設定',
+            path: 'Employee',
+            name: 'A07人員設定作業',
+            component: () => import('@/views/Base/Staff/Employee.vue')
+          },
+          {
+            title: '人員設定',
+            path: 'EmployeeForm',
+            component: () => import('@/views/Base/Staff/EmployeeForm.vue'),
+            meta: { from: ['/menu/Employee'] }
+          },
           {
             title: '部門資料',
             path: 'Department',
@@ -230,23 +241,29 @@ export const getMenuRouter = () => {
 
 export const getMenuGroup = () => {
   const getGroup = (items: MenuEntry[]): MenuMenu[] => {
-    return items.map((entry) => {
+    const list: MenuMenu[] = []
+    items.forEach((entry) => {
       if ('children' in entry) {
-        // MenuGroup: 遞迴處理 children
-        return {
-          title: entry.title,
-          children: getGroup(entry.children)
+        if (Array.isArray(entry.children) && entry.children.length > 0) {
+          // MenuGroup: 遞迴處理 children
+          list.push({
+            title: entry.title,
+            children: getGroup(entry.children)
+          })
         }
       } else {
-        // MenuItem: 只保留 title 和 path
-        return {
-          title: entry.title,
-          path: entry.path
+        if (!(entry.meta && 'from' in entry.meta)) {
+          // MenuItem: 只保留 title 和 path
+          list.push({
+            title: entry.title,
+            path: entry.path
+          })
         }
       }
     })
+    return list
   }
 
-  const group = getGroup(menu)
+  const group: MenuMenu[] = getGroup(menu)
   return group
 }

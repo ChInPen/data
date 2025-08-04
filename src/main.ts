@@ -8,6 +8,9 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 //vuetify
 import { vuetify } from './plugins/vuetify'
 
+//pinia
+import { pinia } from './plugins/pinia'
+
 //自己定義的 style
 import '@/styles/scss/style.scss'
 import '@/styles/css/style.css'
@@ -15,6 +18,7 @@ import '@/styles/css/style.css'
 const app = createApp(App)
 app.use(router)
 app.use(vuetify)
+app.use(pinia)
 app.mount('#app')
 
 //代辦事項

@@ -35,4 +35,13 @@
   .fa-paper-plane {
     transform: translate(-10%, 5%); /* 往左 10%、往下 5% */
   }
+  .fa-phone-volume {
+    transform: translate(-10%, 0); /* 往左 10% */
+  }
+  .fa-user-plus {
+    transform: translate(-15%, 0); /* 往左 10% */
+  }
+  .fa-user-pen {
+    transform: translate(-15%, 0); /* 往左 10% */
+  }
 </style>

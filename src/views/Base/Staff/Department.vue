@@ -150,9 +150,6 @@
   <!--頂部 title & 按鈕區-->
   <c-bread>
     <div class="col-auto">
-      <c-button kind="print" icon="fa-solid fa-print">列印</c-button>
-    </div>
-    <div class="col-auto">
       <c-button kind="create" icon="mdi-plus-circle" @click="handleCreate">新增</c-button>
     </div>
   </c-bread>
@@ -240,7 +237,7 @@
         <c-button icon="mdi-close-circle" kind="cancel" @click="handleDialogClose">取消</c-button>
       </div>
       <div class="col-auto">
-        <c-button icon="fa-solid fa-paper-plane" kind="confirm" @click="handleDialogSubmit">
+        <c-button icon="fa-solid fa-paper-plane" kind="submit" @click="handleDialogSubmit">
           確認送出
         </c-button>
       </div>

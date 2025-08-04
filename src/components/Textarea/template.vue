@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-  import { ref, computed } from 'vue'
   import { cIcon } from '@/components/common'
 
   const model = defineModel({ default: '' })
@@ -13,29 +12,19 @@
     isRequired: {
       type: Boolean,
       default: false
-    },
-    type: {
-      type: String,
-      default: 'text'
     }
-  })
-
-  //密碼用(type="password")
-  const lookPass = ref(false)
-  const inputType = computed(() => {
-    if (props.type === 'password' && lookPass.value) return 'text'
-    return props.type || 'text' // fallback
   })
 </script>
 
 <template>
-  <v-text-field
+  <v-textarea
     v-bind="$attrs"
     v-model="model"
-    :type="inputType"
     hide-details="auto"
     density="compact"
     rounded="1"
+    rows="3"
+    no-resize
   >
     <template v-slot:prepend-inner>
       <div class="prepend-inner-content">
@@ -60,27 +49,7 @@
         />
       </div>
     </template>
-    <template v-slot:append-inner v-if="props.type === 'password'">
-      <div>
-        <c-icon
-          v-if="lookPass"
-          icon="fa-solid fa-eye-slash"
-          size="20"
-          class="mx-1"
-          color="#4b4b4b"
-          @click="lookPass = false"
-        />
-        <c-icon
-          v-else
-          icon="fa-solid fa-eye"
-          size="20"
-          class="mx-1"
-          color="#4b4b4b"
-          @click="lookPass = true"
-        />
-      </div>
-    </template>
-  </v-text-field>
+  </v-textarea>
 </template>
 
 <style scoped>
@@ -96,12 +65,6 @@
   }
   /* 左側 icon 和 label 區塊置中 */
   .prepend-inner-content {
-    display: flex;
-    align-items: center;
-  }
-  /* clearable icon 區塊置中 */
-  .clear-content {
-    height: 100%;
     display: flex;
     align-items: center;
   }

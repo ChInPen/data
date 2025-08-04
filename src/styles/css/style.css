@@ -10,7 +10,7 @@
 }
 
 html {
-  /* vuetify預設會顯示一個垂直 scroll bar，要把它改回 auto */
+  /* vuetify預設會顯示一個垂直 scroll bar，要把它改回 auto (或 hidden) */
   overflow-y: auto !important;
 }
 
@@ -31,5 +31,10 @@ html {
 
 .text-custom-1 {
   font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.text-custom-2 {
+  font-size: 1.2rem;
   font-weight: bold;
 }
