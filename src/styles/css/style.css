@@ -1,0 +1,35 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  /* vuetify預設會顯示一個垂直 scroll bar，要把它改回 auto */
+  overflow-y: auto !important;
+}
+
+#app > div {
+  background-color: var(--bg-color);
+}
+
+.text-custom,
+.text-custom-title-1,
+.text-custom-1 {
+  color: var(--text-color);
+}
+
+.text-custom-title-1 {
+  font-size: 2rem;
+  font-weight: bolder;
+}
+
+.text-custom-1 {
+  font-size: 1.1rem;
+  font-weight: bold;
+}

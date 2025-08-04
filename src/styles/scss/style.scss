@@ -1,0 +1,35 @@
+:root {
+  --bg-color: #ffffff;
+  --text-color: #000000;
+  /* input color */
+  --input-text-color: #0f5997;
+  --input-bg-color: #f0f4f8;
+  --input-icon-color: #4b4b4b;
+  --select-menu-text-color: #0f5997;
+  --select-menu-bg-color: #f0f4f8;
+  /* btn color */
+  --btn-bg-default: #1e5a7a;
+  --btn-bg-login: #df621f;
+  --btn-bg-confirm: #3887b1;
+  --btn-bg-cancel: #838ea1;
+  --btn-bg-create: #589ebe;
+  --btn-bg-print: #3e8b85;
+  --btn-bg-search: #1e5a7a;
+  --btn-bg-clear: #424242;
+  --btn-bg-edit: #37883b;
+  --btn-bg-delete: #dc3545;
+  /* table */
+  --tb-bg-color: #1b2b36;
+  --tb-th-bg-color: #1e5a7a;
+  --tb-th-color: #f0f4f8;
+  --tb-th-fs: 1.2rem;
+  --tb-td-bg-color: var(--tb-bg-color);
+  --tb-td-color: #e4e9ed;
+  --tb-td-fs: 1.1rem;
+  --tb-striped-bg-color: #1f2d38;
+}
+
+.v-theme--dark {
+  --bg-color: #2a3d4d;
+  --text-color: #e4e9ed;
+}
