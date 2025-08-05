@@ -13,7 +13,8 @@ export default {
     CKindlist: 'api/CKind/CKindlist',
     CKind_Add: 'api/CKind/CKind_Add',
     CKind_Upd: 'api/CKind/CKind_Upd',
-    CKind_Del: 'api/CKind/CKind_Del'
+    CKind_Del: 'api/CKind/CKind_Del',
+    CKind_ReNew: 'api/CKind/CKind_ReNew'
   },
   //業主資料
   Cust: {
@@ -40,7 +41,8 @@ export default {
     Skilllist: 'api/Skill/Skilllist',
     Skill_Add: 'api/Skill/Skill_Add',
     Skill_Upd: 'api/Skill/Skill_Upd',
-    Skill_Del: 'api/Skill/Skill_Del'
+    Skill_Del: 'api/Skill/Skill_Del',
+    Skill_ReNew: 'api/Skill/Skill_ReNew'
   },
   //廠商類別
   Skind: {

@@ -56,7 +56,12 @@ const menu: MenuEntry[] = [
         title: '廠商',
         children: [
           { title: '業主資料', path: 'OwnerData' },
-          { title: '業主類別', path: 'OwnerCategory' },
+          { 
+            title: '業主類別', 
+            path: 'OwnerCategory',
+            name: 'A03業主類別建檔',
+            component: () => import('@/views/Base/CompanySetting/OwnerCategory.vue') 
+          },
           { title: '廠商資料', path: 'ManufacturerData' },
           { title: '廠商類別', path: 'ManufacturerCategory' }
         ]
@@ -82,7 +87,12 @@ const menu: MenuEntry[] = [
             name: 'A01部門類別建檔',
             component: () => import('@/views/Base/Staff/Department.vue')
           },
-          { title: '工種資料', path: 'WorkType' },
+          { 
+            title: '工種資料', 
+            path: 'WorkType',
+            name: 'A02工種資料建檔',
+            component: () => import('@/views/Base/Staff/WorkType.vue')
+          },
           { title: '假日匯入EXL', path: '' }
         ]
       },
