@@ -3,8 +3,8 @@
   import {
     cButton,
     cInput,
+    cSelect,
     cTextarea,
-    cTable,
     cDialog,
     cBread,
     cDivider
@@ -21,7 +21,7 @@
 
   //取消&返回 按鈕
   const handleCancel = () => {
-    router.push('/menu/Employee')
+    router.push(store.path1)
   }
 </script>
 
@@ -111,7 +111,13 @@
           <c-input v-model="formData.resdate1" label="離職日期" icon="fa-solid fa-calendar-day" />
         </v-col>
         <v-col :cols="3" class="px-2">
-          <c-input v-model="formData.quotation" label="報價級距" icon="fa-solid fa-money-bill" />
+          <c-input
+            v-model="formData.quotation"
+            label="報價級距"
+            type="number"
+            :number-format="{ thousands: true }"
+            icon="fa-solid fa-money-bill"
+          />
         </v-col>
         <v-col :cols="3" class="px-2">
           <c-input v-model="formData.memo1" label="說明" icon="fa-solid fa-pencil" />
@@ -125,18 +131,55 @@
 
   <v-card color="#1b2b36" rounded="3" class="mt-2">
     <v-card-text>
-      <v-row dense class="mt-2" justify="space-between">
+      <v-row dense justify="space-between">
         <v-col cols="auto" class="text-custom-2">工種資料</v-col>
         <v-col cols="auto">
           <c-button kind="create" icon="mdi-plus-circle">新增工種</c-button>
         </v-col>
+      </v-row>
+      <v-row dense class="align-items-center justify-content-center">
+        <v-col cols="auto" class="text-custom-1 fw-normal">01.</v-col>
+        <v-col cols="3">
+          <c-select
+            label="工種"
+            :items="[
+              { no: '1', name: '校長' },
+              { no: '2', name: '主任' },
+              { no: '3', name: '老師' }
+            ]"
+            item-value="no"
+            item-title="name"
+            :item-columns="[
+              { column: 'no', label: '編號' },
+              { column: 'name', label: '名稱' }
+            ]"
+            icon="fa-solid fa-briefcase"
+          />
+        </v-col>
+        <v-col cols="3">
+          <c-input
+            label="日薪"
+            type="number"
+            :number-format="{ thousands: true }"
+            icon="fa-solid fa-sack-dollar"
+          />
+        </v-col>
+        <v-col cols="3">
+          <c-input
+            label="加班"
+            type="number"
+            :number-format="{ thousands: true }"
+            icon="fa-solid fa-sack-dollar"
+          />
+        </v-col>
+        <v-col cols="auto"><c-button kind="delete" icon="mdi-close-circle" /></v-col>
       </v-row>
     </v-card-text>
   </v-card>
 
   <v-card color="#1b2b36" rounded="3" class="mt-2">
     <v-card-text>
-      <v-row dense class="mt-2" justify="start">
+      <v-row dense justify="start">
         <v-col cols="auto" class="text-custom-2">操作人員</v-col>
       </v-row>
       <v-row dense class="mt-2">

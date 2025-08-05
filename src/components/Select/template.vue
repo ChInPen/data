@@ -5,6 +5,9 @@
 
   const model = defineModel()
   const props = defineProps({
+    items: {
+      type: Array
+    },
     label: {
       type: String
     },
@@ -26,6 +29,10 @@
     hideSearch: {
       type: Boolean,
       default: false
+    },
+    itemColumns: {
+      type: Array as PropType<{ column: string; label: string }[]>,
+      default: () => []
     }
   })
 
@@ -45,10 +52,12 @@
     v-bind="$attrs"
     v-model="model"
     v-model:menu="menuOpen"
+    :items="items"
     hide-details="auto"
     :density="density"
     :rounded="rounded"
     :list-props="{ bgColor: 'white' }"
+    no-data-text="無資料"
   >
     <template v-slot:prepend-inner>
       <div class="prepend-inner-content">
@@ -73,7 +82,7 @@
         />
       </div>
     </template>
-    <template v-slot:prepend-item v-if="!props.hideSearch">
+    <template v-slot:prepend-item v-if="!props.hideSearch && items?.length && items?.length > 0">
       <v-list-item class="select-search">
         <c-input
           v-model="search"
@@ -86,10 +95,35 @@
       </v-list-item>
       <v-divider class="mt-1 mb-1"></v-divider>
     </template>
-    <template v-slot:item="{ item, props }">
+    <template v-slot:item="{ item, index, props }">
+      <!-- 表頭 -->
+      <template v-if="index === 0">
+        <v-list-item class="select-list-header" density="compact">
+          <v-list-item-title class="text-grey">
+            <span v-for="(col, i) in itemColumns" :key="'head-' + i" class="me-4">
+              {{ col.label }}
+            </span>
+          </v-list-item-title>
+        </v-list-item>
+      </template>
+
+      <!-- 資料列 -->
       <v-list-item
         class="select-list-item"
         v-bind="{ ...props, title: undefined, ripple: { class: 'text-blue' } }"
+        v-if="itemColumns"
+      >
+        <v-list-item-title>
+          <span v-for="(col, i) in itemColumns" :key="i" class="me-4">
+            {{ col.column }}
+          </span>
+        </v-list-item-title>
+      </v-list-item>
+
+      <v-list-item
+        class="select-list-item"
+        v-bind="{ ...props, title: undefined, ripple: { class: 'text-blue' } }"
+        v-if="!itemColumns"
         v-show="String(item.value).includes(search) || item.title.includes(search)"
       >
         <v-list-item-title class="title">{{ item.title }}</v-list-item-title>

@@ -1,8 +1,17 @@
 <script lang="ts" setup>
   import { ref, computed } from 'vue'
+  import type { PropType } from 'vue'
   import { cIcon } from '@/components/common'
+  import { numberFormat, numberFormatValue } from '@/utils/uformat'
 
-  const model = defineModel({ default: '' })
+  type NumberFormat = {
+    minus?: boolean
+    decimal?: boolean
+    decAfterN?: number
+    thousands?: boolean
+  }
+
+  const model = defineModel<string | number>({ default: '' })
   const props = defineProps({
     label: {
       type: String
@@ -17,21 +26,59 @@
     type: {
       type: String,
       default: 'text'
+    },
+    numberFormat: Object as PropType<NumberFormat>
+  })
+
+  const inputValue = computed<string | number>({
+    get: () => {
+      switch (props.type) {
+        case 'number':
+          return numberFormat(model.value, {
+            minus: props.numberFormat?.minus ?? false,
+            decimal: props.numberFormat?.decimal ?? false,
+            decAfterN: props.numberFormat?.decAfterN,
+            thousands: props.numberFormat?.thousands ?? false
+          })
+        default:
+          return model.value
+      }
+    },
+    set: (newVal) => {
+      switch (props.type) {
+        case 'number':
+          const numberValue = numberFormatValue(newVal, {
+            minus: props.numberFormat?.minus ?? false,
+            decimal: props.numberFormat?.decimal ?? false,
+            decAfterN: props.numberFormat?.decAfterN
+          })
+          model.value = numberValue
+          break
+        default:
+          model.value = newVal
+          break
+      }
     }
   })
 
   //密碼用(type="password")
   const lookPass = ref(false)
+
+  //輸入框 type
   const inputType = computed(() => {
+    //數字類型
+    if (props.type === 'number') return 'text'
+    //密碼類型
     if (props.type === 'password' && lookPass.value) return 'text'
-    return props.type || 'text' // fallback
+    return props.type || 'text' //預設 'text'
   })
 </script>
 
 <template>
   <v-text-field
+    ref="input"
     v-bind="$attrs"
-    v-model="model"
+    v-model="inputValue"
     :type="inputType"
     hide-details="auto"
     density="compact"
