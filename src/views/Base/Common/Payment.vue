@@ -158,13 +158,17 @@
     <v-card-text>
       <v-row dense>
         <v-col :cols="3">
-          <c-input v-model="filter.akindno" label="結帳類別編號" icon="fa-solid fa-building-user" />
+          <c-input
+            v-model="filter.akindno"
+            label="結帳類別編號"
+            icon="fa-solid fa-hand-holding-dollar"
+          />
         </v-col>
         <v-col :cols="3">
           <c-input
             v-model="filter.akindname"
             label="結帳類別名稱"
-            icon="fa-solid fa-building-user"
+            icon="fa-solid fa-hand-holding-dollar"
           />
         </v-col>
       </v-row>
