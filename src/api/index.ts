@@ -49,7 +49,8 @@ export default {
     Skind_List: 'api/Skind/Skind_List',
     Skind_Create: 'api/Skind/Skind_Create',
     Skind_EDIT: 'api/Skind/Skind_EDIT',
-    Skind_DEL: 'api/Skind/Skind_DEL'
+    Skind_DEL: 'api/Skind/Skind_DEL',
+    Skind_ReNew: 'api/Skind/Skind_ReNew'
   },
   //廠商資料
   Supp: {
@@ -76,7 +77,8 @@ export default {
     Ikind_List: 'api/Ikind/Ikind_List',
     Ikind_Create: 'api/Ikind/Ikind_Create',
     Ikind_EDIT: 'api/Ikind/Ikind_EDIT',
-    Ikind_DEL: 'api/Ikind/Ikind_DEL'
+    Ikind_DEL: 'api/Ikind/Ikind_DEL',
+    Ikind_ReNew: 'api/Ikind/Ikind_ReNew'
   },
   //工料資料
   Item: {
