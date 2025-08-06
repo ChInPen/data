@@ -123,7 +123,8 @@ export default {
     Akind_List: 'api/Akind/Akind_List',
     Akind_Create: 'api/Akind/Akind_Create',
     Akind_EDIT: 'api/Akind/Akind_EDIT',
-    Akind_DEL: 'api/Akind/Akind_DEL'
+    Akind_DEL: 'api/Akind/Akind_DEL',
+    Akind_ReNew: 'api/Akind/Akind_ReNew'
   },
   //人員設定
   Emp: {
