@@ -229,7 +229,12 @@
     <v-row>
       <v-col :cols="6">
         <!-- :is-required="true" 代表必填欄位 -->
-        <c-input v-model="dialogForm.ckindno" label="業主類別編號" :is-required="true" />
+        <c-input
+          v-model="dialogForm.ckindno"
+          label="業主類別編號"
+          :is-required="true"
+          :readonly="dialogAction === 'edit' ? true : false"
+        />
       </v-col>
       <v-col :cols="6">
         <!-- :is-required="true" 代表必填欄位 -->

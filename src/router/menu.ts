@@ -36,7 +36,12 @@ const menu: MenuEntry[] = [
         title: '工務',
         children: [
           { title: '工程資料', path: 'Construction' },
-          { title: '工料類別', path: 'Material' },
+          {
+            title: '工料類別',
+            path: 'Material',
+            name: 'A05工料類別建檔',
+            component: () => import('@/views/Base/WorkSetting/Material.vue')
+          },
           { title: '工料資料', path: 'MaterialData' },
           { title: '採購合約', path: '' },
           { title: '零用金存入', path: '' },
@@ -56,13 +61,18 @@ const menu: MenuEntry[] = [
         title: '廠商',
         children: [
           { title: '業主資料', path: 'OwnerData' },
-          { 
-            title: '業主類別', 
+          {
+            title: '業主類別',
             path: 'OwnerCategory',
             name: 'A03業主類別建檔',
-            component: () => import('@/views/Base/CompanySetting/OwnerCategory.vue') 
+            component: () => import('@/views/Base/CompanySetting/OwnerCategory.vue')
           },
-          { title: '廠商資料', path: 'ManufacturerData' },
+          {
+            title: '廠商資料',
+            path: 'ManufacturerData',
+            name: 'A04廠商類別建檔',
+            component: () => import('@/views/Base/CompanySetting/ManufacturerData.vue')
+          },
           { title: '廠商類別', path: 'ManufacturerCategory' }
         ]
       },
@@ -87,8 +97,8 @@ const menu: MenuEntry[] = [
             name: 'A01部門類別建檔',
             component: () => import('@/views/Base/Staff/Department.vue')
           },
-          { 
-            title: '工種資料', 
+          {
+            title: '工種資料',
             path: 'WorkType',
             name: 'A02工種資料建檔',
             component: () => import('@/views/Base/Staff/WorkType.vue')
@@ -99,7 +109,12 @@ const menu: MenuEntry[] = [
       {
         title: '常用',
         children: [
-          { title: '結帳方式', path: 'Payment' },
+          {
+            title: '結帳方式',
+            path: 'Payment',
+            name: 'A06結帳方式建檔',
+            component: () => import('@/views/Base/Common/Payment.vue')
+          },
           { title: '郵遞區號', path: '' },
           { title: '常用片語', path: '' },
           { title: '表尾註腳', path: '' }

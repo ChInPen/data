@@ -8,42 +8,41 @@
 
   //表格欄位
   interface iData {
-    deparno: string
-    deparname: string
+    ikindno: string
+    ikindname: string
     a_USER: string
     m_USER: string
     [key: string]: any //允許其他屬性
   }
   //查詢條件
   const filter = ref({
-    deparno: '',
-    deparname: ''
+    ikindno: '',
+    ikindname: ''
   })
   //表格資料
   const tbData = ref<iData[]>([])
   //查詢條件-清除按鈕
   const filterClear = () => {
     filter.value = {
-      deparno: '',
-      deparname: ''
+      ikindno: '',
+      ikindname: ''
     }
   }
   //查詢條件-查詢按鈕
   const filterSearch = async () => {
     const res = await callApi({
       method: 'POST',
-      url: api.Depar.Deparlist,
+      url: api.Ikind.Ikind_List,
       data: {
-        deparno: filter.value.deparno ?? '',
-        deparname: filter.value.deparname ?? '',
+        ikindno: filter.value.ikindno ?? '',
+        ikindname: filter.value.ikindname ?? '',
         data_Count: '1000',
         length: 1000
       }
     })
     if (res?.status === 200) {
-      const { _Lists } = res?.data
-      if (_Lists && Array.isArray(_Lists)) {
-        tbData.value = _Lists
+      if (res?.data && Array.isArray(res?.data)) {
+        tbData.value = res?.data
       }
     }
   }
@@ -53,12 +52,12 @@
     //Renew
     await callApi({
       method: 'POST',
-      url: api.Depar.Department_Renew
+      url: api.Ikind.Ikind_ReNew
     }).then((response: any) => {
       const data: any = response?.data
       dialogForm.value = {
-        deparno: data?.deparno ?? '',
-        deparname: data?.deparname ?? ''
+        ikindno: data?.ikindno ?? '',
+        ikindname: data?.ikindname ?? ''
       }
     })
     dialogOpen.value = true
@@ -67,8 +66,8 @@
   const handleEdit = (row: iData) => {
     dialogAction.value = 'edit'
     dialogForm.value = {
-      deparno: row.deparno ?? '',
-      deparname: row.deparname ?? ''
+      ikindno: row.ikindno ?? '',
+      ikindname: row.ikindname ?? ''
     }
     dialogOpen.value = true
   }
@@ -76,13 +75,13 @@
   const handleDelete = (row: iData) => {
     message.confirm({
       type: 'question',
-      message: `確定要刪除「${row.deparno}」${row.deparname}？`,
+      message: `確定要刪除「${row.ikindno}」${row.ikindname}？`,
       onConfirm: () => {
         //刪除
         callApi({
           method: 'POST',
-          url: api.Depar.Department_Del,
-          data: { deparno: row.deparno, deparname: row.deparname }
+          url: api.Ikind.Ikind_DEL,
+          data: { ikindno: row.ikindno, ikindname: row.ikindname }
         }).then((response: any) => {
           if (response?.status === 200) {
             message.alert({
@@ -105,8 +104,8 @@
   const dialogOpen = ref(false)
   const dialogAction = ref<'create' | 'edit'>('create')
   const dialogForm = ref({
-    deparno: '',
-    deparname: ''
+    ikindno: '',
+    ikindname: ''
   })
   const handleDialogClose = () => {
     dialogOpen.value = false
@@ -114,17 +113,17 @@
   const handleDialogSubmit = () => {
     message.confirm({
       type: 'question',
-      message: `確定要${dialogAction.value === 'create' ? '新增' : '編輯'}部門類別？`,
+      message: `確定要${dialogAction.value === 'create' ? '新增' : '編輯'}工料類別？`,
       onConfirm: () => {
         let method = ''
         let url = ''
         if (dialogAction.value === 'create') {
           method = 'POST'
-          url = api.Depar.Department_Add
+          url = api.Ikind.Ikind_Create
         }
         if (dialogAction.value === 'edit') {
-          method = 'POST'
-          url = api.Depar.Department_Upd
+          method = 'PUT'
+          url = api.Ikind.Ikind_EDIT
         }
         callApi({
           method: method as Method,
@@ -159,10 +158,14 @@
     <v-card-text>
       <v-row dense>
         <v-col :cols="3">
-          <c-input v-model="filter.deparno" label="部門編號" icon="fa-solid fa-building-user" />
+          <c-input v-model="filter.ikindno" label="工料類別編號" icon="fa-solid fa-building-user" />
         </v-col>
         <v-col :cols="3">
-          <c-input v-model="filter.deparname" label="部門名稱" icon="fa-solid fa-building-user" />
+          <c-input
+            v-model="filter.ikindname"
+            label="工料類別名稱"
+            icon="fa-solid fa-building-user"
+          />
         </v-col>
       </v-row>
       <v-row justify="end" dense>
@@ -189,15 +192,15 @@
     hover
   >
     <template v-slot:head>
-      <th>部門編號</th>
-      <th>部門名稱</th>
+      <th>工料編號</th>
+      <th>工料名稱</th>
       <th>建立人員</th>
       <th>修改人員</th>
       <th></th>
     </template>
     <template v-slot:body="{ scope }">
-      <td>{{ scope.deparno }}</td>
-      <td>{{ scope.deparname }}</td>
+      <td>{{ scope.ikindno }}</td>
+      <td>{{ scope.ikindname }}</td>
       <td>{{ scope.a_USER }}</td>
       <td>{{ scope.m_USER }}</td>
       <td>
@@ -220,21 +223,21 @@
   <!--新增 & 編輯 彈出視窗-->
   <c-dialog
     v-model="dialogOpen"
-    :title="(dialogAction === 'create' ? '新增' : '編輯') + '部門資料'"
+    :title="(dialogAction === 'create' ? '新增' : '編輯') + '工料類別'"
   >
     <v-row>
       <v-col :cols="6">
         <!-- :is-required="true" 代表必填欄位 -->
         <c-input
-          v-model="dialogForm.deparno"
-          label="部門編號"
+          v-model="dialogForm.ikindno"
+          label="工料編號"
           :is-required="true"
           :readonly="dialogAction === 'edit' ? true : false"
         />
       </v-col>
       <v-col :cols="6">
         <!-- :is-required="true" 代表必填欄位 -->
-        <c-input v-model="dialogForm.deparname" label="部門名稱" :is-required="true" />
+        <c-input v-model="dialogForm.ikindname" label="工料類別名稱" :is-required="true" />
       </v-col>
     </v-row>
     <template v-slot:buttons>
