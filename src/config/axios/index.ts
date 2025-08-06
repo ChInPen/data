@@ -8,6 +8,10 @@ import type {
   AxiosRequestHeaders
 } from 'axios'
 import config from '../config'
+import { logout } from '@/utils/auth'
+import { message } from '@/components/Message/service'
+// import { useRouter } from 'vue-router'
+// const router = useRouter()
 
 interface AdaptAxiosRequestConfig extends AxiosRequestConfig {
   headers: AxiosRequestHeaders
@@ -41,6 +45,18 @@ const createAxiosInstance = (): AxiosInstance => {
     },
     (error: AxiosError) => {
       // 錯誤處理
+      if (error.status === 401) {
+        //token逾期
+        logout()
+        message.alert({
+          type: 'error',
+          message: '連限逾時，請重新登入',
+          autoClose: 2,
+          onConfirm: () => {
+            location.reload()
+          }
+        })
+      }
       return Promise.reject(error)
     }
   )

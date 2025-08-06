@@ -6,7 +6,7 @@
   const model = defineModel()
   const props = defineProps({
     items: {
-      type: Array
+      type: Array as PropType<any[]>
     },
     label: {
       type: String
@@ -65,7 +65,7 @@
           v-if="icon || isRequired"
           :icon="isRequired && !icon ? 'fa-solid fa-asterisk' : icon"
           size="24"
-          :color="isRequired ? 'red' : 'black'"
+          :color="isRequired ? 'red' : '#4b4b4b'"
           class="me-1"
         />
         <span class="fixed-label" v-if="label">{{ props.label }}</span>
@@ -97,12 +97,15 @@
     </template>
     <template v-slot:item="{ item, index, props }">
       <!-- 表頭 -->
-      <template v-if="index === 0">
-        <v-list-item class="select-list-header" density="compact">
+      <template v-if="itemColumns.length > 0">
+        <v-list-item density="compact" v-if="index === 0">
           <v-list-item-title class="text-grey">
-            <span v-for="(col, i) in itemColumns" :key="'head-' + i" class="me-4">
-              {{ col.label }}
-            </span>
+            <v-row no-gutters>
+              <!--class="justify-content-around"-->
+              <v-col v-for="(col, i) in itemColumns" :key="'head-' + i" class="px-2 text-center">
+                {{ col.label }}
+              </v-col>
+            </v-row>
           </v-list-item-title>
         </v-list-item>
       </template>
@@ -111,19 +114,26 @@
       <v-list-item
         class="select-list-item"
         v-bind="{ ...props, title: undefined, ripple: { class: 'text-blue' } }"
-        v-if="itemColumns"
+        v-if="itemColumns.length > 0"
+        v-show="
+          Object.values(item.raw)
+            .map((v) => String(v))
+            .some((x) => x.includes(search))
+        "
       >
         <v-list-item-title>
-          <span v-for="(col, i) in itemColumns" :key="i" class="me-4">
-            {{ col.column }}
-          </span>
+          <v-row no-gutters>
+            <v-col v-for="(col, i) in itemColumns" :key="i" class="px-2 text-center">
+              {{ item.raw?.[col.column] }}
+            </v-col>
+          </v-row>
         </v-list-item-title>
       </v-list-item>
 
       <v-list-item
         class="select-list-item"
         v-bind="{ ...props, title: undefined, ripple: { class: 'text-blue' } }"
-        v-if="!itemColumns"
+        v-if="itemColumns.length == 0"
         v-show="String(item.value).includes(search) || item.title.includes(search)"
       >
         <v-list-item-title class="title">{{ item.title }}</v-list-item-title>

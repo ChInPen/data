@@ -17,12 +17,78 @@
   const store = useEmployeeStore()
   const router = useRouter()
 
+  //下拉選單
+  const empsexDDL = ref([
+    {
+      empsex: '1',
+      empsexName: '男'
+    },
+    {
+      empsex: '2',
+      empsexName: '女'
+    }
+  ])
+  const empmarrDDL = ref([
+    {
+      empmarr: '1',
+      empmarrName: '已婚'
+    },
+    {
+      empmarr: '2',
+      empmarrName: '未婚'
+    }
+  ])
+  const departDDL = ref<{ deparno: string; deparname: string }[]>([])
+  const employeeDDL = ref<{ empno: string; empname: string }[]>([])
+  const skillDDL = ref<{ skillno: string; skillname: string }[]>([])
+
+  //人員資料
   const formData = ref<Record<string, any>>({})
 
   //取消&返回 按鈕
   const handleCancel = () => {
     router.push(store.path1)
   }
+  //起始動作
+  onMounted(() => {
+    //抓部門下拉選單資料
+    callApi({
+      method: 'GET',
+      url: api.Depar.GetAllDep
+    }).then((res: any) => {
+      if (res?.status == 200) {
+        const { data } = res?.data
+        if (Array.isArray(data)) {
+          departDDL.value = data
+        }
+      }
+    })
+    //抓人員下拉選單資料
+    callApi({
+      method: 'POST',
+      url: api.Emp.Emp_ListSimple
+    }).then((res: any) => {
+      if (res?.status == 200) {
+        const data = res?.data as any[] | undefined
+        if (data && Array.isArray(data)) {
+          employeeDDL.value = data.map(({ empno, empname }) => ({ empno, empname }))
+        }
+      }
+    })
+    //抓工種下拉選單資料
+    callApi({
+      method: 'POST',
+      url: api.Skill.Skilllist,
+      data: {}
+    }).then((res: any) => {
+      if (res?.status == 200) {
+        const { _Lists } = res?.data
+        if (Array.isArray(_Lists)) {
+          skillDDL.value = _Lists
+        }
+      }
+    })
+  })
 </script>
 
 <template>
@@ -57,13 +123,29 @@
           <c-input v-model="formData.password1" label="密碼" icon="fa-solid fa-unlock-keyhole" />
         </v-col>
         <v-col :cols="3" class="px-2">
-          <c-input v-model="formData.empsex" label="性別" icon="mdi-gender-male-female" />
+          <c-select
+            v-model="formData.empsex"
+            label="性別"
+            icon="mdi-gender-male-female"
+            :items="empsexDDL"
+            item-title="empsexName"
+            item-value="empsex"
+            hide-search
+          />
         </v-col>
         <v-col :cols="3" class="px-2">
           <c-input v-model="formData.empbirth1" label="出生日期" icon="fa-solid fa-calendar-day" />
         </v-col>
         <v-col :cols="3" class="px-2">
-          <c-input v-model="formData.empmarr" label="婚姻狀況" icon="fa-solid fa-heart" />
+          <c-select
+            v-model="formData.empmarr"
+            label="婚姻狀況"
+            icon="fa-solid fa-heart"
+            :items="empmarrDDL"
+            item-title="empmarrName"
+            item-value="empmarr"
+            hide-search
+          />
         </v-col>
       </v-row>
       <c-divider class="mt-3">聯絡資訊</c-divider>
@@ -99,10 +181,32 @@
       <c-divider class="mt-3">公司資訊</c-divider>
       <v-row dense class="mt-2">
         <v-col :cols="3" class="px-2">
-          <c-input v-model="formData.deparno" label="部門" icon="fa-solid fa-building-user" />
+          <c-select
+            v-model="formData.deparno"
+            label="部門"
+            icon="fa-solid fa-building-user"
+            :items="departDDL"
+            item-title="deparname"
+            item-value="deparno"
+            :item-columns="[
+              { column: 'deparno', label: '部門編號' },
+              { column: 'deparname', label: '部門名稱' }
+            ]"
+          />
         </v-col>
         <v-col :cols="3" class="px-2">
-          <c-input v-model="formData.chiefno" label="主管" icon="fa-solid fa-user-tie" />
+          <c-select
+            v-model="formData.chiefno"
+            label="主管"
+            icon="fa-solid fa-user-tie"
+            :items="employeeDDL"
+            item-title="empname"
+            item-value="empno"
+            :item-columns="[
+              { column: 'empno', label: '人員編號' },
+              { column: 'empname', label: '人員名稱' }
+            ]"
+          />
         </v-col>
         <v-col :cols="3" class="px-2">
           <c-input v-model="formData.duedate1" label="到職日期" icon="fa-solid fa-calendar-day" />
@@ -142,18 +246,14 @@
         <v-col cols="3">
           <c-select
             label="工種"
-            :items="[
-              { no: '1', name: '校長' },
-              { no: '2', name: '主任' },
-              { no: '3', name: '老師' }
-            ]"
-            item-value="no"
-            item-title="name"
-            :item-columns="[
-              { column: 'no', label: '編號' },
-              { column: 'name', label: '名稱' }
-            ]"
             icon="fa-solid fa-briefcase"
+            :items="skillDDL"
+            item-title="skillname"
+            item-value="skillno"
+            :item-columns="[
+              { column: 'skillno', label: '工種編號' },
+              { column: 'skillname', label: '工種名稱' }
+            ]"
           />
         </v-col>
         <v-col cols="3">
