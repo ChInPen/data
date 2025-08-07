@@ -32,14 +32,10 @@
     transform: scale(1.3);
   }
   /* 需偏移調整位置的 icon */
-  .fa-paper-plane {
-    transform: translate(-10%, 5%); /* 往左 10%、往下 5% */
+  .fa-solid {
+    transform: translate(-5%, 0); /* 往左 5% */
   }
-  .fa-phone-volume,
-  .fa-user-plus,
-  .fa-user-pen,
-  .fa-building-user,
-  .fa-map-location-dot {
-    transform: translate(-10%, 0); /* 往左 10% */
+  .fa-paper-plane {
+    transform: translate(0, 5%); /* 往下 5% */
   }
 </style>
