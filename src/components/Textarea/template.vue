@@ -1,5 +1,7 @@
 <script lang="ts" setup>
+  import { computed, useAttrs } from 'vue'
   import { cIcon } from '@/components/common'
+  const attr = useAttrs()
 
   const model = defineModel({ default: '' })
   const props = defineProps({
@@ -13,6 +15,11 @@
       type: Boolean,
       default: false
     }
+  })
+
+  const redicon = computed(() => {
+    const disabled = attr?.disabled ?? false
+    return props.isRequired && disabled === false
   })
 </script>
 
@@ -32,7 +39,7 @@
           v-if="icon || isRequired"
           :icon="isRequired && !icon ? 'fa-solid fa-asterisk' : icon"
           size="24"
-          :color="isRequired ? 'red' : '#4b4b4b'"
+          :color="redicon ? 'red' : '#4b4b4b'"
           class="me-1"
         />
         <span class="fixed-label" v-if="label">{{ props.label }}</span>
@@ -90,5 +97,14 @@
   /* 隱藏底線 */
   :deep(.v-field__outline) {
     display: none;
+  }
+  /* 禁用時底色 */
+  /* 禁用時底色和文字顏色  */
+  :deep(.v-field--disabled) {
+    opacity: var(--input-disabled-opacity);
+
+    :deep(.v-field__input) {
+      color: var(--input-disabled-text-color);
+    }
   }
 </style>

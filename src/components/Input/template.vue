@@ -1,8 +1,9 @@
 <script lang="ts" setup>
-  import { ref, computed } from 'vue'
+  import { ref, computed, useAttrs } from 'vue'
   import type { PropType } from 'vue'
   import { cIcon } from '@/components/common'
   import { numberFormat, numberFormatValue } from '@/utils/uformat'
+  const attr = useAttrs()
 
   type NumberFormat = {
     minus?: boolean
@@ -60,6 +61,10 @@
       }
     }
   })
+  const redicon = computed(() => {
+    const disabled = attr?.disabled ?? false
+    return props.isRequired && disabled === false
+  })
 
   //密碼用(type="password")
   const lookPass = ref(false)
@@ -72,11 +77,16 @@
     if (props.type === 'password' && lookPass.value) return 'text'
     return props.type || 'text' //預設 'text'
   })
+
+  const inputRef = ref()
+  defineExpose({
+    inputRef // 暴露 inputRef 實例
+  })
 </script>
 
 <template>
   <v-text-field
-    ref="input"
+    ref="inputRef"
     v-bind="$attrs"
     v-model="inputValue"
     :type="inputType"
@@ -90,10 +100,12 @@
           v-if="icon || isRequired"
           :icon="isRequired && !icon ? 'fa-solid fa-asterisk' : icon"
           size="24"
-          :color="isRequired ? 'red' : '#4b4b4b'"
+          :color="redicon ? 'red' : '#4b4b4b'"
           class="me-1"
         />
-        <span class="fixed-label" v-if="label">{{ props.label }}</span>
+        <span class="fixed-label" v-if="label">
+          {{ props.label }}
+        </span>
       </div>
     </template>
     <template v-slot:clear>
@@ -174,5 +186,13 @@
   /* 隱藏底線 */
   :deep(.v-field__outline) {
     display: none;
+  }
+  /* 禁用時底色和文字顏色  */
+  :deep(.v-field--disabled) {
+    opacity: var(--input-disabled-opacity);
+
+    :deep(.v-field__input) {
+      color: var(--input-disabled-text-color);
+    }
   }
 </style>

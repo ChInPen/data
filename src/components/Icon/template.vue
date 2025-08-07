@@ -38,7 +38,8 @@
   .fa-phone-volume,
   .fa-user-plus,
   .fa-user-pen,
-  .fa-building-user {
+  .fa-building-user,
+  .fa-map-location-dot {
     transform: translate(-10%, 0); /* 往左 10% */
   }
 </style>

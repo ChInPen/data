@@ -130,6 +130,7 @@
       <v-row dense>
         <v-col :cols="3">
           <c-input v-model="filter.empno" label="人員編號" icon="fa-solid fa-building-user" />
+          <!-- <c-input v-model="filter.empno" label="人員編號" :is-required="true" disabled /> -->
         </v-col>
         <v-col :cols="3">
           <c-input v-model="filter.empname" label="人員名稱" icon="fa-solid fa-building-user" />

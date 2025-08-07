@@ -1,7 +1,8 @@
 <script lang="ts" setup>
-  import { ref, watch } from 'vue'
+  import { ref, computed, useAttrs } from 'vue'
   import type { PropType } from 'vue'
   import { cIcon, cInput } from '@/components/common'
+  const attr = useAttrs()
 
   const model = defineModel()
   const props = defineProps({
@@ -39,11 +40,16 @@
   const search = ref('')
   const menuOpen = ref(false)
 
-  //監聽開啟選單時清空查詢框 search
-  watch(menuOpen, (isOpen) => {
-    if (isOpen === true) {
+  const searchInput = ref()
+  const handleOpenMenu = (open: boolean) => {
+    if (open) {
       search.value = ''
     }
+  }
+
+  const redicon = computed(() => {
+    const disabled = attr?.disabled ?? false
+    return props.isRequired && disabled === false
   })
 </script>
 
@@ -58,6 +64,7 @@
     :rounded="rounded"
     :list-props="{ bgColor: 'white' }"
     no-data-text="無資料"
+    @update:menu="handleOpenMenu"
   >
     <template v-slot:prepend-inner>
       <div class="prepend-inner-content">
@@ -65,7 +72,7 @@
           v-if="icon || isRequired"
           :icon="isRequired && !icon ? 'fa-solid fa-asterisk' : icon"
           size="24"
-          :color="isRequired ? 'red' : '#4b4b4b'"
+          :color="redicon ? 'red' : '#4b4b4b'"
           class="me-1"
         />
         <span class="fixed-label" v-if="label">{{ props.label }}</span>
@@ -85,9 +92,9 @@
     <template v-slot:prepend-item v-if="!props.hideSearch && items?.length && items?.length > 0">
       <v-list-item class="select-search">
         <c-input
+          ref="searchInput"
           v-model="search"
           icon="fa-solid fa-magnifying-glass"
-          autofocus
           clearable
           @mousedown.stop
           @click.stop
@@ -208,5 +215,13 @@
   /* 選單查詢輸入框 選中時背景色 */
   .select-search :deep(.v-field--focused) {
     background-color: #e3f1fb;
+  }
+  /* 禁用時底色和文字顏色  */
+  :deep(.v-field--disabled) {
+    opacity: var(--input-disabled-opacity);
+
+    :deep(.v-field__input) {
+      color: var(--input-disabled-text-color);
+    }
   }
 </style>

@@ -32,6 +32,24 @@ export const useEmployeeStore = defineStore('employee', {
     clear() {
       this.empno = ''
       this.action = 'detail'
+    },
+    actionName() {
+      let acname = ''
+      switch (this.action?.toLowerCase()) {
+        case 'edit':
+          acname = '編輯'
+          break
+        case 'detail':
+          acname = '瀏覽'
+          break
+        case 'copy':
+          acname = '複製'
+          break
+        default:
+          acname = '新增'
+          break
+      }
+      return acname
     }
   }
 })
