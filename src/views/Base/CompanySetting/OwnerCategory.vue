@@ -159,14 +159,10 @@
     <v-card-text>
       <v-row dense>
         <v-col :cols="3">
-          <c-input v-model="filter.ckindno" label="業主類別編號" icon="fa-solid fa-building-user" />
+          <c-input v-model="filter.ckindno" label="業主類別編號" icon="fa-solid fa-building" />
         </v-col>
         <v-col :cols="3">
-          <c-input
-            v-model="filter.ckindname"
-            label="業主類別名稱"
-            icon="fa-solid fa-building-user"
-          />
+          <c-input v-model="filter.ckindname" label="業主類別名稱" icon="fa-solid fa-building" />
         </v-col>
       </v-row>
       <v-row justify="end" dense>

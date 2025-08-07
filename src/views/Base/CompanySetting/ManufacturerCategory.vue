@@ -158,14 +158,10 @@
     <v-card-text>
       <v-row dense>
         <v-col :cols="3">
-          <c-input v-model="filter.skindno" label="廠商類別編號" icon="fa-solid fa-building-user" />
+          <c-input v-model="filter.skindno" label="廠商類別編號" icon="fa-solid fa-warehouse" />
         </v-col>
         <v-col :cols="3">
-          <c-input
-            v-model="filter.skindname"
-            label="廠商類別名稱"
-            icon="fa-solid fa-building-user"
-          />
+          <c-input v-model="filter.skindname" label="廠商類別名稱" icon="fa-solid fa-warehouse" />
         </v-col>
       </v-row>
       <v-row justify="end" dense>

@@ -69,11 +69,14 @@ const menu: MenuEntry[] = [
           },
           {
             title: '廠商資料',
-            path: 'ManufacturerData',
-            name: 'A04廠商類別建檔',
-            component: () => import('@/views/Base/CompanySetting/ManufacturerData.vue')
+            path: 'ManufacturerData'
           },
-          { title: '廠商類別', path: 'ManufacturerCategory' }
+          {
+            title: '廠商類別',
+            path: 'ManufacturerCategory',
+            name: 'A04廠商類別建檔',
+            component: () => import('@/views/Base/CompanySetting/ManufacturerCategory.vue')
+          }
         ]
       },
       {

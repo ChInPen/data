@@ -157,10 +157,10 @@
     <v-card-text>
       <v-row dense>
         <v-col :cols="3">
-          <c-input v-model="filter.skillno" label="工種編號" icon="fa-solid fa-building-user" />
+          <c-input v-model="filter.skillno" label="工種編號" icon="fa-solid fa-briefcase" />
         </v-col>
         <v-col :cols="3">
-          <c-input v-model="filter.skillname" label="工種名稱" icon="fa-solid fa-building-user" />
+          <c-input v-model="filter.skillname" label="工種名稱" icon="fa-solid fa-briefcase" />
         </v-col>
       </v-row>
       <v-row justify="end" dense>
