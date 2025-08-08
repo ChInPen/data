@@ -136,7 +136,9 @@ export default {
     Emp_ListSimple: 'api/Emp/Emp_ListSimple',
     EmpSkill_List: 'api/EmpSkill/EmpSkill_List',
     Emp_PhotoUpload: 'api/Emp/Emp_PhotoUpload',
-    Emp_PhotoGet: 'api/Emp/Emp_PhotoGet'
+    Emp_PhotoGet: 'api/Emp/Emp_PhotoGet',
+    Emp_Print: 'api/Emp/Emp_Print',
+    Emp_ReNew: 'api/Emp/Emp_Renew'
   },
   //郵遞區號
   Zip: {

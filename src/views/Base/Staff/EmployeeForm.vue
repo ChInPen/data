@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-  import { ref, computed, onMounted } from 'vue'
+  import { ref, onMounted } from 'vue'
   import { cButton, cInput, cSelect, cTextarea, cBread, cDivider } from '@/components/common' //共用元件
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
@@ -11,8 +11,6 @@
 
   const store = useEmployeeStore()
   const router = useRouter()
-  const isDetail = computed(() => !['edit', 'create', 'copy'].includes(store.action))
-  const keyDisabled = computed(() => !['create', 'copy'].includes(store.action))
 
   type EmpSkill = {
     //人員工種
@@ -49,42 +47,46 @@
   const skillDDL = ref<{ skillno: string; skillname: string }[]>([])
 
   //人員資料
-  const formData = ref<Record<string, any>>({
-    empno: '',
-    empname: '',
-    empidno: '',
-    password1: '',
-    empsex: '',
-    empbirth1: '',
-    empmarr: '',
-    tel1: '',
-    mobitel: '',
-    empper: '',
-    tel2: '',
-    ziprec1: '',
-    zip1: '',
-    empaddr1: '',
-    ziprec2: '',
-    zip2: '',
-    empaddr2: '',
-    email: '',
-    deparno: '',
-    chiefno: '',
-    duedate1: '',
-    resdate1: '',
-    quotation: 0,
-    memo: '',
-    memo1: '',
-    photo1: ''
-  })
+  const formData = ref<Record<string, any>>({})
   const empSkills = ref<EmpSkill[]>([])
 
   //取消&返回 按鈕
   const handleCancel = () => {
-    router.push(store.path1)
+    store.clear(router)
+  }
+  //檢查欄位規則
+  const checkData = () => {
+    //必填:empno, empname
+    const requiredFields = [
+      { key: 'empno', label: '人員編號' },
+      { key: 'empname', label: '人員姓名' }
+    ]
+
+    let missing = requiredFields
+      .filter((field) => !formData.value?.[field.key])
+      .map((field) => field.label)
+      .join('、')
+    if (missing) missing = `${missing}不可為空白`
+
+    //檢查人員工種
+    let missing2 = empSkills.value
+      .map((s, i) => (!s.skillno ? i + 1 : ''))
+      .filter(Boolean)
+      .join('、')
+    if (missing2) missing2 = `第${missing2}筆工種不可為空白`
+
+    return missing && missing2 ? `${missing}\n${missing2}` : missing || missing2
   }
   //送出存檔
   const handleSave = () => {
+    const check = checkData()
+    if (check) {
+      message.alert({
+        type: 'warning',
+        message: check
+      })
+      return
+    }
     message.confirm({
       type: 'question',
       message: `確定要送出人員資料？`,
@@ -177,7 +179,18 @@
       }
     })
     //抓單筆資料
-    if (store.empno) {
+    if (store.action === 'create') {
+      callApi({
+        method: 'GET',
+        url: api.Emp.Emp_ReNew
+      }).then((res: any) => {
+        if (res?.status == 200) {
+          const data = res?.data ?? {}
+          const { emp } = data
+          if (emp) formData.value = { ...emp }
+        }
+      })
+    } else if (store.empno) {
       callApi({
         method: 'POST',
         url: api.Emp.Emp_GetSingle,
@@ -205,7 +218,7 @@
   })
 
   //彈窗
-  const pcikAddrHS = ref(false)
+  const pcikAddrDS = ref(false)
   const addrTarget = ref<'zip1' | 'zip2' | ''>('')
   const handlePickAddr = (data: any) => {
     if (addrTarget.value === 'zip1') {
@@ -222,11 +235,11 @@
 
 <template>
   <!--頂部 title & 按鈕區-->
-  <c-bread :title="store.actionName()">
-    <div class="col-auto" v-if="!isDetail">
+  <c-bread :title="store.actionName">
+    <div class="col-auto" v-if="!store.isDetail">
       <c-button kind="cancel" icon="mdi-close-circle" @click="handleCancel">取消</c-button>
     </div>
-    <div class="col-auto" v-if="!isDetail">
+    <div class="col-auto" v-if="!store.isDetail">
       <c-button kind="submit" icon="fa-solid fa-paper-plane" @click="handleSave">確認送出</c-button>
     </div>
     <div class="col-auto" v-else>
@@ -244,7 +257,7 @@
             v-model="formData.empno"
             label="人員編號"
             :is-required="true"
-            :disabled="keyDisabled"
+            :disabled="store.keyDisabled"
           />
         </v-col>
         <v-col :cols="3" class="px-2">
@@ -252,7 +265,7 @@
             v-model="formData.empname"
             label="人員姓名"
             :is-required="true"
-            :disabled="isDetail"
+            :disabled="store.isDetail"
           />
         </v-col>
         <v-col :cols="3" class="px-2">
@@ -260,7 +273,8 @@
             v-model="formData.empidno"
             label="身分證號"
             icon="fa-solid fa-user"
-            :disabled="isDetail"
+            :disabled="store.isDetail"
+            :digit-format="{ english: true }"
           />
         </v-col>
         <v-col :cols="2" class="px-2">
@@ -268,7 +282,7 @@
             v-model="formData.password1"
             label="密碼"
             icon="fa-solid fa-unlock-keyhole"
-            :disabled="isDetail"
+            :disabled="store.isDetail"
           />
         </v-col>
         <v-col :cols="3" class="px-2">
@@ -280,15 +294,16 @@
             item-title="empsexName"
             item-value="empsex"
             hide-search
-            :disabled="isDetail"
+            :disabled="store.isDetail"
           />
         </v-col>
         <v-col :cols="3" class="px-2">
           <c-input
+            type="date"
             v-model="formData.empbirth1"
             label="出生日期"
             icon="fa-solid fa-calendar-day"
-            :disabled="isDetail"
+            :disabled="store.isDetail"
           />
         </v-col>
         <v-col :cols="3" class="px-2">
@@ -300,7 +315,7 @@
             item-title="empmarrName"
             item-value="empmarr"
             hide-search
-            :disabled="isDetail"
+            :disabled="store.isDetail"
           />
         </v-col>
       </v-row>
@@ -311,7 +326,8 @@
             v-model="formData.tel1"
             label="聯絡電話"
             icon="fa-solid fa-phone-volume"
-            :disabled="isDetail"
+            :disabled="store.isDetail"
+            :format="{ phone: true }"
           />
         </v-col>
         <v-col :cols="3" class="px-2">
@@ -319,7 +335,8 @@
             v-model="formData.mobitel"
             label="行動電話"
             icon="fa-solid fa-mobile-button"
-            :disabled="isDetail"
+            :disabled="store.isDetail"
+            :format="{ phone: true }"
           />
         </v-col>
         <v-col :cols="3" class="px-2">
@@ -327,7 +344,7 @@
             v-model="formData.empper"
             label="緊急聯絡人"
             icon="fa-solid fa-user"
-            :disabled="isDetail"
+            :disabled="store.isDetail"
           />
         </v-col>
         <v-col :cols="3" class="px-2">
@@ -335,19 +352,20 @@
             v-model="formData.tel2"
             label="緊急聯絡電話"
             icon="fa-solid fa-phone-volume"
-            :disabled="isDetail"
+            :disabled="store.isDetail"
+            :format="{ phone: true }"
           />
         </v-col>
         <v-col :cols="3" class="px-2">
           <v-row dense class="align-items-center">
-            <v-col cols="auto" v-if="!isDetail">
+            <v-col cols="auto" v-if="!store.isDetail">
               <c-button
                 kind="pick"
                 icon="mdi-map-marker-radius"
                 @click="
                   () => {
                     addrTarget = 'zip1'
-                    pcikAddrHS = true
+                    pcikAddrDS = true
                   }
                 "
               >
@@ -369,19 +387,19 @@
             v-model="formData.empaddr1"
             label="戶籍地址"
             icon="fa-solid fa-location-dot"
-            :disabled="isDetail"
+            :disabled="store.isDetail"
           />
         </v-col>
         <v-col :cols="3" class="px-2">
           <v-row dense class="align-items-center">
-            <v-col cols="auto" v-if="!isDetail">
+            <v-col cols="auto" v-if="!store.isDetail">
               <c-button
                 kind="pick"
                 icon="mdi-map-marker-radius"
                 @click="
                   () => {
                     addrTarget = 'zip2'
-                    pcikAddrHS = true
+                    pcikAddrDS = true
                   }
                 "
               >
@@ -403,7 +421,7 @@
             v-model="formData.empaddr2"
             label="通訊地址"
             icon="fa-solid fa-location-dot"
-            :disabled="isDetail"
+            :disabled="store.isDetail"
           />
         </v-col>
         <v-col :cols="4" class="px-2">
@@ -411,7 +429,7 @@
             v-model="formData.email"
             label="E-MAIL"
             icon="fa-solid fa-envelope"
-            :disabled="isDetail"
+            :disabled="store.isDetail"
           />
         </v-col>
       </v-row>
@@ -429,7 +447,7 @@
               { column: 'deparno', label: '部門編號' },
               { column: 'deparname', label: '部門名稱' }
             ]"
-            :disabled="isDetail"
+            :disabled="store.isDetail"
           />
         </v-col>
         <v-col :cols="3" class="px-2">
@@ -444,33 +462,35 @@
               { column: 'empno', label: '人員編號' },
               { column: 'empname', label: '人員名稱' }
             ]"
-            :disabled="isDetail"
+            :disabled="store.isDetail"
           />
         </v-col>
         <v-col :cols="3" class="px-2">
           <c-input
+            type="date"
             v-model="formData.duedate1"
             label="到職日期"
             icon="fa-solid fa-calendar-day"
-            :disabled="isDetail"
+            :disabled="store.isDetail"
           />
         </v-col>
         <v-col :cols="3" class="px-2">
           <c-input
+            type="date"
             v-model="formData.resdate1"
             label="離職日期"
             icon="fa-solid fa-calendar-day"
-            :disabled="isDetail"
+            :disabled="store.isDetail"
           />
         </v-col>
         <v-col :cols="3" class="px-2">
           <c-input
+            type="number"
             v-model="formData.quotation"
             label="報價級距"
-            type="number"
             :number-format="{ thousands: true }"
             icon="fa-solid fa-money-bill"
-            :disabled="isDetail"
+            :disabled="store.isDetail"
           />
         </v-col>
         <v-col :cols="3" class="px-2">
@@ -478,7 +498,7 @@
             v-model="formData.memo1"
             label="說明"
             icon="fa-solid fa-pencil"
-            :disabled="isDetail"
+            :disabled="store.isDetail"
           />
         </v-col>
         <v-col :cols="12" class="px-2">
@@ -486,7 +506,7 @@
             v-model="formData.memo"
             label="備註"
             icon="fa-solid fa-pencil"
-            :disabled="isDetail"
+            :disabled="store.isDetail"
           />
         </v-col>
       </v-row>
@@ -497,7 +517,7 @@
     <v-card-text>
       <v-row dense justify="space-between">
         <v-col cols="auto" class="text-custom-2">工種資料</v-col>
-        <v-col cols="auto" v-if="!isDetail">
+        <v-col cols="auto" v-if="!store.isDetail">
           <c-button kind="create" icon="mdi-plus-circle" @click="empSkillAdd">新增工種</c-button>
         </v-col>
       </v-row>
@@ -522,31 +542,31 @@
               { column: 'skillno', label: '工種編號' },
               { column: 'skillname', label: '工種名稱' }
             ]"
-            :disabled="isDetail"
+            :disabled="store.isDetail"
             @update:modelValue="handleSkillChoose($event, i)"
           />
         </v-col>
         <v-col cols="3">
           <c-input
+            type="number"
             v-model="skill.daytpr"
             label="日薪"
-            type="number"
             :number-format="{ thousands: true }"
             icon="fa-solid fa-sack-dollar"
-            :disabled="isDetail"
+            :disabled="store.isDetail"
           />
         </v-col>
         <v-col cols="3">
           <c-input
+            type="number"
             v-model="skill.overtime"
             label="加班"
-            type="number"
             :number-format="{ thousands: true }"
             icon="fa-solid fa-sack-dollar"
-            :disabled="isDetail"
+            :disabled="store.isDetail"
           />
         </v-col>
-        <v-col cols="auto" v-if="!isDetail">
+        <v-col cols="auto" v-if="!store.isDetail">
           <c-button kind="delete" icon="mdi-close-circle" @click="empSkillDel(skill)" />
         </v-col>
       </v-row>
@@ -562,7 +582,7 @@
     :m_user="formData.m_user"
   />
 
-  <pick-addr v-model="pcikAddrHS" @pick="handlePickAddr" />
+  <pick-addr v-model="pcikAddrDS" @pick="handlePickAddr" />
 </template>
 
 <style scoped></style>

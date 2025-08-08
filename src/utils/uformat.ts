@@ -1,4 +1,4 @@
-import { numeric, digit } from './umatch'
+import { numeric, digit, noChinese } from './umatch'
 
 export const numberFormat = (
   value: string | number,
@@ -57,4 +57,44 @@ export const numberFormatValue = (
     str = numeric.decimal(str, options.decAfterN)
   }
   return Number(str)
+}
+
+export const digitFormat = (
+  value: string | number,
+  options?: {
+    dateTW?: boolean
+  }
+): string => {
+  let str = digit.base(value)
+  if (str === '') return ''
+  // 判斷日期
+  if (options?.dateTW === true) {
+    str = digit.dateTW(str, '/')
+  }
+  return str
+}
+
+export const digitFormatValue = (
+  value: string | number,
+  options?: {
+    dateTW?: boolean
+    phone?: boolean
+    english?: boolean
+  }
+): string => {
+  // 判斷電話
+  if (options?.phone === true) {
+    return digit.phone(value)
+  }
+  // 英文&數字
+  if (options?.english === true) {
+    return noChinese.letter(value, { number: true })
+  }
+  let str = digit.base(value)
+  if (str === '') return ''
+  // 判斷日期
+  if (options?.dateTW === true) {
+    str = digit.dateTW(str, '')
+  }
+  return str
 }

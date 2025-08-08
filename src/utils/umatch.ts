@@ -1,4 +1,5 @@
 const DIGITS = '0123456789'
+const LETTERS = 'abcdefghijklmnopqrstuvwxyz'
 
 export const numeric = {
   base: (value: string | number) => {
@@ -64,11 +65,48 @@ export const numeric = {
 
 export const digit = {
   base: (value: string | number) => {
-    const str = value?.toString() ?? ''
+    const str = value?.toString() ?? '' //強制轉成字串
     const chars = str.split('')
     const temps: string[] = []
     chars.forEach((c) => {
       if (DIGITS.includes(c)) temps.push(c)
+    })
+    return temps.join('')
+  },
+  /**
+   * 將數字字串轉成民國年日期。**建議先執行 digit.base() 再傳入此函式。**
+   */
+  dateTW: (value: string | number, separate: string = '') => {
+    const str = value?.toString() ?? '' //強制轉成字串
+    const year = str.substring(0, 3)
+    const month = str.substring(3, 5)
+    const day = str.substring(5, 7)
+    const sep1 = month ? separate : ''
+    const sep2 = day ? separate : ''
+    return year + sep1 + month + sep2 + day
+  },
+  /**
+   * 將字串過濾到只剩數字和減號。
+   */
+  phone: (value: string | number) => {
+    const str = value?.toString() ?? '' //強制轉成字串
+    const chars = str.split('')
+    const temps: string[] = []
+    chars.forEach((c) => {
+      if (DIGITS.includes(c) || c === '-') temps.push(c)
+    })
+    return temps.join('')
+  }
+}
+
+export const noChinese = {
+  letter: (value: string | number, options?: { number?: boolean }) => {
+    const str = value?.toString() ?? '' //強制轉成字串
+    const chars = str.split('')
+    const temps: string[] = []
+    chars.forEach((c) => {
+      if (LETTERS.includes(c?.toLowerCase())) temps.push(c)
+      if (options?.number && DIGITS.includes(c)) temps.push(c)
     })
     return temps.join('')
   }

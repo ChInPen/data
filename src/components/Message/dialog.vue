@@ -122,5 +122,6 @@
     font-size: 28px;
     font-weight: bold;
     text-align: center;
+    white-space: pre-wrap;
   }
 </style>

@@ -2,8 +2,13 @@
   import { ref, computed, useAttrs } from 'vue'
   import type { PropType } from 'vue'
   import { cIcon } from '@/components/common'
-  import { numberFormat, numberFormatValue } from '@/utils/uformat'
+  import { numberFormat, numberFormatValue, digitFormat, digitFormatValue } from '@/utils/uformat'
   const attr = useAttrs()
+
+  type DigitFormat = {
+    phone?: boolean
+    english?: boolean
+  }
 
   type NumberFormat = {
     minus?: boolean
@@ -28,9 +33,11 @@
       type: String,
       default: 'text'
     },
+    digitFormat: Object as PropType<DigitFormat>,
     numberFormat: Object as PropType<NumberFormat>
   })
 
+  const isComposing = ref(false) //中文輸入法組字中判斷用 flag
   const inputValue = computed<string | number>({
     get: () => {
       switch (props.type) {
@@ -41,6 +48,8 @@
             decAfterN: props.numberFormat?.decAfterN,
             thousands: props.numberFormat?.thousands ?? false
           })
+        case 'date':
+          return digitFormat(model.value, { dateTW: true })
         default:
           return model.value
       }
@@ -48,19 +57,35 @@
     set: (newVal) => {
       switch (props.type) {
         case 'number':
-          const numberValue = numberFormatValue(newVal, {
-            minus: props.numberFormat?.minus ?? false,
-            decimal: props.numberFormat?.decimal ?? false,
-            decAfterN: props.numberFormat?.decAfterN
-          })
-          model.value = numberValue
+        case 'date':
+          if (!isComposing.value) {
+            setInput(newVal)
+          }
           break
         default:
-          model.value = newVal
+          if (props.digitFormat) {
+            model.value = digitFormatValue(newVal, { ...props.digitFormat })
+          } else {
+            model.value = newVal
+          }
           break
       }
     }
   })
+  const setInput = (newVal: string | number) => {
+    //將 computed set 邏輯拆出來重複使用
+    if (props.type === 'number') {
+      const numberValue = numberFormatValue(newVal, {
+        minus: props.numberFormat?.minus ?? false,
+        decimal: props.numberFormat?.decimal ?? false,
+        decAfterN: props.numberFormat?.decAfterN
+      })
+      model.value = numberValue
+    }
+    if (props.type === 'date') {
+      model.value = digitFormatValue(newVal, { dateTW: true })
+    }
+  }
   const redicon = computed(() => {
     const disabled = attr?.disabled ?? false
     return props.isRequired && disabled === false
@@ -73,10 +98,26 @@
   const inputType = computed(() => {
     //數字類型
     if (props.type === 'number') return 'text'
+    //日期類型
+    if (props.type === 'date') return 'text'
     //密碼類型
     if (props.type === 'password' && lookPass.value) return 'text'
     return props.type || 'text' //預設 'text'
   })
+
+  // 處理 IME 組字事件
+  // 如果沒處理，中文輸入法使用數字鍵會重複輸入
+  const onCompositionStart = () => {
+    isComposing.value = true
+  }
+  const onCompositionEnd = (e: Event) => {
+    isComposing.value = false
+    // 組字結束後馬上做一次格式化
+    if (props.type === 'number' || props.type === 'date') {
+      const target = e.target as HTMLInputElement
+      setInput(target.value)
+    }
+  }
 
   const inputRef = ref()
   defineExpose({
@@ -93,6 +134,8 @@
     hide-details="auto"
     density="compact"
     rounded="1"
+    @compositionstart="onCompositionStart"
+    @compositionend="onCompositionEnd"
   >
     <template v-slot:prepend-inner>
       <div class="prepend-inner-content">
