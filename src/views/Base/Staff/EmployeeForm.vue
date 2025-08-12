@@ -1,6 +1,6 @@
 <script lang="ts" setup>
   import { ref, onMounted } from 'vue'
-  import { cButton, cInput, cSelect, cTextarea, cBread, cDivider } from '@/components/common' //共用元件
+  import { cButton, cInput, cSelect, cTextarea, cBread, cDivider } from '@/components/Common' //共用元件
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
   import { useEmployeeStore } from '@/store/employee'
@@ -8,6 +8,7 @@
   import { message } from '@/components/Message/service'
   import { pickAddr } from '@/components/PickAddr'
   import { auditInfo } from '@/components/AuditInfo'
+  import webPermissions from './Components/EmployeeWeb.vue'
 
   const store = useEmployeeStore()
   const router = useRouter()
@@ -231,6 +232,7 @@
       formData.value.empaddr2 = data.zipname
     }
   }
+  const webPerDs = ref(false)
 </script>
 
 <template>
@@ -317,6 +319,9 @@
             hide-search
             :disabled="store.isDetail"
           />
+        </v-col>
+        <v-col cols="auto" class="px-2">
+          <c-button @click="webPerDs = true">web權限</c-button>
         </v-col>
       </v-row>
       <c-divider class="mt-3">聯絡資訊</c-divider>
@@ -583,6 +588,7 @@
   />
 
   <pick-addr v-model="pcikAddrDS" @pick="handlePickAddr" />
+  <web-permissions v-model="webPerDs" />
 </template>
 
 <style scoped></style>

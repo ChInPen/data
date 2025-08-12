@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-  import { ref, onMounted, nextTick } from 'vue'
-  import { cButton, cInput, cSelect, cTable, cBread, cDialog } from '@/components/common' //共用元件
+  import { ref, onMounted } from 'vue'
+  import { cButton, cInput, cTable, cBread } from '@/components/Common' //共用元件
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
   import { message } from '@/components/Message/service' //訊息窗元件
   import { useEmployeeStore } from '@/store/employee'
   import { useRouter } from 'vue-router'
-  import config from '@/config/config'
+  import print from './Components/EmployeePrint.vue'
 
   const store = useEmployeeStore()
   const router = useRouter()
@@ -115,44 +115,6 @@
 
   //列印
   const printDS = ref(false)
-  const printForm = ref({
-    initNo: '',
-    finalNo: '',
-    feetNo: '01'
-  })
-  const feetNoDDL = ref({
-    list: [
-      { feetno: '01', feetname: '第一組' },
-      { feetno: '02', feetname: '第二組' },
-      { feetno: '03', feetname: '第三組' },
-      { feetno: '04', feetname: '第四組' },
-      { feetno: '05', feetname: '第五組' },
-      { feetno: '00', feetname: '不列印' }
-    ],
-    value: 'feetno',
-    title: 'feetname'
-  })
-  const handlePrintClose = () => {
-    nextTick(() => {
-      printForm.value = {
-        initNo: '',
-        finalNo: '',
-        feetNo: '01'
-      }
-    })
-  }
-  const handlePreview = () => {
-    callApi({
-      method: 'POST',
-      url: api.Emp.Emp_Print,
-      data: { ...printForm.value }
-    }).then((res: any) => {
-      if (res?.status === 200) {
-        const data = res?.data ?? ''
-        window.open(config.apiUri + '/' + data)
-      }
-    })
-  }
 </script>
 
 <template>
@@ -172,7 +134,6 @@
       <v-row dense>
         <v-col :cols="3">
           <c-input v-model="filter.empno" label="人員編號" icon="fa-solid fa-building-user" />
-          <!-- <c-input v-model="filter.empno" label="人員編號" :is-required="true" disabled /> -->
         </v-col>
         <v-col :cols="3">
           <c-input v-model="filter.empname" label="人員名稱" icon="fa-solid fa-building-user" />
@@ -241,43 +202,7 @@
   </c-table>
 
   <!--列印 彈出視窗-->
-  <c-dialog v-model="printDS" title="列印" width="500" @afterLeave="handlePrintClose">
-    <v-row dense justify="center">
-      <v-col cols="12">
-        <c-select
-          v-model="printForm.feetNo"
-          label="單行註腳"
-          :items="feetNoDDL.list"
-          :item-title="feetNoDDL.title"
-          :item-value="feetNoDDL.value"
-          hide-search
-        />
-      </v-col>
-      <v-col cols="12 mt-1">
-        <c-input v-model="printForm.initNo" label="起始人員編號" />
-      </v-col>
-      <v-col cols="12 mt-1">
-        <c-input v-model="printForm.finalNo" label="終止人員編號" />
-      </v-col>
-      <v-col cols="auto" class="fs-5 fw-bold text-danger">
-        ※起始編號空白表示從第一筆列印
-        <br />
-        ※終止編號空白表示列印至最後一筆
-        <br />
-        ※兩者皆空白表示全部列印
-      </v-col>
-    </v-row>
-    <template v-slot:buttons>
-      <v-row no-gutters justify="center">
-        <v-col cols="auto mx-1">
-          <c-button kind="print" icon="fa-solid fa-file-pdf" @click="handlePreview">預覽</c-button>
-        </v-col>
-        <v-col cols="auto mx-1">
-          <c-button kind="cancel" icon="mdi-close-circle" @click="printDS = false">結束</c-button>
-        </v-col>
-      </v-row>
-    </template>
-  </c-dialog>
+  <print v-model="printDS" />
 </template>
 
 <style scoped>

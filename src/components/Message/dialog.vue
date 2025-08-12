@@ -2,7 +2,7 @@
   import { onMounted } from 'vue'
   import type { PropType } from 'vue'
   import type { DialogType, DialogMode } from './type'
-  import { cButton, cIcon, cDialog } from '@/components/common'
+  import { cButton, cIcon, cDialog } from '@/components/Common'
 
   //計時器
   let autoCloseTimer: ReturnType<typeof setTimeout> | null = null

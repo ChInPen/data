@@ -1,7 +1,7 @@
 <script lang="ts" setup>
   import { computed } from 'vue'
   import type { PropType } from 'vue'
-  import { cIcon } from '@/components/common'
+  import { cIcon } from '@/components/Common'
   import { useRoute } from 'vue-router'
   const route = useRoute()
 

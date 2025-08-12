@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-  import { cInput } from '@/components/common'
+  import { cInput } from '@/components/Common'
   defineProps({
     a_user: {
       type: String,

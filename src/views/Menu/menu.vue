@@ -3,7 +3,7 @@
   import { logout } from '@/utils/auth'
   import { useRouter } from 'vue-router'
   const router = useRouter()
-  import { cIcon } from '@/components/common'
+  import { cIcon } from '@/components/Common'
   import layout from './layout.vue'
   import { message } from '@/components/Message/service'
   import { getMenuGroup } from '@/router/menu'

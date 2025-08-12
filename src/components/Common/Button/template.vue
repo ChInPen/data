@@ -1,6 +1,6 @@
 <script lang="ts" setup>
   import { computed } from 'vue'
-  import { cIcon } from '@/components/common'
+  import { cIcon } from '@/components/Common'
 
   defineOptions({ inheritAttrs: false })
 

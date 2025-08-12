@@ -35,6 +35,10 @@
     titleDivider: {
       type: Boolean,
       default: false
+    },
+    closeBtn: {
+      type: Boolean,
+      default: false
     }
   })
 

@@ -2,7 +2,7 @@
   import { ref, onMounted } from 'vue'
   import bgpic from '@/assets/LoginBg.jpg'
   import logopic from '@/assets/HslLogo.jpg'
-  import { cButton, cInput } from '@/components/common'
+  import { cButton, cInput } from '@/components/Common'
   import api from '@/api'
   import { baseCallApi } from '@/utils/uapi'
   import { login } from '@/utils/auth'

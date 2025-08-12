@@ -1,6 +1,6 @@
 <script lang="ts" setup>
   import { computed, useAttrs } from 'vue'
-  import { cIcon } from '@/components/common'
+  import { cIcon } from '@/components/Common'
   const attr = useAttrs()
 
   const model = defineModel({ default: '' })

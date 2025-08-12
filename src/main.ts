@@ -23,13 +23,9 @@ app.mount('#app')
 
 //代辦事項
 /*
-1.input框 number 千分符
-2.select框 表格查詢版
-3.textarea
-4.checkbox
-5.表格checkbox
-6.radio
-7.表格排序、表格輸入框
-8.圖片上傳
-9.列印功能
+1.checkbox
+2.表格checkbox
+3.radio
+4.表格排序、表格輸入框
+5.圖片上傳
 */

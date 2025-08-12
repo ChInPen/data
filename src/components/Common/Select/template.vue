@@ -1,7 +1,7 @@
 <script lang="ts" setup>
   import { ref, computed, useAttrs } from 'vue'
   import type { PropType } from 'vue'
-  import { cIcon, cInput } from '@/components/common'
+  import { cIcon, cInput } from '@/components/Common'
   const attr = useAttrs()
 
   const model = defineModel()

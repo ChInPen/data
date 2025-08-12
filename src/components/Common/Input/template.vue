@@ -1,7 +1,7 @@
 <script lang="ts" setup>
   import { ref, computed, useAttrs } from 'vue'
   import type { PropType } from 'vue'
-  import { cIcon } from '@/components/common'
+  import { cIcon } from '@/components/Common'
   import { numberFormat, numberFormatValue, digitFormat, digitFormatValue } from '@/utils/uformat'
   const attr = useAttrs()
 

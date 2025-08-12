@@ -1,6 +1,6 @@
 <script lang="ts" setup>
   import { ref, nextTick } from 'vue'
-  import { cSelect, cDialog, cButton, cTable } from '@/components/common'
+  import { cSelect, cDialog, cButton, cTable } from '@/components/Common'
   import { callApi } from '@/utils/uapi'
   import api from '@/api'
   import { message } from '@/components/Message/service'
