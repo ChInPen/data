@@ -46,6 +46,49 @@
   const departDDL = ref<{ deparno: string; deparname: string }[]>([])
   const employeeDDL = ref<{ empno: string; empname: string }[]>([])
   const skillDDL = ref<{ skillno: string; skillname: string }[]>([])
+  //抓部門下拉選單資料
+  const getDepartApi = async () => {
+    callApi({
+      method: 'GET',
+      url: api.Depar.GetAllDep
+    }).then((res: any) => {
+      if (res?.status == 200) {
+        const { data } = res?.data
+        if (Array.isArray(data)) {
+          departDDL.value = data
+        }
+      }
+    })
+  }
+  //抓人員下拉選單資料
+  const getEmpApi = async () => {
+    callApi({
+      method: 'POST',
+      url: api.Emp.Emp_ListSimple
+    }).then((res: any) => {
+      if (res?.status == 200) {
+        const data = res?.data as any[] | undefined
+        if (data && Array.isArray(data)) {
+          employeeDDL.value = data.map(({ empno, empname }) => ({ empno, empname }))
+        }
+      }
+    })
+  }
+  //抓工種下拉選單資料
+  const getSkillApi = async () => {
+    callApi({
+      method: 'POST',
+      url: api.Skill.Skilllist,
+      data: {}
+    }).then((res: any) => {
+      if (res?.status == 200) {
+        const { _Lists } = res?.data
+        if (Array.isArray(_Lists)) {
+          skillDDL.value = _Lists
+        }
+      }
+    })
+  }
 
   //人員資料
   const formData = ref<Record<string, any>>({})
@@ -79,6 +122,57 @@
     return missing && missing2 ? `${missing}\n${missing2}` : missing || missing2
   }
   //送出存檔
+  const saveData = () => {
+    return {
+      emp: { ...formData.value },
+      data: empSkills.value.map((x) => ({ ...x, empno: formData.value.empno })),
+      empwebparDatas: webPerData.value.map((x) => ({
+        ...x,
+        empno: formData.value.empno,
+        empname: formData.value.empname
+      })),
+      updatePhotoPath: ''
+    }
+  }
+  const callCreateApi = async () => {
+    callApi({
+      method: 'POST',
+      url: api.Emp.Emp_ADD,
+      data: saveData()
+    }).then((res: any) => {
+      if (res?.status === 200) {
+        const data = res?.data
+        if (data && data.state === 'success') {
+          message.alert({
+            type: 'success',
+            message: data?.msg ?? '',
+            autoClose: 2,
+            onConfirm: () => {
+              handleCancel()
+            }
+          })
+        }
+      }
+    })
+  }
+  const callEditApi = async () => {
+    callApi({
+      method: 'PUT',
+      url: api.Emp.Emp_EDIT,
+      data: saveData()
+    }).then((res: any) => {
+      if (res?.state === 'success') {
+        message.alert({
+          type: 'success',
+          message: res?.msg ?? '',
+          autoClose: 2,
+          onConfirm: () => {
+            handleCancel()
+          }
+        })
+      }
+    })
+  }
   const handleSave = () => {
     const check = checkData()
     if (check) {
@@ -92,26 +186,11 @@
       type: 'question',
       message: `確定要送出人員資料？`,
       onConfirm: () => {
-        callApi({
-          method: store.action === 'edit' ? 'PUT' : 'POST',
-          url: store.action === 'edit' ? api.Emp.Emp_EDIT : api.Emp.Emp_ADD,
-          data: {
-            emp: { ...formData.value },
-            data: empSkills.value.map((x) => ({ ...x, empno: formData.value.empno })),
-            updatePhotoPath: ''
-          }
-        }).then((res: any) => {
-          if (res?.state === 'success') {
-            message.alert({
-              type: 'success',
-              message: res?.msg ?? '',
-              autoClose: 2,
-              onConfirm: () => {
-                handleCancel()
-              }
-            })
-          }
-        })
+        if (store.action === 'edit') {
+          callEditApi()
+        } else {
+          callCreateApi()
+        }
       }
     })
   }
@@ -132,89 +211,72 @@
       empSkills.value.splice(find, 1)
     }
   }
-  //工種下拉選單選擇
-  const handleSkillChoose = (skillno: any, index: number) => {
-    const find = skillDDL.value.find((x) => x.skillno === skillno)
-    if (find) {
-      empSkills.value[index].skillname = find.skillname
-    }
+
+  //新增狀態呼叫 Renew api
+  const getRenewApi = async () => {
+    callApi({
+      method: 'GET',
+      url: api.Emp.Emp_ReNew
+    }).then((res: any) => {
+      if (res?.status == 200) {
+        const data = res?.data ?? {}
+        const { emp, empwebparDatas } = data
+        if (emp) formData.value = { ...emp }
+        if (empwebparDatas && Array.isArray(empwebparDatas)) webPerData.value = empwebparDatas
+      }
+    })
+  }
+  //編輯、複製、瀏覽呼叫 api
+  const getAllDataApi = async () => {
+    //抓人員基本資料
+    callApi({
+      method: 'POST',
+      url: api.Emp.Emp_GetSingle,
+      data: { empno: store.empno }
+    }).then((res: any) => {
+      if (res?.status == 200) {
+        const data = res?.data ?? {}
+        formData.value = {
+          ...data,
+          empno: ['edit', 'detail'].includes(store.action) ? (data?.empno ?? '') : ''
+        }
+      }
+    })
+    //抓人員工種資料
+    callApi({
+      method: 'GET',
+      url: api.Emp.EmpSkill_List,
+      params: { empno: store.empno }
+    }).then((res: any) => {
+      if (res?.status == 200) {
+        const data: any[] = res?.data ?? []
+        empSkills.value = data
+      }
+    })
+    //抓人員web權限資料
+    callApi({
+      method: 'GET',
+      url: api.Emp.EmpWebPar_List,
+      params: { empno: store.empno }
+    }).then((res: any) => {
+      if (res?.status == 200) {
+        const data: any[] = res?.data ?? []
+        webPerData.value = data
+      }
+    })
   }
 
   //起始動作
   onMounted(() => {
-    //抓部門下拉選單資料
-    callApi({
-      method: 'GET',
-      url: api.Depar.GetAllDep
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const { data } = res?.data
-        if (Array.isArray(data)) {
-          departDDL.value = data
-        }
-      }
-    })
-    //抓人員下拉選單資料
-    callApi({
-      method: 'POST',
-      url: api.Emp.Emp_ListSimple
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const data = res?.data as any[] | undefined
-        if (data && Array.isArray(data)) {
-          employeeDDL.value = data.map(({ empno, empname }) => ({ empno, empname }))
-        }
-      }
-    })
-    //抓工種下拉選單資料
-    callApi({
-      method: 'POST',
-      url: api.Skill.Skilllist,
-      data: {}
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const { _Lists } = res?.data
-        if (Array.isArray(_Lists)) {
-          skillDDL.value = _Lists
-        }
-      }
-    })
+    //抓下拉選單資料
+    getDepartApi()
+    getEmpApi()
+    getSkillApi()
     //抓單筆資料
     if (store.action === 'create') {
-      callApi({
-        method: 'GET',
-        url: api.Emp.Emp_ReNew
-      }).then((res: any) => {
-        if (res?.status == 200) {
-          const data = res?.data ?? {}
-          const { emp } = data
-          if (emp) formData.value = { ...emp }
-        }
-      })
+      getRenewApi()
     } else if (store.empno) {
-      callApi({
-        method: 'POST',
-        url: api.Emp.Emp_GetSingle,
-        data: { empno: store.empno }
-      }).then((res: any) => {
-        if (res?.status == 200) {
-          const data = res?.data ?? {}
-          formData.value = {
-            ...data,
-            empno: ['edit', 'detail'].includes(store.action) ? (data?.empno ?? '') : ''
-          }
-        }
-      })
-      callApi({
-        method: 'GET',
-        url: api.Emp.EmpSkill_List,
-        params: { empno: store.empno }
-      }).then((res: any) => {
-        if (res?.status == 200) {
-          const data: any[] = res?.data ?? []
-          empSkills.value = data
-        }
-      })
+      getAllDataApi()
     }
   })
 
@@ -232,7 +294,9 @@
       formData.value.empaddr2 = data.zipname
     }
   }
+  //web權限
   const webPerDs = ref(false)
+  const webPerData = ref<any[]>([])
 </script>
 
 <template>
@@ -253,7 +317,7 @@
   <v-card color="#1b2b36" rounded="3">
     <v-card-text>
       <c-divider>人員基本資料</c-divider>
-      <v-row dense class="mt-2">
+      <v-row dense class="mt-2" :align="'center'">
         <v-col :cols="3" class="px-2">
           <c-input
             v-model="formData.empno"
@@ -321,7 +385,7 @@
           />
         </v-col>
         <v-col cols="auto" class="px-2">
-          <c-button @click="webPerDs = true">web權限</c-button>
+          <c-button color="#388e3c" @click="webPerDs = true">web權限</c-button>
         </v-col>
       </v-row>
       <c-divider class="mt-3">聯絡資訊</c-divider>
@@ -332,7 +396,7 @@
             label="聯絡電話"
             icon="fa-solid fa-phone-volume"
             :disabled="store.isDetail"
-            :format="{ phone: true }"
+            :digit-format="{ phone: true }"
           />
         </v-col>
         <v-col :cols="3" class="px-2">
@@ -341,7 +405,7 @@
             label="行動電話"
             icon="fa-solid fa-mobile-button"
             :disabled="store.isDetail"
-            :format="{ phone: true }"
+            :digit-format="{ phone: true }"
           />
         </v-col>
         <v-col :cols="3" class="px-2">
@@ -358,7 +422,7 @@
             label="緊急聯絡電話"
             icon="fa-solid fa-phone-volume"
             :disabled="store.isDetail"
-            :format="{ phone: true }"
+            :digit-format="{ phone: true }"
           />
         </v-col>
         <v-col :cols="3" class="px-2">
@@ -538,6 +602,7 @@
         <v-col cols="3">
           <c-select
             v-model="skill.skillno"
+            v-model:title="skill.skillname"
             label="工種"
             icon="fa-solid fa-briefcase"
             :items="skillDDL"
@@ -548,7 +613,6 @@
               { column: 'skillname', label: '工種名稱' }
             ]"
             :disabled="store.isDetail"
-            @update:modelValue="handleSkillChoose($event, i)"
           />
         </v-col>
         <v-col cols="3">
@@ -588,7 +652,7 @@
   />
 
   <pick-addr v-model="pcikAddrDS" @pick="handlePickAddr" />
-  <web-permissions v-model="webPerDs" />
+  <web-permissions v-model="webPerDs" v-model:data="webPerData" />
 </template>
 
 <style scoped></style>

@@ -4,52 +4,69 @@
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
   import { message } from '@/components/Message/service' //訊息窗元件
-  import { useEmployeeStore } from '@/store/employee'
+  import { useOwnerDataStore } from '@/store/ownerData'
   import { useRouter } from 'vue-router'
-  import print from './Components/EmployeePrint.vue'
 
-  const store = useEmployeeStore()
+  const store = useOwnerDataStore()
   const router = useRouter()
 
   //表格欄位
   interface iData {
-    empno: string
-    empname: string
-    mobitel: string
+    custno: string
+    custname: string
+    custabbr: string
+    con: string
     a_user: string
     m_user: string
+    mobitel: string
+    tel: string
+    uniform: string
+    ckindname: string
+    akindc: string
+    fax: string
+    boss: string
+    taxkindno: string
+    taxkindc: string
     [key: string]: any //允許其他屬性
   }
   //查詢條件
   const filter = ref({
-    empno: '',
-    empname: ''
+    custno: '',
+    custabbr: '',
+    uniform: '',
+    con: '',
+    tel: '',
+    mobitel: ''
   })
   //表格資料
   const tbData = ref<iData[]>([])
   //查詢條件-清除按鈕
   const filterClear = () => {
     filter.value = {
-      empno: '',
-      empname: ''
+      custno: '',
+      custabbr: '',
+      uniform: '',
+      con: '',
+      tel: '',
+      mobitel: ''
     }
   }
   //查詢條件-查詢按鈕
   const filterSearch = async () => {
     const res = await callApi({
       method: 'POST',
-      url: api.Emp.Emp_Search,
+      url: api.Cust.Custlist,
       data: {
-        empno: filter.value.empno ?? '',
-        empname: filter.value.empname ?? '',
-        data_Count: '1000',
-        length: 1000
+        ...filter.value,
+        custname: '',
+        fax: '',
+        boss: ''
       }
     })
     if (res?.status === 200) {
-      const { emps } = res?.data
-      if (emps && Array.isArray(emps)) {
-        tbData.value = emps
+      const data = res?.data
+      if (data && Array.isArray(data)) {
+        tbData.value = data
       }
     }
   }
@@ -59,59 +76,27 @@
   }
   //表格-編輯按鈕
   const handleEdit = (row: iData) => {
-    store.edit(row.empno, router)
+    store.edit(row.custno, router)
   }
   //表格-複製按鈕
   const handleCopy = (row: iData) => {
-    store.copy(row.empno, router)
+    store.copy(row.custno, router)
   }
   //表格-瀏覽按鈕
   const handleBrowse = (row: iData) => {
-    store.browse(row.empno, router)
-  }
-  //表格-刪除按鈕
-  const handleDelete = (row: iData) => {
-    message.confirm({
-      type: 'question',
-      message: `確定要刪除「${row.empno}」${row.empname}？`,
-      onConfirm: () => {
-        //刪除
-        callApi({
-          method: 'POST',
-          url: api.Emp.Emp_DEL,
-          data: { empNo: row.empno }
-        }).then((res: any) => {
-          if (res?.status === 200) {
-            const data = res?.data
-            if (data && data.state === 'success') {
-              message.alert({
-                type: 'success',
-                message: data?.msg ?? '',
-                autoClose: 2,
-                onConfirm: () => {
-                  filterSearch()
-                }
-              })
-            }
-          }
-        })
-      }
-    })
+    store.browse(row.custno, router)
   }
   //起始動作
   onMounted(() => {
     filterSearch()
   })
-
-  //列印
-  const printDS = ref(false)
 </script>
 
 <template>
   <!--頂部 title & 按鈕區-->
   <c-bread>
     <div class="col-auto">
-      <c-button kind="print" icon="fa-solid fa-print" @click="printDS = true">列印</c-button>
+      <c-button kind="print" icon="fa-solid fa-print">列印</c-button>
     </div>
     <div class="col-auto">
       <c-button kind="create" icon="mdi-plus-circle" @click="handleCreate">新增</c-button>
@@ -123,10 +108,23 @@
     <v-card-text>
       <v-row dense>
         <v-col :cols="3">
-          <c-input v-model="filter.empno" label="人員編號" icon="fa-solid fa-user" />
+          <c-input v-model="filter.custno" label="業主編號" icon="fa-solid fa-building" />
         </v-col>
         <v-col :cols="3">
-          <c-input v-model="filter.empname" label="人員名稱" icon="fa-solid fa-user" />
+          <c-input v-model="filter.custabbr" label="業主簡稱" icon="fa-solid fa-building" />
+        </v-col>
+        <v-col :cols="3">
+          <c-input v-model="filter.uniform" label="統一編號" icon="fa-solid fa-barcode" />
+        </v-col>
+        <v-responsive width="100%"></v-responsive>
+        <v-col :cols="3">
+          <c-input v-model="filter.con" label="聯絡人" icon="fa-solid fa-user" />
+        </v-col>
+        <v-col :cols="3">
+          <c-input v-model="filter.tel" label="電話" icon="fa-solid fa-phone-volume" />
+        </v-col>
+        <v-col :cols="3">
+          <c-input v-model="filter.mobitel" label="行動電話" icon="fa-solid fa-mobile-button" />
         </v-col>
       </v-row>
       <v-row justify="end" dense>
@@ -148,24 +146,28 @@
     :show-index="true"
     class="mt-3"
     striped="even"
-    height="580"
+    height="540"
     fixed-header
     hover
   >
     <template v-slot:head>
-      <th>人員編號</th>
-      <th>人員名稱</th>
+      <th>業主編號</th>
+      <th>業主簡稱</th>
+      <th>聯絡人</th>
+      <th>電話1</th>
       <th>行動電話</th>
-      <th>建立人員</th>
-      <th>修改人員</th>
+      <th>統一編號</th>
+      <th>結帳類別</th>
       <th></th>
     </template>
     <template v-slot:body="{ scope }">
-      <td>{{ scope.empno }}</td>
-      <td>{{ scope.empname }}</td>
+      <td>{{ scope.custno }}</td>
+      <td>{{ scope.custabbr }}</td>
+      <td>{{ scope.con }}</td>
+      <td>{{ scope.tel }}</td>
       <td>{{ scope.mobitel }}</td>
-      <td>{{ scope.a_user }}</td>
-      <td>{{ scope.m_user }}</td>
+      <td>{{ scope.uniform }}</td>
+      <td>{{ scope.akindc }}</td>
       <td>
         <v-row dense>
           <v-col cols="auto">
@@ -181,22 +183,15 @@
               瀏覽
             </c-button>
           </v-col>
-          <v-col cols="auto">
+          <!-- <v-col cols="auto">
             <c-button kind="delete" icon="fa-solid fa-trash" @click="handleDelete(scope)">
               刪除
             </c-button>
-          </v-col>
+          </v-col> -->
         </v-row>
       </td>
     </template>
   </c-table>
-
-  <!--列印 彈出視窗-->
-  <print v-model="printDS" />
 </template>
 
-<style scoped>
-  .v-card-text {
-    padding: 12px;
-  }
-</style>
+<style scoped></style>

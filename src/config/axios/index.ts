@@ -41,6 +41,13 @@ const createAxiosInstance = (): AxiosInstance => {
   instance.interceptors.response.use(
     (response: AxiosResponse) => {
       // 在收到回應後做些什麼，例如處理回應資料等
+      const data = response?.data
+      if (data && (data.status === 400 || data.status === 500)) {
+        message.alert({
+          type: 'error',
+          message: data?.message ?? ''
+        })
+      }
       return response
     },
     (error: AxiosError) => {
@@ -55,6 +62,16 @@ const createAxiosInstance = (): AxiosInstance => {
           onConfirm: () => {
             location.reload()
           }
+        })
+      } else if (error.status === 404) {
+        message.alert({
+          type: 'error',
+          message: '找不到應用程式'
+        })
+      } else if (error.status === 400) {
+        message.alert({
+          type: 'error',
+          message: error.message
         })
       }
       return Promise.reject(error)

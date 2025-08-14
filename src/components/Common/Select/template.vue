@@ -1,10 +1,11 @@
 <script lang="ts" setup>
-  import { ref, computed, useAttrs } from 'vue'
+  import { ref, computed, useAttrs, watch } from 'vue'
   import type { PropType } from 'vue'
   import { cIcon, cInput } from '@/components/Common'
   const attr = useAttrs()
 
   const model = defineModel()
+  const title = defineModel<string | undefined>('title')
   const props = defineProps({
     items: {
       type: Array as PropType<any[]>
@@ -31,9 +32,15 @@
       type: Boolean,
       default: false
     },
+    itemTitle: [String, Function] as PropType<string | ((item?: any) => string)>,
+    itemValue: [String, Function] as PropType<string | ((item?: any) => string)>,
     itemColumns: {
       type: Array as PropType<{ column: string; label: string }[]>,
       default: () => []
+    },
+    alsoShowValue: {
+      type: Boolean,
+      default: false
     }
   })
 
@@ -51,6 +58,51 @@
     const disabled = attr?.disabled ?? false
     return props.isRequired && disabled === false
   })
+
+  const checkTitle = computed(() => {
+    // alsoShowValue 判斷是否顯示 value + title
+    if (
+      !props.alsoShowValue ||
+      typeof props.itemValue !== 'string' ||
+      typeof props.itemTitle !== 'string'
+    ) {
+      return props.itemTitle
+    } else {
+      const titleColumn = props.itemTitle ?? 'title'
+      const valueColumn = props.itemValue ?? 'value'
+      return (item: any) => `${item[valueColumn]} - ${item[titleColumn]}`
+    }
+  })
+
+  const getItemTitle = (value: any) => {
+    // 取得 item-title 欄位的值
+    const items = props.items && Array.isArray(props.items) ? props.items : []
+    let titleColumn = 'title'
+    if (typeof props.itemTitle === 'string') {
+      titleColumn = props.itemTitle
+    }
+    if (typeof props.itemTitle === 'function') {
+      titleColumn = props.itemTitle(items)
+    }
+    let valueColumn = 'value'
+    if (typeof props.itemValue === 'string') {
+      valueColumn = props.itemValue
+    }
+    if (typeof props.itemValue === 'function') {
+      valueColumn = props.itemValue(items)
+    }
+    const chooseItem = items.find((x) => x?.[valueColumn] === value)
+    return chooseItem ? (chooseItem?.[titleColumn] ?? '') : ''
+  }
+  watch(
+    () => model.value,
+    (newVal: any) => {
+      //將 item-title 欄位的值存進 v-model:title
+      if (title.value !== undefined) {
+        title.value = getItemTitle(newVal)
+      }
+    }
+  )
 </script>
 
 <template>
@@ -59,6 +111,8 @@
     v-model="model"
     v-model:menu="menuOpen"
     :items="items"
+    :item-title="checkTitle"
+    :item-value="itemValue"
     hide-details="auto"
     :density="density"
     :rounded="rounded"

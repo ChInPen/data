@@ -86,14 +86,14 @@ export const digit = {
     return year + sep1 + month + sep2 + day
   },
   /**
-   * 將字串過濾到只剩數字和減號。
+   * 將字串過濾到只剩數字、減號和左右括號。
    */
   phone: (value: string | number) => {
     const str = value?.toString() ?? '' //強制轉成字串
     const chars = str.split('')
     const temps: string[] = []
     chars.forEach((c) => {
-      if (DIGITS.includes(c) || c === '-') temps.push(c)
+      if (DIGITS.includes(c) || ['-', '(', ')'].includes(c)) temps.push(c)
     })
     return temps.join('')
   }

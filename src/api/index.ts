@@ -139,7 +139,8 @@ export default {
     Emp_PhotoGet: 'api/Emp/Emp_PhotoGet',
     Emp_Print: 'api/Emp/Emp_Print',
     Emp_ReNew: 'api/Emp/Emp_Renew',
-    Emp_Search2: 'api/Emp/Emplist2'
+    Emp_Search2: 'api/Emp/Emplist2',
+    EmpWebPar_List: 'api/EmpWebPar/Emp_WebParlist'
   },
   //郵遞區號
   Zip: {

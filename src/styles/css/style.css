@@ -20,7 +20,8 @@ html {
 
 .text-custom,
 .text-custom-title-1,
-.text-custom-1 {
+.text-custom-1,
+.text-custom-2 {
   color: var(--text-color);
 }
 

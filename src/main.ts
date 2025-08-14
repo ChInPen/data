@@ -14,6 +14,7 @@ import { pinia } from './plugins/pinia'
 //自己定義的 style
 import '@/styles/scss/style.scss'
 import '@/styles/css/style.css'
+import '@/styles/css/tabs.css'
 
 const app = createApp(App)
 app.use(router)

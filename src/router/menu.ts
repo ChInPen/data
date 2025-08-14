@@ -60,7 +60,18 @@ const menu: MenuEntry[] = [
       {
         title: '廠商',
         children: [
-          { title: '業主資料', path: 'OwnerData' },
+          {
+            title: '業主資料',
+            path: 'OwnerData',
+            name: 'A08業主資料建檔',
+            component: () => import('@/views/Base/CompanySetting/OwnerData.vue')
+          },
+          {
+            title: '業主資料',
+            path: 'OwnerDataForm',
+            component: () => import('@/views/Base/CompanySetting/OwnerDataForm.vue'),
+            meta: { from: ['/menu/OwnerData'] }
+          },
           {
             title: '業主類別',
             path: 'OwnerCategory',
