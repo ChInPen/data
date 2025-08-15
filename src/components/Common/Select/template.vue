@@ -70,7 +70,7 @@
     } else {
       const titleColumn = props.itemTitle ?? 'title'
       const valueColumn = props.itemValue ?? 'value'
-      return (item: any) => `${item[valueColumn]} - ${item[titleColumn]}`
+      return (item: any) => (item ? `${item[valueColumn]} - ${item[titleColumn]}` : '')
     }
   })
 

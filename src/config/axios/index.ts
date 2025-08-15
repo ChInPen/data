@@ -68,6 +68,11 @@ const createAxiosInstance = (): AxiosInstance => {
           type: 'error',
           message: '找不到應用程式'
         })
+      } else if (error.status === 503) {
+        message.alert({
+          type: 'error',
+          message: '應用程式伺服已關閉'
+        })
       } else if (error.status === 400) {
         message.alert({
           type: 'error',

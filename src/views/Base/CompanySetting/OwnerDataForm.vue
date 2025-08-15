@@ -1,6 +1,14 @@
 <script lang="ts" setup>
   import { ref, onMounted } from 'vue'
-  import { cButton, cInput, cSelect, cTextarea, cBread, cDivider } from '@/components/Common' //共用元件
+  import {
+    cButton,
+    cInput,
+    cSelect,
+    cTextarea,
+    cBread,
+    cTable,
+    cDivider
+  } from '@/components/Common' //共用元件
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
   import { message } from '@/components/Message/service' //訊息窗元件
@@ -8,6 +16,7 @@
   import { useRouter } from 'vue-router'
   import { pickAddr } from '@/components/PickAddr'
   import { auditInfo } from '@/components/AuditInfo'
+  import { GenerateRec } from '@/utils/ucommon'
 
   const store = useOwnerDataStore()
   const router = useRouter()
@@ -102,6 +111,41 @@
   //業主資料
   const formData = ref<Record<string, any>>({})
   const tabpage = ref('normal') //頁籤
+
+  //聯絡人表格資料
+  const emptyObj = {
+    custno: '',
+    rec1: '',
+    conname: '',
+    condepar: '',
+    contel: '',
+    conmob: '',
+    condescrip: '',
+    conud1: ''
+  }
+  const conList = ref<(typeof emptyObj)[]>([])
+  const conTable = ref()
+  //聯絡人表格-新增
+  const conListAdd = () => {
+    conList.value.push({ ...emptyObj })
+    GenerateRec(conList.value) //自動編號
+  }
+  //聯絡人表格-插入
+  const conListInsert = () => {
+    const selectIndex = conTable.value?.selectIndex
+    if (selectIndex) {
+      conList.value.splice(selectIndex, 0, { ...emptyObj })
+      GenerateRec(conList.value) //自動編號
+    }
+  }
+  //聯絡人表格-刪除
+  const conListDelete = () => {
+    const selectIndex = conTable.value?.selectIndex
+    if (selectIndex) {
+      conList.value.splice(selectIndex, 1)
+      GenerateRec(conList.value) //自動編號
+    }
+  }
 
   //取消&返回 按鈕
   const handleCancel = () => {
@@ -247,17 +291,17 @@
       // })
     } else if (store.custno) {
       getAllDataApi()
-      // //抓人員工種資料
-      // callApi({
-      //   method: 'GET',
-      //   url: api.Emp.EmpSkill_List,
-      //   params: { empno: store.empno }
-      // }).then((res: any) => {
-      //   if (res?.status == 200) {
-      //     const data: any[] = res?.data ?? []
-      //     empSkills.value = data
-      //   }
-      // })
+      //抓業主聯絡人資料
+      callApi({
+        method: 'GET',
+        url: api.Con.Conlist,
+        params: { custno: store.custno }
+      }).then((res: any) => {
+        if (res?.status == 200) {
+          const data: any[] = res?.data ?? []
+          conList.value = data
+        }
+      })
       // //抓人員web權限資料
       // callApi({
       //   method: 'GET',
@@ -626,7 +670,51 @@
           </v-row>
         </v-tabs-window-item>
 
-        <v-tabs-window-item value="conlist">聯絡人</v-tabs-window-item>
+        <v-tabs-window-item value="conlist">
+          <v-row dense>
+            <v-col cols="auto">
+              <c-button kind="create" icon="mdi-plus-circle" @click="conListAdd">新增</c-button>
+            </v-col>
+            <v-col cols="auto">
+              <c-button kind="insert" icon="mdi-arrow-down-circle" @click="conListInsert">
+                插入
+              </c-button>
+            </v-col>
+            <v-col cols="auto">
+              <c-button kind="delete" icon="fa-solid fa-trash" @click="conListDelete">
+                刪除
+              </c-button>
+            </v-col>
+          </v-row>
+          <c-table
+            ref="conTable"
+            class="mt-2"
+            v-model="conList"
+            striped="even"
+            hover
+            header-align="center"
+            selectable
+          >
+            <template v-slot:head>
+              <th width="80">編號</th>
+              <th width="230">聯絡人</th>
+              <th width="230">部門</th>
+              <th width="300">電話</th>
+              <th width="300">行動電話</th>
+              <th>說明</th>
+              <th>自訂一</th>
+            </template>
+            <template v-slot:body="{ scope }">
+              <td class="text-center">{{ scope.rec1 }}</td>
+              <td><c-input v-model="scope.conname" :disabled="store.isDetail" /></td>
+              <td><c-input v-model="scope.condepar" :disabled="store.isDetail" /></td>
+              <td><c-input v-model="scope.contel" :disabled="store.isDetail" /></td>
+              <td><c-input v-model="scope.conmob" :disabled="store.isDetail" /></td>
+              <td><c-input v-model="scope.condescrip" :disabled="store.isDetail" /></td>
+              <td><c-input v-model="scope.conname" :disabled="store.isDetail" /></td>
+            </template>
+          </c-table>
+        </v-tabs-window-item>
 
         <v-tabs-window-item value="memo">
           <c-textarea

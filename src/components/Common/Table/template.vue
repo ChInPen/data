@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-  import { ref, computed } from 'vue'
+  import { ref, computed, watch } from 'vue'
   import type { PropType } from 'vue'
 
   const model = defineModel<any[]>({ default: [] as any[] })
@@ -19,6 +19,14 @@
     pagination: {
       type: Boolean,
       default: true
+    },
+    headerAlign: {
+      type: String as PropType<'start' | 'center' | 'end'>,
+      default: 'start'
+    },
+    selectable: {
+      type: Boolean,
+      default: false
     }
   })
   //分頁屬性
@@ -38,20 +46,66 @@
     }
     return model.value.slice(pageStart.value, pageStart.value + pageNum.value) ?? []
   })
+  //表頭 align
+  const thAlign = computed(() => {
+    return `header-${props.headerAlign}`
+  })
+  //選中行
+  const selectRow = ref<any[]>([])
+  const handleRowSelect = (data: any) => {
+    selectRow.value[0] = data
+  }
+  const selectIndex = computed(() => {
+    if (selectRow.value.length > 0) {
+      const findindex = tbDataShow.value.findIndex((x) => x === selectRow.value[0])
+      return findindex >= 0 ? findindex : null
+    }
+    return null
+  })
+  const modelSelectIndex = computed(() => {
+    if (selectRow.value.length > 0) {
+      const findindex = model.value.findIndex((x) => x === selectRow.value[0])
+      return findindex >= 0 ? findindex : null
+    }
+    return null
+  })
+
+  watch(
+    () => tbDataShow.value,
+    (newVal: any[]) => {
+      selectRow.value = selectRow.value.filter((x) => {
+        newVal.some((y) => y === x)
+      })
+    }
+  )
+
+  defineExpose({
+    get selected() {
+      return selectRow.value
+    },
+    get selectIndex() {
+      return modelSelectIndex.value
+    }
+  })
 </script>
 
 <template>
-  <v-table v-bind="$attrs">
+  <v-table v-bind="$attrs" class="c-table">
     <template v-slot:default>
       <thead v-if="$slots.head">
-        <tr>
+        <tr :class="[thAlign]">
           <th v-show="showIndex" width="60" class="text-center">#</th>
           <slot name="head"></slot>
         </tr>
       </thead>
 
       <tbody v-if="$slots.body">
-        <tr v-for="(item, index) in tbDataShow" :key="`tb-row-${index}`">
+        <tr
+          v-for="(item, index) in tbDataShow"
+          :key="`tb-row-${index}`"
+          @click="selectable ? handleRowSelect(item) : null"
+          :class="index === selectIndex ? 'tr-selected' : ''"
+        >
           <td v-show="showIndex" class="text-center">{{ pageStart + index + 1 }}</td>
           <slot name="body" :scope="item" :index="pageStart + index"></slot>
         </tr>
@@ -98,7 +152,7 @@
 </template>
 
 <style scoped>
-  .v-table {
+  .c-table {
     background-color: var(--tb-bg-color);
     color: var(--tb-color);
 
@@ -108,11 +162,32 @@
       color: var(--tb-th-color);
       font-size: var(--tb-th-fs);
       font-weight: 300;
+      padding: 0 8px;
     }
 
     :deep(td) {
       color: var(--tb-td-color);
       font-size: var(--tb-td-fs);
+      padding: 0 8px;
+    }
+
+    tr.header-start :deep(th),
+    tr.header-start :deep(td) {
+      text-align: start;
+    }
+
+    tr.header-center :deep(th),
+    tr.header-center :deep(td) {
+      text-align: center;
+    }
+
+    tr.header-end :deep(th),
+    tr.header-end :deep(td) {
+      text-align: end;
+    }
+
+    :deep(tr.tr-selected) {
+      background-color: rgba(255, 255, 255, 0.4);
     }
 
     /* 通用 tbody border-bottom */
@@ -134,6 +209,9 @@
     &.v-table--striped-even > .v-table__wrapper > table > tbody > tr:nth-child(even) {
       background-color: #1f2d38;
     }
+    &.v-table--striped-even > .v-table__wrapper > table > tbody > tr.tr-selected:nth-child(even) {
+      background-color: rgba(255, 255, 255, 0.4);
+    }
   }
 
   .tb-pagination {
@@ -148,5 +226,14 @@
   .v-select {
     height: 40px;
     width: 97px;
+  }
+
+  .v-table > .v-table__wrapper > table > tbody > tr > :deep(td),
+  .v-table > .v-table__wrapper > table > tbody > tr > :deep(th),
+  .v-table > .v-table__wrapper > table > thead > tr > :deep(td),
+  .v-table > .v-table__wrapper > table > thead > tr > :deep(th),
+  .v-table > .v-table__wrapper > table > tfoot > tr > :deep(td),
+  .v-table > .v-table__wrapper > table > tfoot > tr > :deep(th) {
+    padding: 0 6px;
   }
 </style>
