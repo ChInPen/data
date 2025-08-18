@@ -6,6 +6,7 @@
   import { message } from '@/components/Message/service' //訊息窗元件
   import { useOwnerDataStore } from '@/store/ownerData'
   import { useRouter } from 'vue-router'
+  import print from './Components/OwnerDataPrint.vue'
 
   const store = useOwnerDataStore()
   const router = useRouter()
@@ -86,17 +87,50 @@
   const handleBrowse = (row: iData) => {
     store.browse(row.custno, router)
   }
+  //表格-刪除按鈕
+  const handleDelete = (row: iData) => {
+    message.confirm({
+      type: 'question',
+      message: `確定要刪除「${row.custno}」${row.custabbr}？`,
+      onConfirm: () => {
+        //刪除
+        callApi({
+          method: 'POST',
+          url: api.Cust.Cust_Del,
+          data: { custno: row.custno }
+        }).then((res: any) => {
+          if (res?.status === 200) {
+            const data = res?.data
+            if (data && data.state === 'success') {
+              message.alert({
+                type: 'success',
+                // message: data?.msg ?? '刪除成功',
+                message: '刪除成功',
+                autoClose: 2,
+                onConfirm: () => {
+                  filterSearch()
+                }
+              })
+            }
+          }
+        })
+      }
+    })
+  }
   //起始動作
   onMounted(() => {
     filterSearch()
   })
+
+  //列印
+  const printDS = ref(false)
 </script>
 
 <template>
   <!--頂部 title & 按鈕區-->
   <c-bread>
     <div class="col-auto">
-      <c-button kind="print" icon="fa-solid fa-print">列印</c-button>
+      <c-button kind="print" icon="fa-solid fa-print" @click="printDS = true">列印</c-button>
     </div>
     <div class="col-auto">
       <c-button kind="create" icon="mdi-plus-circle" @click="handleCreate">新增</c-button>
@@ -183,15 +217,18 @@
               瀏覽
             </c-button>
           </v-col>
-          <!-- <v-col cols="auto">
+          <v-col cols="auto">
             <c-button kind="delete" icon="fa-solid fa-trash" @click="handleDelete(scope)">
               刪除
             </c-button>
-          </v-col> -->
+          </v-col>
         </v-row>
       </td>
     </template>
   </c-table>
+
+  <!--列印 彈出視窗-->
+  <print v-model="printDS" />
 </template>
 
 <style scoped></style>

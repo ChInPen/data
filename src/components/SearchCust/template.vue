@@ -9,23 +9,37 @@
   const emits = defineEmits(['pick'])
 
   type SearchData = {
-    empno: string
-    empname: string
-    tel1: string
+    custno: string
+    custname: string
+    custabbr: string
+    con: string
+    tel: string
     mobitel: string
+    uniform: string
+    ckindname: string
+    akindc: string
+    fax: string
+    boss: string
+    taxkindno: string
+    taxkindc: string
+    a_user: string
+    m_user: string
   }
 
   const filter = ref({
-    type1: 'empno',
-    type2: 'empname',
+    type1: 'custno',
+    type2: 'custabbr',
     filter1: '',
     filter2: ''
   })
   const filterDDL = [
-    { name: 'empno', label: '人員編號' },
-    { name: 'empname', label: '人員名稱' },
-    { name: 'tel1', label: '電    話' },
-    { name: 'mobitel', label: '手    機' }
+    { name: 'custno', label: '業主編號' },
+    { name: 'custabbr', label: '業主簡稱' },
+    { name: 'custname', label: '業主名稱' },
+    { name: 'tel', label: '電    話' },
+    { name: 'fax', label: '傳    真' },
+    { name: 'con', label: '聯 絡 人' },
+    { name: 'boss', label: '負 責 人' }
   ]
   const tbData = ref<SearchData[]>([])
 
@@ -38,20 +52,26 @@
       })
       return
     }
+    const obj: Record<string, any> = {
+      custno: '',
+      custabbr: '',
+      custname: '',
+      con: '',
+      mobitel: '',
+      tel: '',
+      uniform: '',
+      fax: '',
+      boss: ''
+    }
+    if (filter.value?.type1) obj[filter.value.type1] = filter.value?.filter1 ?? ''
+    if (filter.value?.type2) obj[filter.value.type2] = filter.value?.filter2 ?? ''
     await callApi({
       method: 'POST',
-      url: api.Emp.Emp_Search2,
-      data: {
-        pageNumber: 1,
-        pageSize: 10000,
-        query_project_name_1st: filter.value.type1,
-        query_project_value_1st: filter.value.filter1 ?? '',
-        query_project_name_2nd: filter.value.type2,
-        query_project_value_2nd: filter.value.filter2 ?? ''
-      }
+      url: api.Cust.Custlist,
+      data: obj
     }).then((res: any) => {
       if (res?.status === 200) {
-        const data: any[] = res?.data?.data ?? []
+        const data: any[] = res?.data ?? []
         tbData.value = data
       }
     })
@@ -59,8 +79,8 @@
   // 清空查詢條件
   const handleClear = () => {
     filter.value = {
-      type1: 'empno',
-      type2: 'empname',
+      type1: 'custno',
+      type2: 'custabbr',
       filter1: '',
       filter2: ''
     }
@@ -78,21 +98,10 @@
       tbData.value = []
     })
   }
-
-  //開啟時先查詢一次
-  const handleDialogOpen = () => {
-    handleSearch()
-  }
 </script>
 
 <template>
-  <c-dialog
-    v-model="isOpen"
-    width="1100"
-    @afterLeave="handleDialogClose"
-    @afterEnter="handleDialogOpen"
-    title-divider
-  >
+  <c-dialog v-model="isOpen" width="1100" @afterLeave="handleDialogClose" title-divider>
     <template v-slot:title>
       <v-row dense :align="'center'">
         <v-col>選擇人員</v-col>
@@ -157,16 +166,18 @@
       hover
     >
       <template v-slot:head>
-        <th class="text-center">人員編號</th>
-        <th class="text-center">人員名稱</th>
+        <th class="text-center">業主編號</th>
+        <th class="text-center">業主簡稱</th>
+        <th class="text-center">聯絡人</th>
         <th class="text-center">電話</th>
         <th class="text-center">行動電話</th>
         <th></th>
       </template>
       <template v-slot:body="{ scope }">
-        <td class="text-center">{{ scope.empno }}</td>
-        <td class="text-center">{{ scope.empname }}</td>
-        <td class="text-center">{{ scope.tel1 }}</td>
+        <td class="text-center">{{ scope.custno }}</td>
+        <td class="text-center">{{ scope.custabbr }}</td>
+        <td class="text-center">{{ scope.con }}</td>
+        <td class="text-center">{{ scope.tel }}</td>
         <td class="text-center">{{ scope.mobitel }}</td>
         <td>
           <v-row dense justify="center">

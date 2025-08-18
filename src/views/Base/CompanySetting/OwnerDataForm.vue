@@ -132,16 +132,16 @@
   }
   //聯絡人表格-插入
   const conListInsert = () => {
-    const selectIndex = conTable.value?.selectIndex
-    if (selectIndex) {
+    const selectIndex = conTable.value?.selectIndex?.[0]
+    if (typeof selectIndex === 'number' && selectIndex >= 0) {
       conList.value.splice(selectIndex, 0, { ...emptyObj })
       GenerateRec(conList.value) //自動編號
     }
   }
   //聯絡人表格-刪除
   const conListDelete = () => {
-    const selectIndex = conTable.value?.selectIndex
-    if (selectIndex) {
+    const selectIndex = conTable.value?.selectIndex?.[0]
+    if (typeof selectIndex === 'number' && selectIndex >= 0) {
       conList.value.splice(selectIndex, 1)
       GenerateRec(conList.value) //自動編號
     }
@@ -153,100 +153,118 @@
   }
   //檢查欄位規則
   const checkData = () => {
-    //必填:empno, empname
-    // const requiredFields = [
-    //   { key: 'empno', label: '人員編號' },
-    //   { key: 'empname', label: '人員姓名' }
-    // ]
-    // let missing = requiredFields
-    //   .filter((field) => !formData.value?.[field.key])
-    //   .map((field) => field.label)
-    //   .join('、')
-    // if (missing) missing = `${missing}不可為空白`
-    // //檢查人員工種
-    // let missing2 = empSkills.value
-    //   .map((s, i) => (!s.skillno ? i + 1 : ''))
-    //   .filter(Boolean)
-    //   .join('、')
-    // if (missing2) missing2 = `第${missing2}筆工種不可為空白`
-    // return missing && missing2 ? `${missing}\n${missing2}` : missing || missing2
+    //必填:custno，custname，custabbr, taxkindno, invokindno
+    const requiredFields = [
+      { key: 'custno', label: '業主編號' },
+      { key: 'custname', label: '業主名稱' },
+      { key: 'custabbr', label: '業主簡稱' },
+      { key: 'taxkindno', label: '營業稅' },
+      { key: 'invokindno', label: '發票種類' }
+    ]
+    const missing = requiredFields
+      .filter((field) => !formData.value?.[field.key])
+      .map((field) => field.label)
+      .join('、')
+    return missing ? `${missing}不可為空白` : ''
   }
   //送出存檔
   const saveData = () => {
-    // return {
-    //   emp: { ...formData.value },
-    //   data: empSkills.value.map((x) => ({ ...x, empno: formData.value.empno })),
-    //   empwebparDatas: webPerData.value.map((x) => ({
-    //     ...x,
-    //     empno: formData.value.empno,
-    //     empname: formData.value.empname
-    //   })),
-    //   updatePhotoPath: ''
-    // }
+    //存檔需要的欄位
+    const cust = { ...formData.value }
+    //數字欄位
+    cust.custud3 = formData.value?.custud3 ?? 0
+    cust.emckday = formData.value?.emckday ?? 25
+    cust.afterck = formData.value?.afterck ?? 0
+    //其他
+    cust.m_user = ''
+    cust.m_date1 = ''
+    cust.m_date2 = ''
+    cust.m_date3 = ''
+    //聯絡人清單
+    const list = conList.value.map((obj: any) => ({
+      ...obj,
+      custno: formData.value?.custno ?? ''
+    }))
+    return { cust, conList: list }
   }
   const callCreateApi = () => {
-    // callApi({
-    //   method: 'POST',
-    //   url: api.Emp.Emp_ADD,
-    //   data: saveData()
-    // }).then((res: any) => {
-    //   if (res?.status === 200) {
-    //     const data = res?.data
-    //     if (data && data.state === 'success') {
-    //       message.alert({
-    //         type: 'success',
-    //         message: data?.msg ?? '',
-    //         autoClose: 2,
-    //         onConfirm: () => {
-    //           handleCancel()
-    //         }
-    //       })
-    //     }
-    //   }
-    // })
+    callApi({
+      method: 'POST',
+      url: api.Cust.Cust_Add,
+      data: saveData()
+    }).then((res: any) => {
+      if (res?.status === 200) {
+        const data = res?.data
+        if (data && data.state === 'success') {
+          message.alert({
+            type: 'success',
+            // message: data?.msg ?? '存檔成功',
+            message: '存檔成功',
+            autoClose: 2,
+            onConfirm: () => {
+              handleCancel()
+            }
+          })
+        }
+      }
+    })
   }
   const callEditApi = () => {
-    // callApi({
-    //   method: 'PUT',
-    //   url: api.Emp.Emp_EDIT,
-    //   data: saveData()
-    // }).then((res: any) => {
-    //   if (res?.state === 'success') {
-    //     message.alert({
-    //       type: 'success',
-    //       message: res?.msg ?? '',
-    //       autoClose: 2,
-    //       onConfirm: () => {
-    //         handleCancel()
-    //       }
-    //     })
-    //   }
-    // })
+    callApi({
+      method: 'PUT',
+      url: api.Cust.Cust_Upd,
+      data: saveData()
+    }).then((res: any) => {
+      const data = res?.data
+      if (data && data.state === 'success') {
+        message.alert({
+          type: 'success',
+          // message: data?.msg ?? '存檔成功',
+          message: '存檔成功',
+          autoClose: 2,
+          onConfirm: () => {
+            handleCancel()
+          }
+        })
+      }
+    })
   }
   const handleSave = () => {
-    // const check = checkData()
-    // if (check) {
-    //   message.alert({
-    //     type: 'warning',
-    //     message: check
-    //   })
-    //   return
-    // }
-    // message.confirm({
-    //   type: 'question',
-    //   message: `確定要送出人員資料？`,
-    //   onConfirm: () => {
-    //     if (store.action === 'edit') {
-    //       callEditApi()
-    //     } else {
-    //       callCreateApi()
-    //     }
-    //   }
-    // })
+    const check = checkData()
+    if (check) {
+      message.alert({
+        type: 'warning',
+        message: check
+      })
+      return
+    }
+    message.confirm({
+      type: 'question',
+      message: `確定要送出業主資料？`,
+      onConfirm: () => {
+        if (store.action === 'edit') {
+          callEditApi()
+        } else {
+          callCreateApi()
+        }
+      }
+    })
   }
 
   //新增狀態呼叫 Renew api
-  const getRenewApi = async () => {}
+  const getRenewApi = async () => {
+    callApi({
+      method: 'GET',
+      url: api.Cust.Cust_Renew
+    }).then((res: any) => {
+      if (res?.status == 200) {
+        const data = res?.data ?? {}
+        const { cust, conList: list } = data
+        if (cust) formData.value = { ...cust }
+        if (list && Array.isArray(list)) conList.value = list
+      }
+    })
+  }
   //編輯、複製、瀏覽呼叫 api
   const getAllDataApi = async () => {
     //抓業主基本資料
@@ -278,17 +296,6 @@
     //抓單筆資料
     if (store.action === 'create') {
       getRenewApi()
-      // callApi({
-      //   method: 'GET',
-      //   url: api.Emp.Emp_ReNew
-      // }).then((res: any) => {
-      //   if (res?.status == 200) {
-      //     const data = res?.data ?? {}
-      //     const { emp, empwebparDatas } = data
-      //     if (emp) formData.value = { ...emp }
-      //     if (empwebparDatas && Array.isArray(empwebparDatas)) webPerData.value = empwebparDatas
-      //   }
-      // })
     } else if (store.custno) {
       getAllDataApi()
       //抓業主聯絡人資料
@@ -302,17 +309,6 @@
           conList.value = data
         }
       })
-      // //抓人員web權限資料
-      // callApi({
-      //   method: 'GET',
-      //   url: api.Emp.EmpWebPar_List,
-      //   params: { empno: store.empno }
-      // }).then((res: any) => {
-      //   if (res?.status == 200) {
-      //     const data: any[] = res?.data ?? []
-      //     webPerData.value = data
-      //   }
-      // })
     }
   })
 
@@ -329,6 +325,13 @@
       formData.value.custzip = data.zipno
       formData.value.custaddr = data.zipname
     }
+  }
+
+  //名稱取五碼帶入簡稱
+  const nameChange = () => {
+    if (store.isDetail) return //狀態為瀏覽就return
+    if (formData.value?.custabbr) return //簡稱不為空白就return
+    formData.value.custabbr = (formData.value?.custname ?? '').substring(0, 5)
   }
 </script>
 
@@ -402,6 +405,7 @@
             label="業主名稱"
             :is-required="true"
             :disabled="store.isDetail"
+            @change="nameChange"
           />
         </v-col>
         <v-col :cols="3" class="px-2">
@@ -697,10 +701,10 @@
           >
             <template v-slot:head>
               <th width="80">編號</th>
-              <th width="230">聯絡人</th>
-              <th width="230">部門</th>
-              <th width="300">電話</th>
-              <th width="300">行動電話</th>
+              <th width="220">聯絡人</th>
+              <th width="220">部門</th>
+              <th width="280">電話</th>
+              <th width="280">行動電話</th>
               <th>說明</th>
               <th>自訂一</th>
             </template>
@@ -708,8 +712,20 @@
               <td class="text-center">{{ scope.rec1 }}</td>
               <td><c-input v-model="scope.conname" :disabled="store.isDetail" /></td>
               <td><c-input v-model="scope.condepar" :disabled="store.isDetail" /></td>
-              <td><c-input v-model="scope.contel" :disabled="store.isDetail" /></td>
-              <td><c-input v-model="scope.conmob" :disabled="store.isDetail" /></td>
+              <td>
+                <c-input
+                  v-model="scope.contel"
+                  :disabled="store.isDetail"
+                  :digit-format="{ phone: true }"
+                />
+              </td>
+              <td>
+                <c-input
+                  v-model="scope.conmob"
+                  :disabled="store.isDetail"
+                  :digit-format="{ phone: true }"
+                />
+              </td>
               <td><c-input v-model="scope.condescrip" :disabled="store.isDetail" /></td>
               <td><c-input v-model="scope.conname" :disabled="store.isDetail" /></td>
             </template>

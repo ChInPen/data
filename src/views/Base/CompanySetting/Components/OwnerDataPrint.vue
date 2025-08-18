@@ -1,7 +1,7 @@
 <script lang="ts" setup>
   import { ref, nextTick } from 'vue'
   import { cButton, cInput, cSelect, cDialog } from '@/components/Common' //共用元件
-  import { searchEmp } from '@/components/SearchEmp'
+  import { searchCust } from '@/components/SearchCust'
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
   import config from '@/config/config'
@@ -47,11 +47,11 @@
       }
     })
   }
-  const searchEmpDS = ref(false)
+  const searchCustDS = ref(false)
   const flag = ref<'initNo' | 'finalNo'>('initNo')
   const searchPick = (data: any) => {
-    if (flag.value === 'initNo') printForm.value.initNo = data.empno
-    if (flag.value === 'finalNo') printForm.value.finalNo = data.empno
+    if (flag.value === 'initNo') printForm.value.initNo = data.custno
+    if (flag.value === 'finalNo') printForm.value.finalNo = data.custno
   }
 </script>
 
@@ -74,7 +74,7 @@
           kind="pick"
           @click="
             () => {
-              searchEmpDS = true
+              searchCustDS = true
               flag = 'initNo'
             }
           "
@@ -83,7 +83,7 @@
         </c-button>
       </v-col>
       <v-col>
-        <c-input v-model="printForm.initNo" label="起始人員編號" />
+        <c-input v-model="printForm.initNo" label="起始業主編號" />
       </v-col>
       <v-responsive width="100%"></v-responsive>
       <v-col cols="auto">
@@ -91,7 +91,7 @@
           kind="pick"
           @click="
             () => {
-              searchEmpDS = true
+              searchCustDS = true
               flag = 'finalNo'
             }
           "
@@ -100,7 +100,7 @@
         </c-button>
       </v-col>
       <v-col>
-        <c-input v-model="printForm.finalNo" label="終止人員編號" />
+        <c-input v-model="printForm.finalNo" label="終止業主編號" />
       </v-col>
       <v-col cols="12"></v-col>
       <v-responsive width="100%"></v-responsive>
@@ -124,5 +124,5 @@
     </template>
   </c-dialog>
 
-  <search-emp v-model="searchEmpDS" @pick="searchPick" />
+  <search-cust v-model="searchCustDS" @pick="searchPick" />
 </template>

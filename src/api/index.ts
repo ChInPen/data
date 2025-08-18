@@ -22,7 +22,8 @@ export default {
     Cust_Add: 'api/Cust/Cust_ADD',
     Cust_Upd: 'api/Cust/Cust_EDIT',
     Cust_Del: 'api/Cust/Cust_Dele',
-    Cust_Data: 'api/Cust/Cust_GetSingle'
+    Cust_Data: 'api/Cust/Cust_GetSingle',
+    Cust_Renew: 'api/Cust/Cust_Renew/renew'
   },
   Con: {
     Conlist: 'api/Con/Con_list'

@@ -27,6 +27,10 @@
     selectable: {
       type: Boolean,
       default: false
+    },
+    multiSelect: {
+      type: Boolean,
+      default: false
     }
   })
   //分頁屬性
@@ -51,31 +55,45 @@
     return `header-${props.headerAlign}`
   })
   //選中行
-  const selectRow = ref<any[]>([])
-  const handleRowSelect = (data: any) => {
-    selectRow.value[0] = data
+  //存選中行的 index 陣列
+  const selectIndexs = ref<number[]>([])
+  //行被選中時根據是否多選判斷如何加入
+  const handleRowSelect = (index: number) => {
+    if (!props.multiSelect) selectIndexs.value = []
+    if (!selectIndexs.value.includes(index)) selectIndexs.value.push(index)
   }
-  const selectIndex = computed(() => {
-    if (selectRow.value.length > 0) {
-      const findindex = tbDataShow.value.findIndex((x) => x === selectRow.value[0])
-      return findindex >= 0 ? findindex : null
+  //取得選中行的資料陣列
+  const selectRow = computed<any[]>(() => {
+    if (selectIndexs.value.length > 0) {
+      return tbDataShow.value.filter((_data, index) => selectIndexs.value.includes(index))
     }
-    return null
+    return []
   })
-  const modelSelectIndex = computed(() => {
+  //取得選中行的原始資料 index 陣列
+  const modelSelectIndex = computed<number[]>(() => {
     if (selectRow.value.length > 0) {
-      const findindex = model.value.findIndex((x) => x === selectRow.value[0])
-      return findindex >= 0 ? findindex : null
+      const findindexs = model.value.reduce((acc, val, idx) => {
+        if (selectRow.value.some((x) => x === val)) acc.push(idx)
+        return acc
+      }, [])
+      return findindexs
     }
-    return null
+    return []
   })
 
+  //監聽
+  watch(
+    () => currentPage.value,
+    () => {
+      //切換分頁就把 selectIndexs 重置
+      selectIndexs.value = []
+    }
+  )
   watch(
     () => tbDataShow.value,
     (newVal: any[]) => {
-      selectRow.value = selectRow.value.filter((x) => {
-        newVal.some((y) => y === x)
-      })
+      //過濾選中行的 index 陣列中，index 已超出顯示資料筆數的部分
+      selectIndexs.value = selectIndexs.value.filter((x) => x < newVal.length)
     }
   )
 
@@ -103,8 +121,8 @@
         <tr
           v-for="(item, index) in tbDataShow"
           :key="`tb-row-${index}`"
-          @click="selectable ? handleRowSelect(item) : null"
-          :class="index === selectIndex ? 'tr-selected' : ''"
+          @click="selectable ? handleRowSelect(index) : null"
+          :class="selectIndexs.includes(index) ? 'tr-selected' : ''"
         >
           <td v-show="showIndex" class="text-center">{{ pageStart + index + 1 }}</td>
           <slot name="body" :scope="item" :index="pageStart + index"></slot>
