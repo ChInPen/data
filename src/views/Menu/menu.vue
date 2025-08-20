@@ -1,8 +1,9 @@
 <script lang="ts" setup>
-  import { ref } from 'vue'
+  import { ref, computed, onMounted } from 'vue'
   import { logout } from '@/utils/auth'
-  import { useRouter } from 'vue-router'
+  import { useRouter, useRoute } from 'vue-router'
   const router = useRouter()
+  const route = useRoute()
   import { cIcon } from '@/components/Common'
   import layout from './layout.vue'
   import { message } from '@/components/Message/service'
@@ -22,6 +23,7 @@
 
   const menu = getMenuGroup()
 
+  const open = ref<any[]>([])
   const selectedItem = ref({
     title1: '',
     title2: '',
@@ -32,6 +34,44 @@
     selectedItem.value = { title1, title2, title3 }
     router.push(`/menu/${path}`)
   }
+
+  const layer1Click = (title: string) => {
+    if (open.value.includes(title)) {
+      open.value = [title]
+    } else {
+      open.value = []
+    }
+  }
+
+  const layer2Click = (title1: string, title2: string) => {
+    if (open.value.includes(title2)) {
+      open.value = [title1, title2]
+    } else {
+      open.value = [title1]
+    }
+  }
+
+  onMounted(() => {
+    menu.forEach((layer1) => {
+      if ('children' in layer1) {
+        layer1.children.forEach((layer2) => {
+          if ('children' in layer2) {
+            layer2.children.forEach((layer3) => {
+              if ('path' in layer3 && route.path === `/menu/${layer3.path}`) {
+                open.value.push(layer1.title)
+                open.value.push(layer1.title + '>' + layer2.title)
+                selectedItem.value = {
+                  title1: layer1.title,
+                  title2: layer2.title,
+                  title3: layer3.title
+                }
+              }
+            })
+          }
+        })
+      }
+    })
+  })
 </script>
 
 <template>
@@ -63,10 +103,15 @@
   </v-app-bar>
 
   <v-navigation-drawer permanent class="sidebar" width="192">
-    <v-list class="sidebar-list">
-      <v-list-group v-for="(list1, i) in menu" :key="i">
+    <v-list class="sidebar-list" v-model:opened="open">
+      <v-list-group v-for="(list1, i) in menu" :key="i" :value="list1.title">
         <template #activator="{ isOpen, props }">
-          <v-list-item class="text-custom-1" min-height="40" v-bind="props">
+          <v-list-item
+            class="text-custom-1"
+            min-height="40"
+            v-bind="props"
+            @click="layer1Click(list1.title)"
+          >
             <template v-slot:append>
               <c-icon size="20" :icon="isOpen ? 'mdi-menu-down' : 'mdi-menu-right'" />
             </template>
@@ -75,9 +120,18 @@
         </template>
 
         <template v-if="'children' in list1">
-          <v-list-group v-for="(list2, j) in list1.children" :key="j">
+          <v-list-group
+            v-for="(list2, j) in list1.children"
+            :key="j"
+            :value="list1.title + '>' + list2.title"
+          >
             <template #activator="{ isOpen, props }">
-              <v-list-item class="text-custom-1 layer2" min-height="40" v-bind="props">
+              <v-list-item
+                class="text-custom-1 layer2"
+                min-height="40"
+                v-bind="props"
+                @click="layer2Click(list1.title, list1.title + '>' + list2.title)"
+              >
                 <template v-slot:append>
                   <c-icon size="20" :icon="isOpen ? 'mdi-menu-down' : 'mdi-menu-right'" />
                 </template>
@@ -91,6 +145,7 @@
                   v-if="'path' in item"
                   class="text-custom-1 layer3 clickable-item"
                   min-height="40"
+                  :value="list1.title + '>' + list2.title + '>' + item.title"
                   :class="{
                     'selected-item':
                       selectedItem.title1 === list1.title &&

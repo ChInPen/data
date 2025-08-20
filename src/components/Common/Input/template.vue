@@ -2,22 +2,27 @@
   import { ref, computed, useAttrs } from 'vue'
   import type { PropType } from 'vue'
   import { cIcon } from '@/components/Common'
-  import { numberFormat, numberFormatValue, digitFormat, digitFormatValue } from '@/utils/uformat'
+  import {
+    numberFormat,
+    numberFormatValue,
+    dateFormat,
+    dateFormatValue,
+    Format
+  } from '@/utils/uformat'
   const attr = useAttrs()
 
-  type DigitFormat = {
-    phone?: boolean
-    english?: boolean
-  }
-
-  type NumberFormat = {
+  type tFormat = {
     minus?: boolean
     decimal?: boolean
     decAfterN?: number
     thousands?: boolean
+    number?: boolean
+    english?: boolean
+    phone?: boolean
   }
 
   const model = defineModel<string | number>({ default: '' })
+  const abbr = defineModel<string>('abbr')
   const props = defineProps({
     label: {
       type: String
@@ -33,8 +38,25 @@
       type: String,
       default: 'text'
     },
-    digitFormat: Object as PropType<DigitFormat>,
-    numberFormat: Object as PropType<NumberFormat>
+    format: Object as PropType<tFormat>
+  })
+
+  const numberFormatOptions = computed(() => {
+    const { minus, decimal, decAfterN } = props.format ?? {}
+    return {
+      minus: minus ?? false,
+      decimal: decimal ?? false,
+      decAfterN: decAfterN
+    }
+  })
+  const formatOptions = computed(() => {
+    if (props.format) {
+      const { number, english, phone } = props.format
+      if (number === true || english === true || phone === true) {
+        return { digit: number, english, phone }
+      }
+    }
+    return null
   })
 
   const isComposing = ref(false) //中文輸入法組字中判斷用 flag
@@ -43,14 +65,15 @@
       switch (props.type) {
         case 'number':
           return numberFormat(model.value, {
-            minus: props.numberFormat?.minus ?? false,
-            decimal: props.numberFormat?.decimal ?? false,
-            decAfterN: props.numberFormat?.decAfterN,
-            thousands: props.numberFormat?.thousands ?? false
+            ...numberFormatOptions.value,
+            thousands: props.format?.thousands ?? false
           })
         case 'date':
-          return digitFormat(model.value, { dateTW: true })
+          return dateFormat(model.value, { dateTW: true })
         default:
+          if (props.type === 'text' && formatOptions.value) {
+            return Format(model.value, formatOptions.value)
+          }
           return model.value
       }
     },
@@ -63,8 +86,8 @@
           }
           break
         default:
-          if (props.digitFormat) {
-            model.value = digitFormatValue(newVal, { ...props.digitFormat })
+          if (props.type === 'text' && formatOptions.value) {
+            model.value = Format(newVal, formatOptions.value)
           } else {
             model.value = newVal
           }
@@ -75,15 +98,11 @@
   const setInput = (newVal: string | number) => {
     //將 computed set 邏輯拆出來重複使用
     if (props.type === 'number') {
-      const numberValue = numberFormatValue(newVal, {
-        minus: props.numberFormat?.minus ?? false,
-        decimal: props.numberFormat?.decimal ?? false,
-        decAfterN: props.numberFormat?.decAfterN
-      })
+      const numberValue = numberFormatValue(newVal, numberFormatOptions.value)
       model.value = numberValue
     }
     if (props.type === 'date') {
-      model.value = digitFormatValue(newVal, { dateTW: true })
+      model.value = dateFormatValue(newVal, { dateTW: true })
     }
   }
   const redicon = computed(() => {
@@ -119,6 +138,15 @@
     }
   }
 
+  //名稱取5碼帶入簡稱
+  const nameChange = () => {
+    //簡稱不為空白就return
+    if (abbr.value === undefined || abbr.value !== '') return
+    //取5碼帶入
+    const modelvalue = typeof model.value === 'number' ? String(model.value) : (model.value ?? '')
+    abbr.value = modelvalue.substring(0, 5)
+  }
+
   const inputRef = ref()
   defineExpose({
     inputRef // 暴露 inputRef 實例
@@ -136,6 +164,7 @@
     rounded="1"
     @compositionstart="onCompositionStart"
     @compositionend="onCompositionEnd"
+    @change="nameChange"
   >
     <template v-slot:prepend-inner>
       <div class="prepend-inner-content">

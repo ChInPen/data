@@ -340,7 +340,7 @@
             label="身分證號"
             icon="fa-solid fa-user"
             :disabled="store.isDetail"
-            :digit-format="{ english: true }"
+            :format="{ number: true, english: true }"
           />
         </v-col>
         <v-col :cols="2" class="px-2">
@@ -396,7 +396,7 @@
             label="聯絡電話"
             icon="fa-solid fa-phone-volume"
             :disabled="store.isDetail"
-            :digit-format="{ phone: true }"
+            :format="{ phone: true }"
           />
         </v-col>
         <v-col :cols="3" class="px-2">
@@ -405,7 +405,7 @@
             label="行動電話"
             icon="fa-solid fa-mobile-button"
             :disabled="store.isDetail"
-            :digit-format="{ phone: true }"
+            :format="{ phone: true }"
           />
         </v-col>
         <v-col :cols="3" class="px-2">
@@ -422,7 +422,7 @@
             label="緊急聯絡電話"
             icon="fa-solid fa-phone-volume"
             :disabled="store.isDetail"
-            :digit-format="{ phone: true }"
+            :format="{ phone: true }"
           />
         </v-col>
         <v-col :cols="3" class="px-2">

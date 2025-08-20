@@ -65,7 +65,7 @@
   //取得選中行的資料陣列
   const selectRow = computed<any[]>(() => {
     if (selectIndexs.value.length > 0) {
-      return tbDataShow.value.filter((_data, index) => selectIndexs.value.includes(index))
+      return tbDataShow.value.filter((_, index) => selectIndexs.value.includes(index))
     }
     return []
   })
@@ -136,43 +136,47 @@
         </tr>
       </tfoot>
     </template>
+
+    <template v-slot:bottom>
+      <v-row
+        v-if="pagination"
+        no-gutters
+        justify="end"
+        class="py-2 pe-4 tb-pagination align-items-center"
+      >
+        <v-col cols="auto me-3">每頁筆數</v-col>
+        <v-col cols="auto">
+          <v-select
+            v-model="page"
+            :items="pages"
+            variant="outlined"
+            density="compact"
+            :list-props="{ bgColor: 'white' }"
+          ></v-select>
+        </v-col>
+        <v-col cols="auto">
+          <v-pagination
+            v-model="currentPage"
+            :length="pageLenght"
+            :total-visible="5"
+            density="comfortable"
+            show-first-last-page
+            first-icon="mdi:mdi-page-first"
+            prev-icon="mdi:mdi-chevron-left"
+            next-icon="mdi:mdi-chevron-right"
+            last-icon="mdi:mdi-page-last"
+          ></v-pagination>
+        </v-col>
+      </v-row>
+    </template>
   </v-table>
-  <v-row
-    v-if="pagination"
-    no-gutters
-    justify="end"
-    class="py-2 pe-4 tb-pagination align-items-center"
-  >
-    <v-col cols="auto me-3">每頁筆數</v-col>
-    <v-col cols="auto">
-      <v-select
-        v-model="page"
-        :items="pages"
-        variant="outlined"
-        density="compact"
-        :list-props="{ bgColor: 'white' }"
-      ></v-select>
-    </v-col>
-    <v-col cols="auto">
-      <v-pagination
-        v-model="currentPage"
-        :length="pageLenght"
-        :total-visible="5"
-        density="comfortable"
-        show-first-last-page
-        first-icon="mdi:mdi-page-first"
-        prev-icon="mdi:mdi-chevron-left"
-        next-icon="mdi:mdi-chevron-right"
-        last-icon="mdi:mdi-page-last"
-      ></v-pagination>
-    </v-col>
-  </v-row>
 </template>
 
 <style scoped>
   .c-table {
     background-color: var(--tb-bg-color);
     color: var(--tb-color);
+    /* border: 2px solid var(--tb-th-bg-color); */
 
     :deep(th) {
       --v-table-header-height: 52px;
@@ -180,13 +184,13 @@
       color: var(--tb-th-color);
       font-size: var(--tb-th-fs);
       font-weight: 300;
-      padding: 0 8px;
+      padding: 0 8px !important;
     }
 
     :deep(td) {
       color: var(--tb-td-color);
       font-size: var(--tb-td-fs);
-      padding: 0 8px;
+      padding: 0 6px !important;
     }
 
     tr.header-start :deep(th),
@@ -210,12 +214,12 @@
 
     /* 通用 tbody border-bottom */
     .v-table__wrapper > table > tbody > tr:not(:last-child) > :deep(td, th) {
-      border-bottom: thin solid rgba(0, 0, 0, var(--v-border-opacity));
+      border-bottom: thin solid rgba(0, 0, 0, 0.3);
     }
 
     /* fixed-height 時的 border-bottom */
     &.v-table--fixed-height .v-table__wrapper > table > tbody > tr:last-child > :deep(td, th) {
-      border-bottom: thin solid rgba(0, 0, 0, var(--v-border-opacity));
+      border-bottom: thin solid rgba(0, 0, 0, 0.3);
     }
 
     /* fixed-header 時的 thead 樣式 */
@@ -244,14 +248,5 @@
   .v-select {
     height: 40px;
     width: 97px;
-  }
-
-  .v-table > .v-table__wrapper > table > tbody > tr > :deep(td),
-  .v-table > .v-table__wrapper > table > tbody > tr > :deep(th),
-  .v-table > .v-table__wrapper > table > thead > tr > :deep(td),
-  .v-table > .v-table__wrapper > table > thead > tr > :deep(th),
-  .v-table > .v-table__wrapper > table > tfoot > tr > :deep(td),
-  .v-table > .v-table__wrapper > table > tfoot > tr > :deep(th) {
-    padding: 0 6px;
   }
 </style>

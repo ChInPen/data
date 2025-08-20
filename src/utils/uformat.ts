@@ -1,5 +1,14 @@
 import { numeric, digit, noChinese } from './umatch'
 
+export const thousandsMark = (text: string) => {
+  // 加上千分符
+  const minusMark = text.startsWith('-') ? '-' : ''
+  const content = text.startsWith('-') ? text.substring(1) : text
+  const parts = content.split('.')
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  return minusMark + parts.join('.')
+}
+
 export const numberFormat = (
   value: string | number,
   options?: {
@@ -20,16 +29,16 @@ export const numberFormat = (
     str = numeric.integer(str)
   }
   // 判斷小數
-  if (options?.decimal === true && options?.decAfterN) {
-    str = numeric.decimal(str, options.decAfterN)
+  if (options?.decimal === true) {
+    if (options?.decAfterN) {
+      str = numeric.decimal(str, options.decAfterN)
+    } else {
+      str = numeric.decimal(str)
+    }
   }
   // 加上千分符
   if (options?.thousands === true) {
-    const minusMark = str.startsWith('-') ? '-' : ''
-    const content = str.startsWith('-') ? str.substring(1) : str
-    const parts = content.split('.')
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-    str = minusMark + parts.join('.')
+    str = thousandsMark(str)
   }
   return str
 }
@@ -59,7 +68,7 @@ export const numberFormatValue = (
   return Number(str)
 }
 
-export const digitFormat = (
+export const dateFormat = (
   value: string | number,
   options?: {
     dateTW?: boolean
@@ -74,22 +83,12 @@ export const digitFormat = (
   return str
 }
 
-export const digitFormatValue = (
+export const dateFormatValue = (
   value: string | number,
   options?: {
     dateTW?: boolean
-    phone?: boolean
-    english?: boolean
   }
 ): string => {
-  // 判斷電話
-  if (options?.phone === true) {
-    return digit.phone(value)
-  }
-  // 英文&數字
-  if (options?.english === true) {
-    return noChinese.letter(value, { number: true })
-  }
   let str = digit.base(value)
   if (str === '') return ''
   // 判斷日期
@@ -97,4 +96,26 @@ export const digitFormatValue = (
     str = digit.dateTW(str, '')
   }
   return str
+}
+
+export const Format = (
+  value: string | number,
+  options?: {
+    digit?: boolean
+    english?: boolean
+    phone?: boolean
+  }
+): string | number => {
+  if (value === '') return ''
+  if (options?.english === true) {
+    // 英文&數字
+    return noChinese.letter(value, { number: options?.digit === true })
+  } else if (options?.phone === true) {
+    // 電話
+    return digit.phone(value)
+  } else if (options?.digit === true) {
+    // 純數字
+    return digit.base(value)
+  }
+  return value
 }

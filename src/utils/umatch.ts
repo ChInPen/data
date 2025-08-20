@@ -52,11 +52,11 @@ export const numeric = {
   /**
    * 將數字字串中的小數保留到第n位。**建議先執行 numeric.base() 再傳入此函式。**
    */
-  decimal: (value: string | number, n: number) => {
+  decimal: (value: string | number, n: number = 0) => {
     const str = value?.toString() ?? '' //強制轉成字串
     const splitDot = str.split('.')
     if (splitDot.length === 1) return str
-    if (splitDot[1].length > n) {
+    if (n > 0 && splitDot[1].length > n) {
       splitDot[1] = splitDot[1].substring(0, n - 1)
     }
     return splitDot[0] + splitDot[1]

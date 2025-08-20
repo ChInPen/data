@@ -8,5 +8,18 @@ import cDialog from './Dialog/template.vue'
 import cBread from './Bread/template.vue'
 import cDivider from './Divider/template.vue'
 import cCheckbox from './Checkbox/template.vue'
+import cDataTable from './DataTable/template.vue'
 
-export { cButton, cIcon, cInput, cSelect, cTextarea, cTable, cDialog, cBread, cDivider, cCheckbox }
+export {
+  cButton,
+  cIcon,
+  cInput,
+  cSelect,
+  cTextarea,
+  cTable,
+  cDialog,
+  cBread,
+  cDivider,
+  cCheckbox,
+  cDataTable
+}

@@ -6,8 +6,8 @@
     cSelect,
     cTextarea,
     cBread,
-    cTable,
-    cDivider
+    cDivider,
+    cDataTable
   } from '@/components/Common' //共用元件
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
@@ -17,6 +17,7 @@
   import { pickAddr } from '@/components/PickAddr'
   import { auditInfo } from '@/components/AuditInfo'
   import { GenerateRec } from '@/utils/ucommon'
+  import type { DataTableHeader } from 'vuetify'
 
   const store = useOwnerDataStore()
   const router = useRouter()
@@ -111,7 +112,16 @@
   //業主資料
   const formData = ref<Record<string, any>>({})
   const tabpage = ref('normal') //頁籤
-
+  //聯絡人表格設定
+  const headers: DataTableHeader[] = [
+    { title: '編號', key: 'rec1', width: '80', align: 'center', sortable: false },
+    { title: '聯絡人', key: 'conname', width: '220' },
+    { title: '部門', key: 'condepar', width: '220' },
+    { title: '電話', key: 'contel', width: '280' },
+    { title: '行動電話', key: 'conmob', width: '280' },
+    { title: '說明', key: 'condescrip' },
+    { title: '自訂一', key: 'conud1' }
+  ]
   //聯絡人表格資料
   const emptyObj = {
     custno: '',
@@ -133,6 +143,7 @@
   //聯絡人表格-插入
   const conListInsert = () => {
     const selectIndex = conTable.value?.selectIndex?.[0]
+    console.log(selectIndex)
     if (typeof selectIndex === 'number' && selectIndex >= 0) {
       conList.value.splice(selectIndex, 0, { ...emptyObj })
       GenerateRec(conList.value) //自動編號
@@ -326,13 +337,6 @@
       formData.value.custaddr = data.zipname
     }
   }
-
-  //名稱取五碼帶入簡稱
-  const nameChange = () => {
-    if (store.isDetail) return //狀態為瀏覽就return
-    if (formData.value?.custabbr) return //簡稱不為空白就return
-    formData.value.custabbr = (formData.value?.custname ?? '').substring(0, 5)
-  }
 </script>
 
 <template>
@@ -402,10 +406,10 @@
         <v-col :cols="6" class="px-2">
           <c-input
             v-model="formData.custname"
+            v-model:abbr="formData.custabbr"
             label="業主名稱"
             :is-required="true"
             :disabled="store.isDetail"
-            @change="nameChange"
           />
         </v-col>
         <v-col :cols="3" class="px-2">
@@ -455,7 +459,7 @@
                 label="電話"
                 icon="fa-solid fa-phone-volume"
                 :disabled="store.isDetail"
-                :digit-format="{ phone: true }"
+                :format="{ phone: true }"
               />
             </v-col>
             <v-col :cols="3" class="px-2">
@@ -464,7 +468,7 @@
                 label="行動電話"
                 icon="fa-solid fa-mobile-button"
                 :disabled="store.isDetail"
-                :digit-format="{ phone: true }"
+                :format="{ phone: true }"
               />
             </v-col>
             <v-col :cols="3" class="px-2">
@@ -473,7 +477,7 @@
                 label="傳真"
                 icon="fa-solid fa-fax"
                 :disabled="store.isDetail"
-                :digit-format="{ phone: true }"
+                :format="{ phone: true }"
               />
             </v-col>
             <v-responsive width="100%"></v-responsive>
@@ -622,14 +626,22 @@
               <v-row dense :align="'center'">
                 <v-col cols="4" class="text-end text-custom-1">每月結帳</v-col>
                 <v-col cols="2">
-                  <c-input type="number" v-model="formData.emckday" :disabled="store.isDetail" />
+                  <c-input
+                    v-model="formData.emckday"
+                    :format="{ number: true }"
+                    :disabled="store.isDetail"
+                  />
                 </v-col>
                 <v-col class="text-start text-custom-1">日</v-col>
               </v-row>
               <v-row dense :align="'center'">
                 <v-col cols="4" class="text-end text-custom-1">付款日：結帳後</v-col>
                 <v-col cols="2">
-                  <c-input type="number" v-model="formData.afterck" :disabled="store.isDetail" />
+                  <c-input
+                    v-model="formData.afterck"
+                    :format="{ number: true }"
+                    :disabled="store.isDetail"
+                  />
                 </v-col>
                 <v-col class="text-start text-custom-1">天</v-col>
               </v-row>
@@ -664,10 +676,10 @@
             </v-col>
             <v-col :cols="4" class="px-2">
               <c-input
-                type="number"
                 v-model="formData.custud3"
                 label="客戶自訂3"
                 icon="fa-solid fa-pencil"
+                :format="{ number: true }"
                 :disabled="store.isDetail"
               />
             </v-col>
@@ -690,46 +702,43 @@
               </c-button>
             </v-col>
           </v-row>
-          <c-table
+          <c-data-table
             ref="conTable"
             class="mt-2"
             v-model="conList"
+            :headers="headers"
             striped="even"
             hover
-            header-align="center"
+            :header-props="{ align: 'center' }"
             selectable
           >
-            <template v-slot:head>
-              <th width="80">編號</th>
-              <th width="220">聯絡人</th>
-              <th width="220">部門</th>
-              <th width="280">電話</th>
-              <th width="280">行動電話</th>
-              <th>說明</th>
-              <th>自訂一</th>
+            <template v-slot:item.conname="{ scope }">
+              <c-input v-model="scope.conname" :disabled="store.isDetail" />
             </template>
-            <template v-slot:body="{ scope }">
-              <td class="text-center">{{ scope.rec1 }}</td>
-              <td><c-input v-model="scope.conname" :disabled="store.isDetail" /></td>
-              <td><c-input v-model="scope.condepar" :disabled="store.isDetail" /></td>
-              <td>
-                <c-input
-                  v-model="scope.contel"
-                  :disabled="store.isDetail"
-                  :digit-format="{ phone: true }"
-                />
-              </td>
-              <td>
-                <c-input
-                  v-model="scope.conmob"
-                  :disabled="store.isDetail"
-                  :digit-format="{ phone: true }"
-                />
-              </td>
-              <td><c-input v-model="scope.condescrip" :disabled="store.isDetail" /></td>
-              <td><c-input v-model="scope.conname" :disabled="store.isDetail" /></td>
+            <template v-slot:item.condepar="{ scope }">
+              <c-input v-model="scope.condepar" :disabled="store.isDetail" />
             </template>
-          </c-table>
+            <template v-slot:item.contel="{ scope }">
+              <c-input
+                v-model="scope.contel"
+                :disabled="store.isDetail"
+                :format="{ phone: true }"
+              />
+            </template>
+            <template v-slot:item.conmob="{ scope }">
+              <c-input
+                v-model="scope.conmob"
+                :disabled="store.isDetail"
+                :format="{ phone: true }"
+              />
+            </template>
+            <template v-slot:item.condescrip="{ scope }">
+              <c-input v-model="scope.condescrip" :disabled="store.isDetail" />
+            </template>
+            <template v-slot:item.conud1="{ scope }">
+              <c-input v-model="scope.conud1" :disabled="store.isDetail" />
+            </template>
+          </c-data-table>
         </v-tabs-window-item>
 
         <v-tabs-window-item value="memo">
