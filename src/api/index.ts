@@ -23,7 +23,8 @@ export default {
     Cust_Upd: 'api/Cust/Cust_EDIT',
     Cust_Del: 'api/Cust/Cust_Dele',
     Cust_Data: 'api/Cust/Cust_GetSingle',
-    Cust_Renew: 'api/Cust/Cust_Renew/renew'
+    Cust_Renew: 'api/Cust/Cust_Renew/renew',
+    Cust_Print: 'api/Cust/Cust_Print'
   },
   Con: {
     Conlist: 'api/Con/Con_list'
@@ -61,7 +62,8 @@ export default {
     Supp_DEL: 'api/Supp/Supp_Del',
     Supp_Data: 'api/Supp/Supp_Data',
     Supp_ReNew: 'api/Supp/Supp_ReNew',
-    Supp_Brow: 'api/Supp/SuppBrowWin'
+    Supp_Brow: 'api/Supp/SuppBrowWin',
+    Supp_Print: 'api/Supp/Supp_Print'
   },
   //工程資料
   Project: {
@@ -88,6 +90,7 @@ export default {
     Item_EDIT: 'api/Item/Item_Upd',
     Item_DEL: 'api/Item/Item_Del',
     Item_Data: 'api/Item/Item_Data',
+    Item_ReNew: 'api/Item/Item_ReNew',
     ItemNo_Data: 'api/Item/ItemNo_Data'
   },
   //報價單

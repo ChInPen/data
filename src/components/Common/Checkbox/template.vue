@@ -4,7 +4,7 @@
 
   type Justify = 'start' | 'center' | 'end'
 
-  const model = defineModel({ default: false })
+  const model = defineModel<boolean | any[]>({ default: false })
   const props = defineProps({
     size: {
       type: [String, Number],
@@ -48,6 +48,21 @@
 </template>
 
 <style scoped>
+  .size2 :deep(label) {
+    font-size: 1.1rem;
+  }
+  .size3 :deep(label) {
+    font-size: 1.2rem;
+  }
+  .size4 :deep(label) {
+    font-size: 1.3rem;
+  }
+  .size5 :deep(label) {
+    font-size: 1.4rem;
+  }
+  .size6 :deep(label) {
+    font-size: 1.5rem;
+  }
   .size2 :deep(.v-selection-control__input) {
     .mdi-checkbox-blank-outline,
     .mdi-checkbox-marked {

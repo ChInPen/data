@@ -557,7 +557,7 @@
             type="number"
             v-model="formData.quotation"
             label="報價級距"
-            :number-format="{ thousands: true }"
+            :format="{ thousands: true }"
             icon="fa-solid fa-money-bill"
             :disabled="store.isDetail"
           />
@@ -620,7 +620,7 @@
             type="number"
             v-model="skill.daytpr"
             label="日薪"
-            :number-format="{ thousands: true }"
+            :format="{ thousands: true }"
             icon="fa-solid fa-sack-dollar"
             :disabled="store.isDetail"
           />
@@ -630,7 +630,7 @@
             type="number"
             v-model="skill.overtime"
             label="加班"
-            :number-format="{ thousands: true }"
+            :format="{ thousands: true }"
             icon="fa-solid fa-sack-dollar"
             :disabled="store.isDetail"
           />

@@ -1,52 +1,56 @@
 <script lang="ts" setup>
   import { ref, onMounted } from 'vue'
-  import {
-    cButton,
-    cInput,
-    cSelect,
-    cTextarea,
-    cBread,
-    cDivider,
-    cDataTable
-  } from '@/components/Common' //共用元件
+  import { cButton, cInput, cSelect, cTextarea, cBread, cDivider } from '@/components/Common' //共用元件
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
   import { message } from '@/components/Message/service' //訊息窗元件
-  import { useOwnerDataStore } from '@/store/ownerData'
+  import { useManufacturerDataStore } from '@/store/manufacturerData'
   import { useRouter } from 'vue-router'
   import { pickAddr } from '@/components/PickAddr'
   import { auditInfo } from '@/components/AuditInfo'
-  import { GenerateRec } from '@/utils/ucommon'
-  import type { DataTableHeader } from 'vuetify'
 
-  const store = useOwnerDataStore()
+  const store = useManufacturerDataStore()
   const router = useRouter()
 
   //下拉選單
-  const ckindDDL = ref<{ ckindno: string; ckindname: string }[]>([])
+  const skindDDL = ref<{ skindno: string; skindname: string }[]>([])
   const empDDL = ref<{ empno: string; empname: string }[]>([])
-  const taxkindDDL = ref<{ taxkind: string; taxkindc: string }[]>([])
+  const taxkindDDL = ref<{ taxkindno: string; taxkindc: string }[]>([])
   const invokindDDL = ref<{ invokindno: string; invokindna: string }[]>([])
-  const akindDDL = ref<{ akindno: string; akindname: string }[]>([])
-  //抓業主類別下拉選單資料
-  const getCkindApi = async () => {
+  const akindDDL = ref<{ akindno: string; akindna: string }[]>([])
+  //抓各種下拉選單資料
+  const getDDLApi = async () => {
     callApi({
       method: 'POST',
-      url: api.CKind.CKindlist,
+      url: api.Supp.Supp_List,
       data: {
-        ckindno: '',
-        ckindname: ''
+        suppno: 'xxx', //隨便key參數不需要查出_Lists
+        suppabbr: '',
+        uniform: '',
+        business: '',
+        coN1: '',
+        teL1: '',
+        mobiteL1: ''
       }
     }).then((res: any) => {
       if (res?.status == 200) {
-        const { _Lists } = res?.data
-        if (_Lists && Array.isArray(_Lists)) {
-          ckindDDL.value = _Lists.map(({ ckindno, ckindname }) => ({ ckindno, ckindname }))
+        const { sKindNo, tax, invoKind, aKind } = res?.data
+        if (sKindNo && Array.isArray(sKindNo)) {
+          skindDDL.value = sKindNo
+        }
+        if (tax && Array.isArray(tax)) {
+          taxkindDDL.value = tax
+        }
+        if (invoKind && Array.isArray(invoKind)) {
+          invokindDDL.value = invoKind
+        }
+        if (aKind && Array.isArray(aKind)) {
+          akindDDL.value = aKind
         }
       }
     })
   }
-  //抓業務人員下拉選單資料
+  //抓採購人員下拉選單資料
   const getEmpApi = async () => {
     callApi({
       method: 'POST',
@@ -60,102 +64,10 @@
       }
     })
   }
-  //抓營業稅下拉選單資料
-  const getTaxkindApi = async () => {
-    callApi({
-      method: 'POST',
-      url: api.Taxkind.Taxkind_List,
-      params: { indexValue: '' }
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const data = res?.data as any[] | undefined
-        if (data && Array.isArray(data)) {
-          taxkindDDL.value = data
-        }
-      }
-    })
-  }
-  //抓發票種類下拉選單資料
-  const getInvokindApi = async () => {
-    callApi({
-      method: 'POST',
-      url: api.Invokind.Invokind_List,
-      params: { indexValue: '' }
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const data = res?.data as any[] | undefined
-        if (data && Array.isArray(data)) {
-          invokindDDL.value = data
-        }
-      }
-    })
-  }
-  //抓結帳類別下拉選單資料
-  const getAkindApi = async () => {
-    callApi({
-      method: 'POST',
-      url: api.Akind.Akind_List,
-      data: {
-        akindno: '',
-        akindname: ''
-      }
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const data = res?.data as any[] | undefined
-        if (data && Array.isArray(data)) {
-          akindDDL.value = data.map(({ akindno, akindname }) => ({ akindno, akindname }))
-        }
-      }
-    })
-  }
 
-  //業主資料
+  //廠商資料
   const formData = ref<Record<string, any>>({})
   const tabpage = ref('normal') //頁籤
-  //聯絡人表格設定
-  const headers: DataTableHeader[] = [
-    { title: '編號', key: 'rec1', width: '80', align: 'center', sortable: false },
-    { title: '聯絡人', key: 'conname', width: '220' },
-    { title: '部門', key: 'condepar', width: '220' },
-    { title: '電話', key: 'contel', width: '280' },
-    { title: '行動電話', key: 'conmob', width: '280' },
-    { title: '說明', key: 'condescrip' },
-    { title: '自訂一', key: 'conud1' }
-  ]
-  //聯絡人表格資料
-  const emptyObj = {
-    custno: '',
-    rec1: '',
-    conname: '',
-    condepar: '',
-    contel: '',
-    conmob: '',
-    condescrip: '',
-    conud1: ''
-  }
-  const conList = ref<(typeof emptyObj)[]>([])
-  const conTable = ref()
-  //聯絡人表格-新增
-  const conListAdd = () => {
-    conList.value.push({ ...emptyObj })
-    GenerateRec(conList.value) //自動編號
-  }
-  //聯絡人表格-插入
-  const conListInsert = () => {
-    const selectIndex = conTable.value?.selectIndex?.[0]
-    if (typeof selectIndex === 'number' && selectIndex >= 0) {
-      conList.value.splice(selectIndex, 0, { ...emptyObj })
-      GenerateRec(conList.value) //自動編號
-    }
-  }
-  //聯絡人表格-刪除
-  const conListDelete = () => {
-    const selectIndex = conTable.value?.selectIndex?.[0]
-    if (typeof selectIndex === 'number' && selectIndex >= 0) {
-      conList.value.splice(selectIndex, 1)
-      GenerateRec(conList.value) //自動編號
-    }
-  }
 
   //取消&返回 按鈕
   const handleCancel = () => {
@@ -163,11 +75,11 @@
   }
   //檢查欄位規則
   const checkData = () => {
-    //必填:custno, custname, custabbr, taxkindno, invokindno
+    //必填:suppno, suppname, suppabbr, taxkindno, invokindno
     const requiredFields = [
-      { key: 'custno', label: '業主編號' },
-      { key: 'custname', label: '業主名稱' },
-      { key: 'custabbr', label: '業主簡稱' },
+      { key: 'suppno', label: '廠商編號' },
+      { key: 'suppname', label: '廠商名稱' },
+      { key: 'suppabbr', label: '廠商簡稱' },
       { key: 'taxkindno', label: '營業稅' },
       { key: 'invokindno', label: '發票種類' }
     ]
@@ -180,35 +92,24 @@
   //送出存檔
   const saveData = () => {
     //存檔需要的欄位
-    const cust = { ...formData.value }
-    //數字欄位
-    cust.custud3 = formData.value?.custud3 ?? 0
-    cust.emckday = formData.value?.emckday ?? 25
-    cust.afterck = formData.value?.afterck ?? 0
-    //其他
-    cust.m_user = ''
-    cust.m_date1 = ''
-    cust.m_date2 = ''
-    cust.m_date3 = ''
-    //聯絡人清單
-    const list = conList.value.map((obj: any) => ({
-      ...obj,
-      custno: formData.value?.custno ?? ''
-    }))
-    return { cust, conList: list }
+    const data = { ...formData.value }
+    // //數字欄位
+    data.emckday = formData.value?.emckday ?? 25
+    data.afterck = formData.value?.afterck ?? 0
+
+    return data
   }
   const callCreateApi = () => {
     callApi({
       method: 'POST',
-      url: api.Cust.Cust_Add,
+      url: api.Supp.Supp_Create,
       data: saveData()
     }).then((res: any) => {
       if (res?.status === 200) {
         const data = res?.data
-        if (data && data.state === 'success') {
+        if (data === '') {
           message.alert({
             type: 'success',
-            // message: data?.msg ?? '存檔成功',
             message: '存檔成功',
             autoClose: 2,
             onConfirm: () => {
@@ -221,21 +122,22 @@
   }
   const callEditApi = () => {
     callApi({
-      method: 'PUT',
-      url: api.Cust.Cust_Upd,
+      method: 'POST',
+      url: api.Supp.Supp_EDIT,
       data: saveData()
     }).then((res: any) => {
-      const data = res?.data
-      if (data && data.state === 'success') {
-        message.alert({
-          type: 'success',
-          // message: data?.msg ?? '存檔成功',
-          message: '存檔成功',
-          autoClose: 2,
-          onConfirm: () => {
-            handleCancel()
-          }
-        })
+      if (res?.status === 200) {
+        const data = res?.data
+        if (data === '') {
+          message.alert({
+            type: 'success',
+            message: '存檔成功',
+            autoClose: 2,
+            onConfirm: () => {
+              handleCancel()
+            }
+          })
+        }
       }
     })
   }
@@ -264,33 +166,12 @@
   //新增狀態呼叫 Renew api
   const getRenewApi = async () => {
     callApi({
-      method: 'GET',
-      url: api.Cust.Cust_Renew
+      method: 'POST',
+      url: api.Supp.Supp_ReNew
     }).then((res: any) => {
       if (res?.status == 200) {
         const data = res?.data ?? {}
-        const { cust, conList: list } = data
-        if (cust) formData.value = { ...cust }
-        if (list && Array.isArray(list)) conList.value = list
-      }
-    })
-  }
-  //編輯、複製、瀏覽呼叫 api
-  const getAllDataApi = async () => {
-    //抓業主基本資料
-    callApi({
-      method: 'POST',
-      url: api.Cust.Cust_Data,
-      data: { custno: store.custno }
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const data = (res?.data ?? []) as any[]
-        if (data.length > 0) {
-          formData.value = {
-            ...data[0],
-            custno: ['edit', 'detail'].includes(store.action) ? (data[0]?.custno ?? '') : ''
-          }
-        }
+        formData.value = { ...data }
       }
     })
   }
@@ -298,25 +179,26 @@
   //起始動作
   onMounted(() => {
     //抓下拉選單資料
-    getCkindApi()
+    getDDLApi()
     getEmpApi()
-    getTaxkindApi()
-    getInvokindApi()
-    getAkindApi()
     //抓單筆資料
     if (store.action === 'create') {
       getRenewApi()
-    } else if (store.custno) {
-      getAllDataApi()
-      //抓業主聯絡人資料
+    } else if (store.suppno) {
+      //抓廠商資料
       callApi({
-        method: 'GET',
-        url: api.Con.Conlist,
-        params: { custno: store.custno }
+        method: 'POST',
+        url: api.Supp.Supp_Data,
+        data: { suppno: store.suppno }
       }).then((res: any) => {
         if (res?.status == 200) {
           const data: any[] = res?.data ?? []
-          conList.value = data
+          if (Array.isArray(data) && data.length > 0) {
+            formData.value = {
+              ...data[0],
+              suppno: ['edit', 'detail'].includes(store.action) ? (data[0]?.suppno ?? '') : ''
+            }
+          }
         }
       })
     }
@@ -328,12 +210,12 @@
   const handlePickAddr = (data: any) => {
     if (addrTarget.value === 'zip1') {
       formData.value.comprec = data.rec
-      formData.value.zip1 = data.zipno
+      formData.value.ziP1 = data.zipno
       formData.value.compaddr = data.zipname
     } else if (addrTarget.value === 'zip2') {
-      formData.value.custrec = data.rec
-      formData.value.custzip = data.zipno
-      formData.value.custaddr = data.zipname
+      formData.value.factrec = data.rec
+      formData.value.ziP2 = data.zipno
+      formData.value.factaddr = data.zipname
     }
   }
 </script>
@@ -356,29 +238,29 @@
   <v-card color="#1b2b36" rounded="3">
     <v-card-text>
       <v-row dense>
-        <v-col cols="auto" class="text-custom-2">業主基本資料</v-col>
+        <v-col cols="auto" class="text-custom-2">廠商基本資料</v-col>
       </v-row>
       <v-row dense class="mt-2" :align="'center'">
         <v-col :cols="3" class="px-2">
           <c-input
-            v-model="formData.custno"
-            label="業主編號"
+            v-model="formData.suppno"
+            label="廠商編號"
             :is-required="true"
             :disabled="store.keyDisabled"
           />
         </v-col>
         <v-col :cols="3" class="px-2">
           <c-select
-            v-model="formData.ckindno"
-            v-model:title="formData.ckindname"
-            label="業主類別"
-            icon="fa-solid fa-building"
-            :items="ckindDDL"
-            item-title="ckindname"
-            item-value="ckindno"
+            v-model="formData.skindno"
+            v-model:title="formData.skindname"
+            label="廠商類別"
+            icon="fa-solid fa-warehouse"
+            :items="skindDDL"
+            item-title="skindname"
+            item-value="skindno"
             :item-columns="[
-              { column: 'ckindno', label: '業主類別編號' },
-              { column: 'ckindname', label: '業主類別' }
+              { column: 'skindno', label: '廠商類別編號' },
+              { column: 'skindname', label: '廠商類別' }
             ]"
             also-show-value
             :disabled="store.isDetail"
@@ -388,7 +270,7 @@
           <c-select
             v-model="formData.empno"
             v-model:title="formData.empname"
-            label="業務人員"
+            label="採購人員"
             icon="fa-solid fa-user"
             :items="empDDL"
             item-title="empname"
@@ -404,17 +286,17 @@
         <v-responsive width="100%"></v-responsive>
         <v-col :cols="6" class="px-2">
           <c-input
-            v-model="formData.custname"
-            v-model:abbr="formData.custabbr"
-            label="業主名稱"
+            v-model="formData.suppname"
+            v-model:abbr="formData.suppabbr"
+            label="廠商名稱"
             :is-required="true"
             :disabled="store.isDetail"
           />
         </v-col>
         <v-col :cols="3" class="px-2">
           <c-input
-            v-model="formData.custabbr"
-            label="業主簡稱"
+            v-model="formData.suppabbr"
+            label="廠商簡稱"
             :is-required="true"
             :disabled="store.isDetail"
           />
@@ -426,8 +308,7 @@
   <v-card class="mt-3">
     <v-tabs v-model="tabpage" bg-color="primary" class="c-tabs">
       <v-tab value="normal">一般資料</v-tab>
-      <v-tab value="conlist">聯絡人</v-tab>
-      <v-tab value="memo">備註</v-tab>
+      <v-tab value="con">聯絡人</v-tab>
     </v-tabs>
 
     <v-card-text>
@@ -437,8 +318,16 @@
           <v-row dense class="mt-2" :align="'center'">
             <v-col :cols="3" class="px-2">
               <c-input
-                v-model="formData.con"
-                label="聯絡人"
+                v-model="formData.coN1"
+                label="聯絡人1"
+                icon="fa-solid fa-user"
+                :disabled="store.isDetail"
+              />
+            </v-col>
+            <v-col :cols="3" class="px-2">
+              <c-input
+                v-model="formData.coN2"
+                label="聯絡人2"
                 icon="fa-solid fa-user"
                 :disabled="store.isDetail"
               />
@@ -454,8 +343,8 @@
             <v-responsive width="100%"></v-responsive>
             <v-col :cols="3" class="px-2">
               <c-input
-                v-model="formData.tel"
-                label="電話"
+                v-model="formData.teL1"
+                label="電話1"
                 icon="fa-solid fa-phone-volume"
                 :disabled="store.isDetail"
                 :format="{ phone: true }"
@@ -463,9 +352,9 @@
             </v-col>
             <v-col :cols="3" class="px-2">
               <c-input
-                v-model="formData.mobitel"
-                label="行動電話"
-                icon="fa-solid fa-mobile-button"
+                v-model="formData.teL2"
+                label="電話2"
+                icon="fa-solid fa-phone-volume"
                 :disabled="store.isDetail"
                 :format="{ phone: true }"
               />
@@ -475,6 +364,34 @@
                 v-model="formData.fax"
                 label="傳真"
                 icon="fa-solid fa-fax"
+                :disabled="store.isDetail"
+                :format="{ phone: true }"
+              />
+            </v-col>
+            <v-responsive width="100%"></v-responsive>
+            <v-col :cols="3" class="px-2">
+              <c-input
+                v-model="formData.mobiteL1"
+                label="行動電話1"
+                icon="fa-solid fa-mobile-button"
+                :disabled="store.isDetail"
+                :format="{ phone: true }"
+              />
+            </v-col>
+            <v-col :cols="3" class="px-2">
+              <c-input
+                v-model="formData.mobiteL2"
+                label="行動電話2"
+                icon="fa-solid fa-mobile-button"
+                :disabled="store.isDetail"
+                :format="{ phone: true }"
+              />
+            </v-col>
+            <v-col :cols="3" class="px-2">
+              <c-input
+                v-model="formData.mobiteL3"
+                label="行動電話3"
+                icon="fa-solid fa-mobile-button"
                 :disabled="store.isDetail"
                 :format="{ phone: true }"
               />
@@ -498,7 +415,7 @@
                 </v-col>
                 <v-col>
                   <c-input
-                    v-model="formData.zip1"
+                    v-model="formData.ziP1"
                     label="郵遞區號"
                     icon="fa-solid fa-location-dot"
                     disabled
@@ -532,7 +449,7 @@
                 </v-col>
                 <v-col>
                   <c-input
-                    v-model="formData.custzip"
+                    v-model="formData.ziP2"
                     label="郵遞區號"
                     icon="fa-solid fa-location-dot"
                     disabled
@@ -542,8 +459,8 @@
             </v-col>
             <v-col :cols="8" class="px-2">
               <c-input
-                v-model="formData.custaddr"
-                label="發票地址"
+                v-model="formData.factaddr"
+                label="工廠地址"
                 icon="fa-solid fa-location-dot"
                 :disabled="store.isDetail"
               />
@@ -567,9 +484,9 @@
                 :is-required="true"
                 :items="taxkindDDL"
                 item-title="taxkindc"
-                item-value="taxkind"
+                item-value="taxkindno"
                 :item-columns="[
-                  { column: 'taxkind', label: '編號' },
+                  { column: 'taxkindno', label: '編號' },
                   { column: 'taxkindc', label: '名稱' }
                 ]"
                 also-show-value
@@ -598,15 +515,15 @@
             <v-col :cols="4" class="px-2">
               <c-select
                 v-model="formData.akindno"
-                v-model:title="formData.akindc"
+                v-model:title="formData.akindname"
                 label="結帳類別"
                 icon="fa-solid fa-hand-holding-dollar"
                 :items="akindDDL"
-                item-title="akindname"
+                item-title="akindna"
                 item-value="akindno"
                 :item-columns="[
                   { column: 'akindno', label: '編號' },
-                  { column: 'akindname', label: '名稱' }
+                  { column: 'akindna', label: '名稱' }
                 ]"
                 also-show-value
                 hide-search
@@ -645,109 +562,90 @@
                 <v-col class="text-start text-custom-1">天</v-col>
               </v-row>
             </v-col>
+            <v-responsive width="100%"></v-responsive>
+            <v-col :cols="3" class="px-2">
+              <c-input
+                v-model="formData.rembank"
+                label="匯款銀行"
+                icon="fa-solid fa-university"
+                :disabled="store.isDetail"
+              />
+            </v-col>
+            <v-col :cols="3" class="px-2">
+              <c-input
+                v-model="formData.remno"
+                label="帳號"
+                icon="fa-solid fa-money-check"
+                :disabled="store.isDetail"
+                :format="{ number: true }"
+              />
+            </v-col>
+            <v-col :cols="3" class="px-2">
+              <c-input
+                v-model="formData.remname"
+                label="戶名"
+                icon="fa-solid fa-circle-user"
+                :disabled="store.isDetail"
+              />
+            </v-col>
           </v-row>
           <c-divider class="mt-3">其它資訊</c-divider>
           <v-row dense class="mt-2" :align="'center'">
             <v-col :cols="6" class="px-2">
               <c-input
-                v-model="formData.memo1"
+                v-model="formData.business"
+                label="營業項目"
+                icon="fa-solid fa-shop"
+                :disabled="store.isDetail"
+              />
+            </v-col>
+            <v-col :cols="6" class="px-2">
+              <c-input
+                v-model="formData.http"
+                label="網址"
+                icon="fa-solid fa-globe"
+                :disabled="store.isDetail"
+              />
+            </v-col>
+            <v-col :cols="4" class="px-2">
+              <c-input
+                v-model="formData.suppuD1"
+                label="廠商自訂1"
+                icon="fa-solid fa-pencil"
+                :disabled="store.isDetail"
+              />
+            </v-col>
+            <v-col :cols="4" class="px-2">
+              <c-input
+                v-model="formData.suppuD2"
+                label="廠商自訂2"
+                icon="fa-solid fa-pencil"
+                :disabled="store.isDetail"
+              />
+            </v-col>
+          </v-row>
+        </v-tabs-window-item>
+
+        <v-tabs-window-item value="con">
+          <v-row dense>
+            <v-col :cols="12" class="px-2">
+              <c-textarea
+                v-model="formData.memo"
+                label="聯絡人"
+                icon="fa-solid fa-user"
+                :disabled="store.isDetail"
+                auto-grow
+              />
+            </v-col>
+            <v-col :cols="6" class="px-2">
+              <c-input
+                v-model="formData.memO1"
                 label="備註"
                 icon="fa-solid fa-pencil"
                 :disabled="store.isDetail"
               />
             </v-col>
-            <v-responsive width="100%"></v-responsive>
-            <v-col :cols="4" class="px-2">
-              <c-input
-                v-model="formData.custud1"
-                label="客戶自訂1"
-                icon="fa-solid fa-pencil"
-                :disabled="store.isDetail"
-              />
-            </v-col>
-            <v-col :cols="4" class="px-2">
-              <c-input
-                v-model="formData.custud2"
-                label="客戶自訂2"
-                icon="fa-solid fa-pencil"
-                :disabled="store.isDetail"
-              />
-            </v-col>
-            <v-col :cols="4" class="px-2">
-              <c-input
-                v-model="formData.custud3"
-                label="客戶自訂3"
-                icon="fa-solid fa-pencil"
-                :format="{ number: true }"
-                :disabled="store.isDetail"
-              />
-            </v-col>
           </v-row>
-        </v-tabs-window-item>
-
-        <v-tabs-window-item value="conlist">
-          <v-row dense>
-            <v-col cols="auto">
-              <c-button kind="create" icon="mdi-plus-circle" @click="conListAdd">新增</c-button>
-            </v-col>
-            <v-col cols="auto">
-              <c-button kind="insert" icon="mdi-arrow-down-circle" @click="conListInsert">
-                插入
-              </c-button>
-            </v-col>
-            <v-col cols="auto">
-              <c-button kind="delete" icon="fa-solid fa-trash" @click="conListDelete">
-                刪除
-              </c-button>
-            </v-col>
-          </v-row>
-          <c-data-table
-            ref="conTable"
-            class="mt-2"
-            v-model="conList"
-            :headers="headers"
-            striped="even"
-            hover
-            :header-props="{ align: 'center' }"
-            selectable
-          >
-            <template v-slot:item.conname="{ scope }">
-              <c-input v-model="scope.conname" :disabled="store.isDetail" />
-            </template>
-            <template v-slot:item.condepar="{ scope }">
-              <c-input v-model="scope.condepar" :disabled="store.isDetail" />
-            </template>
-            <template v-slot:item.contel="{ scope }">
-              <c-input
-                v-model="scope.contel"
-                :disabled="store.isDetail"
-                :format="{ phone: true }"
-              />
-            </template>
-            <template v-slot:item.conmob="{ scope }">
-              <c-input
-                v-model="scope.conmob"
-                :disabled="store.isDetail"
-                :format="{ phone: true }"
-              />
-            </template>
-            <template v-slot:item.condescrip="{ scope }">
-              <c-input v-model="scope.condescrip" :disabled="store.isDetail" />
-            </template>
-            <template v-slot:item.conud1="{ scope }">
-              <c-input v-model="scope.conud1" :disabled="store.isDetail" />
-            </template>
-          </c-data-table>
-        </v-tabs-window-item>
-
-        <v-tabs-window-item value="memo">
-          <c-textarea
-            v-model="formData.memo"
-            label="備註"
-            icon="fa-solid fa-pencil"
-            :disabled="store.isDetail"
-            auto-grow
-          />
         </v-tabs-window-item>
       </v-tabs-window>
     </v-card-text>
@@ -756,13 +654,11 @@
   <audit-info
     class="mt-2"
     v-if="store.action === 'edit' || store.action === 'detail'"
-    :a_date="formData.a_date1"
-    :a_user="formData.a_user"
-    :m_date="formData.m_date1"
-    :m_user="formData.m_user"
+    :a_date="formData.a_DATE1"
+    :a_user="formData.a_USER"
+    :m_date="formData.m_DATE1"
+    :m_user="formData.m_USER"
   />
 
   <pick-addr v-model="pcikAddrDS" @pick="handlePickAddr" />
 </template>
-
-<style scoped></style>

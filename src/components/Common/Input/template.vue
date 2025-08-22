@@ -40,6 +40,7 @@
     },
     format: Object as PropType<tFormat>
   })
+  const emit = defineEmits(['change'])
 
   const numberFormatOptions = computed(() => {
     const { minus, decimal, decAfterN } = props.format ?? {}
@@ -140,6 +141,7 @@
 
   //名稱取5碼帶入簡稱
   const nameChange = () => {
+    emit('change')
     //簡稱不為空白就return
     if (abbr.value === undefined || abbr.value !== '') return
     //取5碼帶入

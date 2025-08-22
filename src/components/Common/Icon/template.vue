@@ -38,4 +38,10 @@
   .fa-paper-plane {
     transform: translate(0, 5%); /* 往下 5% */
   }
+
+  i {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 </style>

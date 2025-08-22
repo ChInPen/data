@@ -1,8 +1,8 @@
-<script lang="ts" setup>
+<script lang="ts" setup generic="T extends Record<string, any>">
   import { ref, computed, watch } from 'vue'
   import type { PropType } from 'vue'
 
-  const model = defineModel<any[]>({ default: [] as any[] })
+  const model = defineModel<T[]>({ default: [] })
   const props = defineProps({
     pageSize: {
       type: String,
@@ -72,7 +72,7 @@
   //取得選中行的原始資料 index 陣列
   const modelSelectIndex = computed<number[]>(() => {
     if (selectRow.value.length > 0) {
-      const findindexs = model.value.reduce((acc, val, idx) => {
+      const findindexs = model.value.reduce((acc: number[], val, idx) => {
         if (selectRow.value.some((x) => x === val)) acc.push(idx)
         return acc
       }, [])

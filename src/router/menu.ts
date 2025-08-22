@@ -42,7 +42,18 @@ const menu: MenuEntry[] = [
             name: 'A05工料類別建檔',
             component: () => import('@/views/Base/WorkSetting/Material.vue')
           },
-          { title: '工料資料', path: 'MaterialData' },
+          {
+            title: '工料資料',
+            path: 'MaterialData',
+            name: 'A11工料資料建檔',
+            component: () => import('@/views/Base/WorkSetting/MaterialData.vue')
+          },
+          {
+            title: '工料資料',
+            path: 'MaterialDataForm',
+            component: () => import('@/views/Base/WorkSetting/MaterialDataForm.vue'),
+            meta: { from: ['/menu/MaterialData'] }
+          },
           { title: '採購合約', path: '' },
           { title: '零用金存入', path: '' },
           { title: '完工日期批次異動', path: '' }
@@ -63,7 +74,7 @@ const menu: MenuEntry[] = [
           {
             title: '業主資料',
             path: 'OwnerData',
-            name: 'A08業主資料建檔',
+            name: 'A09業主資料建檔',
             component: () => import('@/views/Base/CompanySetting/OwnerData.vue')
           },
           {
@@ -80,7 +91,15 @@ const menu: MenuEntry[] = [
           },
           {
             title: '廠商資料',
-            path: 'ManufacturerData'
+            path: 'ManufacturerData',
+            name: 'A10業主資料建檔',
+            component: () => import('@/views/Base/CompanySetting/ManufacturerData.vue')
+          },
+          {
+            title: '廠商資料',
+            path: 'ManufacturerDataForm',
+            component: () => import('@/views/Base/CompanySetting/ManufacturerDataForm.vue'),
+            meta: { from: ['/menu/ManufacturerData'] }
           },
           {
             title: '廠商類別',

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
   import { ref, nextTick } from 'vue'
   import { cButton, cInput, cSelect, cDialog } from '@/components/Common' //共用元件
-  import { searchCust } from '@/components/SearchCust'
+  import { searchSupp } from '@/components/SearchSupp'
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
   import config from '@/config/config'
@@ -38,20 +38,23 @@
   const handlePreview = () => {
     callApi({
       method: 'POST',
-      url: api.Cust.Cust_Print,
-      data: { ...printForm.value }
+      url: api.Supp.Supp_Print,
+      data: {
+        footNote: printForm.value.feetNo,
+        suppNo_S: printForm.value.initNo,
+        suppNo_E: printForm.value.finalNo
+      }
     }).then((res: any) => {
-      if (res?.status === 200) {
-        const data = res?.data ?? ''
-        window.open(config.apiUri + '/' + data)
+      if (typeof res === 'string' && res.startsWith('PDF')) {
+        window.open(config.apiUri + '/' + res)
       }
     })
   }
-  const searchCustDS = ref(false)
+  const searchSuppDS = ref(false)
   const flag = ref<'initNo' | 'finalNo'>('initNo')
   const searchPick = (data: any) => {
-    if (flag.value === 'initNo') printForm.value.initNo = data.custno
-    if (flag.value === 'finalNo') printForm.value.finalNo = data.custno
+    if (flag.value === 'initNo') printForm.value.initNo = data.suppno
+    if (flag.value === 'finalNo') printForm.value.finalNo = data.suppno
   }
 </script>
 
@@ -74,7 +77,7 @@
           kind="pick"
           @click="
             () => {
-              searchCustDS = true
+              searchSuppDS = true
               flag = 'initNo'
             }
           "
@@ -83,7 +86,7 @@
         </c-button>
       </v-col>
       <v-col>
-        <c-input v-model="printForm.initNo" label="起始業主編號" />
+        <c-input v-model="printForm.initNo" label="起始廠商編號" />
       </v-col>
       <v-responsive width="100%"></v-responsive>
       <v-col cols="auto">
@@ -91,7 +94,7 @@
           kind="pick"
           @click="
             () => {
-              searchCustDS = true
+              searchSuppDS = true
               flag = 'finalNo'
             }
           "
@@ -100,7 +103,7 @@
         </c-button>
       </v-col>
       <v-col>
-        <c-input v-model="printForm.finalNo" label="終止業主編號" />
+        <c-input v-model="printForm.finalNo" label="終止廠商編號" />
       </v-col>
       <v-col cols="12"></v-col>
       <v-responsive width="100%"></v-responsive>
@@ -124,5 +127,5 @@
     </template>
   </c-dialog>
 
-  <search-cust v-model="searchCustDS" @pick="searchPick" />
+  <search-supp v-model="searchSuppDS" @pick="searchPick" />
 </template>

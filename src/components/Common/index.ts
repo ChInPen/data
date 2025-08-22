@@ -8,6 +8,7 @@ import cDialog from './Dialog/template.vue'
 import cBread from './Bread/template.vue'
 import cDivider from './Divider/template.vue'
 import cCheckbox from './Checkbox/template.vue'
+import cRadioGroup from './RadioGroup/template.vue'
 import cDataTable from './DataTable/template.vue'
 
 export {
@@ -21,5 +22,6 @@ export {
   cBread,
   cDivider,
   cCheckbox,
-  cDataTable
+  cDataTable,
+  cRadioGroup
 }

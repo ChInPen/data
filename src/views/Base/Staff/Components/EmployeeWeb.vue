@@ -86,7 +86,7 @@
             size="5"
             icon-justify="center"
             density="compact"
-            @update:modelValue="selectAll($event, index)"
+            @update:modelValue="selectAll($event as boolean, index)"
           />
         </td>
         <td class="text-center">
@@ -95,7 +95,7 @@
             size="5"
             icon-justify="center"
             density="compact"
-            @update:modelValue="cancelAll($event, index)"
+            @update:modelValue="cancelAll($event as boolean, index)"
           />
         </td>
       </template>
