@@ -149,6 +149,17 @@
     abbr.value = modelvalue.substring(0, 5)
   }
 
+  //數字欄位時自動反白內容
+  const handleFocusin = (event: FocusEvent) => {
+    if (props.type === 'number' || props.format?.number === true) {
+      //自動選取文字
+      const target = event.target
+      if (target instanceof HTMLInputElement && target.type === 'text') {
+        target.select()
+      }
+    }
+  }
+
   const inputRef = ref()
   defineExpose({
     inputRef // 暴露 inputRef 實例
@@ -167,6 +178,10 @@
     @compositionstart="onCompositionStart"
     @compositionend="onCompositionEnd"
     @change="nameChange"
+    :class="{
+      'input-text-end': type === 'number' || format?.number === true
+    }"
+    @focusin="handleFocusin"
   >
     <template v-slot:prepend-inner>
       <div class="prepend-inner-content">
@@ -268,5 +283,9 @@
     :deep(.v-field__input) {
       color: var(--input-disabled-text-color);
     }
+  }
+  /* 數字欄位的文字要置右 */
+  .v-input.input-text-end :deep(input) {
+    text-align: end;
   }
 </style>

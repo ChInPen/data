@@ -97,6 +97,53 @@
     }
   )
 
+  const handleKeydownArrow = (event: KeyboardEvent) => {
+    // 只處理 input (textarea 是 HTMLTextAreaElement)
+    if (!(event.target instanceof HTMLInputElement)) return
+    const input = event.target
+    // 不處理 readonly、disabled，不處理 checkbox、radio 等類型
+    const notInputTypes = ['checkbox', 'radio', 'hidden', 'file', 'submit', 'reset', 'button']
+    if (notInputTypes.includes(input.type) || input.readOnly || input.disabled) return
+
+    const row = input.closest('tr')
+    if (!row) return
+    const td = input.closest('td')
+    if (!td) return
+
+    // 找下一格輸入框的判斷標準 (input、textarea)
+    const canInput = (el: Element) => {
+      if (el instanceof HTMLTextAreaElement) {
+        return !el.readOnly && !el.disabled
+      }
+      if (el instanceof HTMLInputElement) {
+        return !notInputTypes.includes(el.type) && !el.readOnly && !el.disabled
+      }
+      return false
+    }
+
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault()
+
+      const tds = Array.from(row?.children ?? [])
+      const colIndex = tds.indexOf(td) // 第幾欄（從 0 開始）
+
+      // 行上下移動
+      const targetRow =
+        event.key === 'ArrowDown'
+          ? (row.nextElementSibling as HTMLTableRowElement)
+          : (row.previousElementSibling as HTMLTableRowElement)
+
+      if (targetRow) {
+        const targetTd = targetRow.children[colIndex]
+        const sameColumnInput = targetTd?.querySelector('input, textarea') as
+          | HTMLInputElement
+          | HTMLTextAreaElement
+
+        if (canInput(sameColumnInput)) sameColumnInput.focus()
+      }
+    }
+  }
+
   defineExpose({
     get selected() {
       return selectRow.value
@@ -108,7 +155,7 @@
 </script>
 
 <template>
-  <v-table v-bind="$attrs" class="c-table">
+  <v-table v-bind="$attrs" class="c-table" @keydown="handleKeydownArrow">
     <template v-slot:default>
       <thead v-if="$slots.head">
         <tr :class="[thAlign]">

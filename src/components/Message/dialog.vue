@@ -116,7 +116,8 @@
   .title-icon {
     padding-top: 5px;
     padding-bottom: 5px;
-    text-align: center;
+    display: flex;
+    justify-content: center;
   }
   .msg-area {
     font-size: 28px;
