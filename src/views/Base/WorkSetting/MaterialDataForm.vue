@@ -314,6 +314,22 @@
 
   //規格說明彈窗
   const projectTypeDS = ref(false)
+  const projectTypeItems = computed(() => {
+    const { pjT1, pjT2, pjT3, pjT4, pjT5, pjT6, pjT7, pjT8, pjT9, pjT10 } = formData.value
+    return { pjT1, pjT2, pjT3, pjT4, pjT5, pjT6, pjT7, pjT8, pjT9, pjT10 }
+  })
+  const handlePJTsave = (data: any) => {
+    formData.value.pjT1 = data.pjt1
+    formData.value.pjT2 = data.pjt2
+    formData.value.pjT3 = data.pjt3
+    formData.value.pjT4 = data.pjt4
+    formData.value.pjT5 = data.pjt5
+    formData.value.pjT6 = data.pjt6
+    formData.value.pjT7 = data.pjt7
+    formData.value.pjT8 = data.pjt8
+    formData.value.pjT9 = data.pjt9
+    formData.value.pjT10 = data.pjt10
+  }
 </script>
 
 <template>
@@ -743,5 +759,5 @@
     :m_user="formData.m_USER"
   />
 
-  <project-type v-model="projectTypeDS" />
+  <project-type v-model="projectTypeDS" :items="projectTypeItems" @save="handlePJTsave" />
 </template>

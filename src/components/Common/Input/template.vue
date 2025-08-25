@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-  import { ref, computed, useAttrs } from 'vue'
+  import { ref, computed, useAttrs, getCurrentInstance } from 'vue'
   import type { PropType } from 'vue'
-  import { cIcon } from '@/components/Common'
+  import { cIcon, cButton } from '@/components/Common'
   import {
     numberFormat,
     numberFormatValue,
@@ -40,7 +40,7 @@
     },
     format: Object as PropType<tFormat>
   })
-  const emit = defineEmits(['change'])
+  const emit = defineEmits(['change', 'button'])
 
   const numberFormatOptions = computed(() => {
     const { minus, decimal, decAfterN } = props.format ?? {}
@@ -106,10 +106,8 @@
       model.value = dateFormatValue(newVal, { dateTW: true })
     }
   }
-  const redicon = computed(() => {
-    const disabled = attr?.disabled ?? false
-    return props.isRequired && disabled === false
-  })
+  const disabled = computed(() => attr?.disabled ?? false)
+  const redicon = computed(() => props.isRequired && disabled.value === false)
 
   //密碼用(type="password")
   const lookPass = ref(false)
@@ -160,6 +158,16 @@
     }
   }
 
+  //控制輸入框內的按鈕要不要顯示
+  const instance = getCurrentInstance()
+  const hasButtonEvent = computed(() => {
+    // 注意 defineEmits 對應到 template 裡是 onButton
+    return !!instance?.vnode.props?.onButton
+  })
+
+  //每次渲染一個輸入框就 random 一個 name，避免觸發瀏覽器 autocomplete
+  const randomName = ref('field_' + Math.random().toString(36).slice(2, 11))
+
   const inputRef = ref()
   defineExpose({
     inputRef // 暴露 inputRef 實例
@@ -169,6 +177,7 @@
 <template>
   <v-text-field
     ref="inputRef"
+    :name="randomName"
     v-bind="$attrs"
     v-model="inputValue"
     :type="inputType"
@@ -208,10 +217,10 @@
         />
       </div>
     </template>
-    <template v-slot:append-inner v-if="props.type === 'password'">
-      <div>
+    <template v-slot:append-inner v-if="(props.type === 'password' || hasButtonEvent) && !disabled">
+      <div class="d-flex align-items-center">
         <c-icon
-          v-if="lookPass"
+          v-if="props.type === 'password' && lookPass"
           icon="fa-solid fa-eye-slash"
           size="20"
           class="mx-1"
@@ -219,13 +228,23 @@
           @click="lookPass = false"
         />
         <c-icon
-          v-else
+          v-if="props.type === 'password' && !lookPass"
           icon="fa-solid fa-eye"
           size="20"
           class="mx-1"
           color="#4b4b4b"
           @click="lookPass = true"
         />
+        <c-button
+          v-if="hasButtonEvent"
+          kind="pick"
+          class="p-0"
+          width="40px"
+          density="comfortable"
+          @click="emit('button')"
+        >
+          ...
+        </c-button>
       </div>
     </template>
   </v-text-field>

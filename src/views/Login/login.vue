@@ -81,6 +81,7 @@
                 <!--公司編號-->
                 <c-input
                   v-model="comp"
+                  name="comp"
                   class="mt-3"
                   label="公司編號"
                   icon="fa-solid fa-briefcase"
@@ -88,6 +89,7 @@
                 <!--帳號-->
                 <c-input
                   v-model="username"
+                  name="acct"
                   class="mt-2"
                   label="使用者帳號"
                   icon="fa-solid fa-user"
@@ -95,6 +97,7 @@
                 <!--密碼-->
                 <c-input
                   v-model="password"
+                  name="pswd"
                   class="mt-2"
                   label="使用者密碼"
                   icon="fa-solid fa-unlock-keyhole"

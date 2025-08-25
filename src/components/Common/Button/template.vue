@@ -10,7 +10,8 @@
     },
     color: String,
     kind: String,
-    value: String // 作為 slot fallback
+    value: String, // 作為 slot fallback
+    width: [Number, String]
   })
 
   const emit = defineEmits(['click'])
@@ -22,10 +23,26 @@
       'background-color': props.color ?? kindColor
     }
   })
+  //寬度
+  const widthStyle = computed(() => {
+    if (!props.width) return { width: '100%' }
+
+    // 如果是數字，補上 px
+    if (typeof props.width === 'number') return { width: `${props.width}px`, 'min-width': 0 }
+    // 只允許數字 + %, px, em, rem
+    if (/^\d+(px|%|em|rem)?$/.test(props.width)) return { width: props.width, 'min-width': 0 }
+
+    return { width: '100%' }
+  })
 </script>
 
 <template>
-  <v-btn v-bind="$attrs" class="c-btn" :style="colorStyle" @click="$emit('click', $event)">
+  <v-btn
+    v-bind="$attrs"
+    class="c-btn"
+    :style="[colorStyle, widthStyle]"
+    @click="$emit('click', $event)"
+  >
     <template v-slot:default>
       <div class="d-flex align-items-center">
         <c-icon
@@ -45,7 +62,7 @@
 
 <style scoped>
   .c-btn {
-    width: 100%;
+    /* width: 100%; 改用computed計算 */
     padding: 0 12px;
   }
 

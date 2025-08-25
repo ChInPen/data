@@ -94,6 +94,11 @@
     const chooseItem = items.find((x) => x?.[valueColumn] === value)
     return chooseItem ? (chooseItem?.[titleColumn] ?? '') : ''
   }
+  const filterItems = (raw: any) => {
+    return Object.values(raw)
+      .map((v) => String(v))
+      .some((x) => x.toLowerCase().includes(search.value.toLowerCase()))
+  }
   watch(
     () => model.value,
     (newVal: any) => {
@@ -103,10 +108,13 @@
       }
     }
   )
+
+  const selectRef = ref()
 </script>
 
 <template>
   <v-select
+    ref="selectRef"
     v-bind="$attrs"
     v-model="model"
     v-model:menu="menuOpen"
@@ -144,43 +152,37 @@
       </div>
     </template>
     <template v-slot:prepend-item v-if="!props.hideSearch && items?.length && items?.length > 0">
-      <v-list-item class="select-search">
-        <c-input
-          ref="searchInput"
-          v-model="search"
-          icon="fa-solid fa-magnifying-glass"
-          clearable
-          @mousedown.stop
-          @click.stop
-        />
-      </v-list-item>
-      <v-divider class="mt-1 mb-1"></v-divider>
-    </template>
-    <template v-slot:item="{ item, index, props }">
-      <!-- 表頭 -->
-      <template v-if="itemColumns.length > 0">
-        <v-list-item density="compact" v-if="index === 0">
+      <div class="select-search">
+        <v-list-item>
+          <c-input
+            ref="searchInput"
+            v-model="search"
+            icon="fa-solid fa-magnifying-glass"
+            clearable
+            @mousedown.stop
+            @click.stop
+          />
+        </v-list-item>
+        <v-divider class="mt-1 mb-1"></v-divider>
+        <!-- 表頭 -->
+        <v-list-item class="items-header" v-if="itemColumns.length > 0" density="compact">
           <v-list-item-title class="text-grey">
             <v-row no-gutters>
-              <!--class="justify-content-around"-->
               <v-col v-for="(col, i) in itemColumns" :key="'head-' + i" class="px-2 text-center">
                 {{ col.label }}
               </v-col>
             </v-row>
           </v-list-item-title>
         </v-list-item>
-      </template>
-
+      </div>
+    </template>
+    <template v-slot:item="{ item, props }">
       <!-- 資料列 -->
       <v-list-item
         class="select-list-item"
         v-bind="{ ...props, title: undefined, ripple: { class: 'text-blue' } }"
         v-if="itemColumns.length > 0"
-        v-show="
-          Object.values(item.raw)
-            .map((v) => String(v))
-            .some((x) => x.includes(search))
-        "
+        v-show="filterItems(item.raw)"
       >
         <v-list-item-title>
           <v-row no-gutters>
@@ -266,9 +268,19 @@
   .select-list-item.v-list-item--active {
     background-color: #dbecfa;
   }
+  .select-search {
+    position: sticky;
+    top: -8px;
+    z-index: 10; /* 提高層級 */
+    background: #fff; /* 避免內容透出 */
+    padding-top: 8px;
+  }
   /* 選單查詢輸入框 選中時背景色 */
   .select-search :deep(.v-field--focused) {
     background-color: #e3f1fb;
+  }
+  .v-overlay__content.v-select__content :deep(.v-list):has(.select-search) {
+    padding-top: 0;
   }
   /* 禁用時底色和文字顏色  */
   :deep(.v-field--disabled) {

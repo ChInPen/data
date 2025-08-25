@@ -49,6 +49,14 @@
   }
   const searchEmpDS = ref(false)
   const flag = ref<'initNo' | 'finalNo'>('initNo')
+  const chooseInit = () => {
+    flag.value = 'initNo'
+    searchEmpDS.value = true
+  }
+  const chooseFinal = () => {
+    flag.value = 'finalNo'
+    searchEmpDS.value = true
+  }
   const searchPick = (data: any) => {
     if (flag.value === 'initNo') printForm.value.initNo = data.empno
     if (flag.value === 'finalNo') printForm.value.finalNo = data.empno
@@ -70,34 +78,14 @@
         />
       </v-col>
       <v-col cols="auto">
-        <c-button
-          kind="pick"
-          @click="
-            () => {
-              searchEmpDS = true
-              flag = 'initNo'
-            }
-          "
-        >
-          選擇
-        </c-button>
+        <c-button kind="pick" @click="chooseInit">選擇</c-button>
       </v-col>
       <v-col>
         <c-input v-model="printForm.initNo" label="起始人員編號" />
       </v-col>
       <v-responsive width="100%"></v-responsive>
       <v-col cols="auto">
-        <c-button
-          kind="pick"
-          @click="
-            () => {
-              searchEmpDS = true
-              flag = 'finalNo'
-            }
-          "
-        >
-          選擇
-        </c-button>
+        <c-button kind="pick" @click="chooseFinal">選擇</c-button>
       </v-col>
       <v-col>
         <c-input v-model="printForm.finalNo" label="終止人員編號" />
