@@ -17,6 +17,7 @@
   import { auditInfo } from '@/components/AuditInfo'
   import { GenerateRec } from '@/utils/ucommon'
   import { projectType } from '@/components/ProjectType'
+  import { pickItem } from '@/components/PickItem'
 
   const store = useMaterialDataStore()
   const router = useRouter()
@@ -330,6 +331,12 @@
     formData.value.pjT9 = data.pjt9
     formData.value.pjT10 = data.pjt10
   }
+
+  //選擇工料彈窗
+  const pickItemDS = ref(false)
+  const handlePickItemOpen = () => {
+    pickItemDS.value = true
+  }
 </script>
 
 <template>
@@ -603,7 +610,7 @@
           <c-table ref="e3Table" class="mt-2" v-model="e3DataList" striped="even" hover selectable>
             <template v-slot:head>
               <th width="80">序號</th>
-              <th width="200">工料編號</th>
+              <th width="250">工料編號</th>
               <th>工料名稱</th>
               <th width="160">單位</th>
               <th width="150">數量</th>
@@ -613,7 +620,13 @@
             </template>
             <template v-slot:body="{ scope }">
               <td>{{ scope.ibomrec }}</td>
-              <td><c-input v-model="scope.ibomno" :disabled="store.isDetail" /></td>
+              <td>
+                <c-input
+                  v-model="scope.ibomno"
+                  :disabled="store.isDetail"
+                  @button="handlePickItemOpen"
+                />
+              </td>
               <td><c-input v-model="scope.ibomname" :disabled="true" /></td>
               <td>
                 <c-select
@@ -674,7 +687,7 @@
           <c-table ref="esTable" class="mt-2" v-model="esDataList" striped="even" hover selectable>
             <template v-slot:head>
               <th width="80">序號</th>
-              <th width="200">工料編號</th>
+              <th width="250">工料編號</th>
               <th width="400">工料名稱</th>
               <th width="160">單位</th>
               <th width="150">數量</th>
@@ -686,7 +699,13 @@
             </template>
             <template v-slot:body="{ scope }">
               <td>{{ scope.ibomrec }}</td>
-              <td><c-input v-model="scope.ibomno" :disabled="store.isDetail" /></td>
+              <td>
+                <c-input
+                  v-model="scope.ibomno"
+                  :disabled="store.isDetail"
+                  @button="handlePickItemOpen"
+                />
+              </td>
               <td><c-input v-model="scope.ibomname" :disabled="true" /></td>
               <td>
                 <c-select
@@ -760,4 +779,5 @@
   />
 
   <project-type v-model="projectTypeDS" :items="projectTypeItems" @save="handlePJTsave" />
+  <pick-item v-model="pickItemDS" @pick="(data) => console.log(data)" />
 </template>
