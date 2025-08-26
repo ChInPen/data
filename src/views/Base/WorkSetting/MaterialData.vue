@@ -6,6 +6,7 @@
   import { message } from '@/components/Message/service' //訊息窗元件
   import { useMaterialDataStore } from '@/store/materialData'
   import { useRouter } from 'vue-router'
+  import print from './Components/MaterialDataPrint.vue'
 
   const store = useMaterialDataStore()
   const router = useRouter()
@@ -135,13 +136,16 @@
     })
     filterSearch()
   })
+
+  //列印
+  const printDS = ref(false)
 </script>
 
 <template>
   <!--頂部 title & 按鈕區-->
   <c-bread>
     <div class="col-auto">
-      <!-- <c-button kind="print" icon="fa-solid fa-print" @click="printDS = true">列印</c-button> -->
+      <c-button kind="print" icon="fa-solid fa-print" @click="printDS = true">列印</c-button>
     </div>
     <div class="col-auto">
       <c-button kind="create" icon="mdi-plus-circle" @click="handleCreate">新增</c-button>
@@ -245,4 +249,7 @@
       </td>
     </template>
   </c-table>
+
+  <!--列印 彈出視窗-->
+  <print v-model="printDS" />
 </template>

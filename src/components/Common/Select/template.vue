@@ -183,6 +183,7 @@
         v-bind="{ ...props, title: undefined, ripple: { class: 'text-blue' } }"
         v-if="itemColumns.length > 0"
         v-show="filterItems(item.raw)"
+        :disabled="item.raw?.disabled === true"
       >
         <v-list-item-title>
           <v-row no-gutters>
@@ -198,6 +199,7 @@
         v-bind="{ ...props, title: undefined, ripple: { class: 'text-blue' } }"
         v-if="itemColumns.length == 0"
         v-show="String(item.value).includes(search) || item.title.includes(search)"
+        :disabled="item.raw?.disabled === true"
       >
         <v-list-item-title class="title">{{ item.title }}</v-list-item-title>
       </v-list-item>
@@ -259,6 +261,7 @@
   .select-list-item .title {
     color: var(--select-menu-text-color);
     font-size: 18px;
+    white-space: pre-wrap;
   }
   /* 選單選項(滑鼠停留)背景色 */
   .select-list-item:hover {
@@ -289,5 +292,9 @@
     :deep(.v-field__input) {
       color: var(--input-disabled-text-color);
     }
+  }
+  /* 下拉選項禁用時底色  */
+  .v-list-item--disabled {
+    background-color: #b0bccf;
   }
 </style>

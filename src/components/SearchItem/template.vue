@@ -19,25 +19,18 @@
   }
 
   const filter = ref({
-    type1: 'suppno',
-    type2: 'suppabbr',
+    type1: 'itemno',
+    type2: 'itemname',
     filter1: '',
     filter2: ''
   })
   const filterDDL = [
-    { name: 'suppno', label: '廠商編號' },
-    { name: 'suppabbr', label: '廠商簡稱' },
-    { name: 'suppname', label: '廠商名稱' },
-    { name: 'con1', label: '聯 絡 人1' },
-    { name: 'con2', label: '聯 絡 人2' },
-    { name: 'boss', label: '負 責 人' },
-    { name: 'tel1', label: '電 話1' },
-    { name: 'tel2', label: '電 話2' },
-    { name: 'fax', label: '傳 真' },
-    { name: 'mobitel1', label: '行動電話1' },
-    { name: 'mobitel2', label: '行動電話2' },
-    { name: 'mobitel3', label: '行動電話3' },
-    { name: 'compaddr', label: '公司地址' }
+    { name: 'itemno', label: '工料編號' },
+    { name: 'itemname', label: '工料名稱' },
+    { name: 'ikindno', label: '類別編號' },
+    { name: 'ikindname', label: '類別名稱' },
+    { name: 'stkpurpc', label: '進        價' },
+    { name: 'stksalpc', label: '售        價' }
   ]
   const tbData = ref<SearchData[]>([])
 
@@ -50,27 +43,33 @@
       })
       return
     }
+    const obj: Record<string, any> = {
+      itemno: '',
+      ikindno: '',
+      itemname: '',
+      mkindno: '',
+      ikindname: '',
+      stkpurpc: 0,
+      stksalpc: 0
+    }
+    obj[filter.value.type1] = filter.value.filter1 ?? ''
+    obj[filter.value.type2] = filter.value.filter2 ?? ''
     await callApi({
       method: 'POST',
-      url: api.Supp.Supp_Brow,
-      data: {
-        query_project_name: filter.value.type1,
-        query_project_value: filter.value.filter1 ?? '',
-        query_project_name2: filter.value.type2,
-        query_project_value2: filter.value.filter2 ?? ''
-      }
+      url: api.Item.Item_List,
+      data: obj
     }).then((res: any) => {
       if (res?.status === 200) {
-        const data: any[] = res?.data ?? []
-        tbData.value = data
+        const { _Lists } = res?.data ?? []
+        if (_Lists && Array.isArray(_Lists)) tbData.value = _Lists
       }
     })
   }
   // 清空查詢條件
   const handleClear = () => {
     filter.value = {
-      type1: 'suppno',
-      type2: 'suppabbr',
+      type1: 'itemno',
+      type2: 'itemname',
       filter1: '',
       filter2: ''
     }
@@ -94,7 +93,7 @@
   <c-dialog v-model="isOpen" width="1100" @afterLeave="handleDialogClose" title-divider>
     <template v-slot:title>
       <v-row dense :align="'center'">
-        <v-col>選擇廠商</v-col>
+        <v-col>選擇工料</v-col>
         <v-col cols="auto">
           <c-button kind="cancel" icon="mdi-close-circle" @click="isOpen = false">關閉</c-button>
         </v-col>
@@ -156,19 +155,15 @@
       hover
     >
       <template v-slot:head>
-        <th class="text-center">廠商編號</th>
-        <th class="text-center">廠商簡稱</th>
-        <th class="text-center">聯絡人1</th>
-        <th class="text-center">電話1</th>
-        <th class="text-center">行動電話1</th>
+        <th class="text-center">工料編號</th>
+        <th class="text-center">工料名稱</th>
+        <th class="text-center">工料分類</th>
         <th></th>
       </template>
       <template v-slot:body="{ scope }">
-        <td class="text-center">{{ scope.suppno }}</td>
-        <td class="text-center">{{ scope.suppabbr }}</td>
-        <td class="text-center">{{ scope.con1 }}</td>
-        <td class="text-center">{{ scope.tel1 }}</td>
-        <td class="text-center">{{ scope.mobitel1 }}</td>
+        <td class="text-center">{{ scope.itemno }}</td>
+        <td class="text-center">{{ scope.itemname }}</td>
+        <td class="text-center">{{ scope.mkindname }}</td>
         <td>
           <v-row dense justify="center">
             <v-col cols="auto">

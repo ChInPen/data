@@ -406,27 +406,14 @@
             </v-col>
             <v-responsive width="100%"></v-responsive>
             <v-col :cols="3" class="px-2">
-              <v-row dense class="align-items-center">
-                <!-- <v-col cols="auto" v-if="!store.isDetail">
-                  <c-button
-                    kind="pick"
-                    icon="mdi-map-marker-radius"
-                    @click="pickAdderComp"
-                  >
-                    選擇地址
-                  </c-button>
-                </v-col> -->
-                <v-col>
-                  <c-input
-                    v-model="formData.ziP1"
-                    label="郵遞區號"
-                    icon="fa-solid fa-location-dot"
-                    :disabled="store.isDetail"
-                    :readonly="!store.isDetail"
-                    @button="pickAdderComp"
-                  />
-                </v-col>
-              </v-row>
+              <c-input
+                v-model="formData.ziP1"
+                label="郵遞區號"
+                icon="fa-solid fa-location-dot"
+                :disabled="store.isDetail"
+                :readonly="!store.isDetail"
+                @button="pickAdderComp"
+              />
             </v-col>
             <v-col :cols="8" class="px-2">
               <c-input
@@ -437,21 +424,14 @@
               />
             </v-col>
             <v-col :cols="3" class="px-2">
-              <v-row dense class="align-items-center">
-                <v-col cols="auto" v-if="!store.isDetail">
-                  <c-button kind="pick" icon="mdi-map-marker-radius" @click="pickAdderFact">
-                    選擇地址
-                  </c-button>
-                </v-col>
-                <v-col>
-                  <c-input
-                    v-model="formData.ziP2"
-                    label="郵遞區號"
-                    icon="fa-solid fa-location-dot"
-                    disabled
-                  />
-                </v-col>
-              </v-row>
+              <c-input
+                v-model="formData.ziP2"
+                label="郵遞區號"
+                icon="fa-solid fa-location-dot"
+                :disabled="store.isDetail"
+                :readonly="!store.isDetail"
+                @button="pickAdderFact"
+              />
             </v-col>
             <v-col :cols="8" class="px-2">
               <c-input

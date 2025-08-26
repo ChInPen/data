@@ -77,18 +77,11 @@
           hide-search
         />
       </v-col>
-      <v-col cols="auto">
-        <c-button kind="pick" @click="chooseInit">選擇</c-button>
+      <v-col cols="12">
+        <c-input v-model="printForm.initNo" label="起始人員編號" @button="chooseInit" />
       </v-col>
-      <v-col>
-        <c-input v-model="printForm.initNo" label="起始人員編號" />
-      </v-col>
-      <v-responsive width="100%"></v-responsive>
-      <v-col cols="auto">
-        <c-button kind="pick" @click="chooseFinal">選擇</c-button>
-      </v-col>
-      <v-col>
-        <c-input v-model="printForm.finalNo" label="終止人員編號" />
+      <v-col cols="12">
+        <c-input v-model="printForm.finalNo" label="終止人員編號" @button="chooseFinal" />
       </v-col>
       <v-col cols="12"></v-col>
       <v-responsive width="100%"></v-responsive>

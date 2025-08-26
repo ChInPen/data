@@ -104,7 +104,7 @@
   <c-dialog v-model="isOpen" width="1100" @afterLeave="handleDialogClose" title-divider>
     <template v-slot:title>
       <v-row dense :align="'center'">
-        <v-col>選擇人員</v-col>
+        <v-col>選擇業主</v-col>
         <v-col cols="auto">
           <c-button kind="cancel" icon="mdi-close-circle" @click="isOpen = false">關閉</c-button>
         </v-col>

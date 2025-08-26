@@ -140,6 +140,7 @@
           | HTMLTextAreaElement
 
         if (canInput(sameColumnInput)) sameColumnInput.focus()
+        targetRow.click()
       }
     }
   }

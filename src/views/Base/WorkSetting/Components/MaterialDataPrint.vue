@@ -1,7 +1,7 @@
 <script lang="ts" setup>
   import { ref, nextTick } from 'vue'
   import { cButton, cInput, cSelect, cDialog } from '@/components/Common' //共用元件
-  import { searchSupp } from '@/components/SearchSupp'
+  import { searchItem } from '@/components/SearchItem'
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
   import config from '@/config/config'
@@ -10,9 +10,10 @@
 
   //列印
   const printForm = ref({
-    initNo: '',
-    finalNo: '',
-    feetNo: '01'
+    itemNo_S: '',
+    itemNo_E: '',
+    footNote: '01',
+    report_Content: 'Arranged'
   })
   const feetNoDDL = ref({
     list: [
@@ -29,40 +30,37 @@
   const handlePrintClose = () => {
     nextTick(() => {
       printForm.value = {
-        initNo: '',
-        finalNo: '',
-        feetNo: '01'
+        itemNo_S: '',
+        itemNo_E: '',
+        footNote: '01',
+        report_Content: 'Arranged'
       }
     })
   }
   const handlePreview = () => {
     callApi({
       method: 'POST',
-      url: api.Supp.Supp_Print,
-      data: {
-        footNote: printForm.value.feetNo,
-        suppNo_S: printForm.value.initNo,
-        suppNo_E: printForm.value.finalNo
-      }
+      url: api.Item.Item_Print,
+      data: { ...printForm.value }
     }).then((res: any) => {
       if (typeof res === 'string' && res.startsWith('PDF')) {
         window.open(config.apiUri + '/' + res)
       }
     })
   }
-  const searchSuppDS = ref(false)
+  const searchItemDS = ref(false)
   const flag = ref<'initNo' | 'finalNo'>('initNo')
   const chooseInit = () => {
     flag.value = 'initNo'
-    searchSuppDS.value = true
+    searchItemDS.value = true
   }
   const chooseFinal = () => {
     flag.value = 'finalNo'
-    searchSuppDS.value = true
+    searchItemDS.value = true
   }
   const searchPick = (data: any) => {
-    if (flag.value === 'initNo') printForm.value.initNo = data.suppno
-    if (flag.value === 'finalNo') printForm.value.finalNo = data.suppno
+    if (flag.value === 'initNo') printForm.value.itemNo_S = data.itemno
+    if (flag.value === 'finalNo') printForm.value.itemNo_E = data.itemno
   }
 </script>
 
@@ -72,7 +70,21 @@
     <v-row dense justify="center" :align="'center'">
       <v-col cols="12">
         <c-select
-          v-model="printForm.feetNo"
+          v-model="printForm.report_Content"
+          label="報表內容"
+          :items="[
+            { label: '內定報表', value: 'Arranged' },
+            { label: '自訂1', disabled: true },
+            { label: '自訂2', disabled: true }
+          ]"
+          item-title="label"
+          item-value="value"
+          hide-search
+        />
+      </v-col>
+      <v-col cols="12">
+        <c-select
+          v-model="printForm.footNote"
           label="單行註腳"
           :items="feetNoDDL.list"
           :item-title="feetNoDDL.title"
@@ -81,10 +93,10 @@
         />
       </v-col>
       <v-col cols="12">
-        <c-input v-model="printForm.initNo" label="起始廠商編號" @button="chooseInit" />
+        <c-input v-model="printForm.itemNo_S" label="起始工料編號" @button="chooseInit" />
       </v-col>
       <v-col cols="12">
-        <c-input v-model="printForm.finalNo" label="終止廠商編號" @button="chooseFinal" />
+        <c-input v-model="printForm.itemNo_E" label="終止工料編號" @button="chooseFinal" />
       </v-col>
       <v-col cols="12"></v-col>
       <v-responsive width="100%"></v-responsive>
@@ -108,5 +120,5 @@
     </template>
   </c-dialog>
 
-  <search-supp v-model="searchSuppDS" @pick="searchPick" />
+  <search-item v-model="searchItemDS" @pick="searchPick" />
 </template>

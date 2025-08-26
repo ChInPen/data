@@ -91,7 +91,8 @@ export default {
     Item_DEL: 'api/Item/Item_Del',
     Item_Data: 'api/Item/Item_Data',
     Item_ReNew: 'api/Item/Item_ReNew',
-    ItemNo_Data: 'api/Item/ItemNo_Data'
+    ItemNo_Data: 'api/Item/ItemNo_Data',
+    Item_Print: 'api/Item/Item_Print'
   },
   //報價單
   Sqte: {
