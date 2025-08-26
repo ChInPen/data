@@ -9,28 +9,31 @@
   const emits = defineEmits(['pick'])
 
   type SearchData = {
-    itemno: string
-    itemname: string
-    stksalpc: number
-    stkpurpc: number
-    ikindname: string
-    mkindname: string
+    taxkindno: string
+    taxkindc: string
+    protno: string
+    protabbr: string
+    protname: string
+    custno: string
+    custabbr: string
+    protaddr: string
     [key: string]: any
   }
 
   const filter = ref({
-    type1: 'itemno',
-    type2: 'itemname',
+    type1: 'protno',
+    type2: 'protname',
     filter1: '',
     filter2: ''
   })
   const filterDDL = [
-    { name: 'itemno', label: '工料編號' },
-    { name: 'itemname', label: '工料名稱' },
-    { name: 'ikindno', label: '類別編號' },
-    { name: 'ikindname', label: '類別名稱' },
-    { name: 'stkpurpc', label: '進        價' },
-    { name: 'stksalpc', label: '售        價' }
+    { name: 'protno', label: '工程編號' },
+    { name: 'protabbr', label: '工程簡稱' },
+    { name: 'protname', label: '工程名稱' },
+    { name: 'custno', label: '業主編號' },
+    { name: 'custabbr', label: '業主簡稱' },
+    { name: 'tel', label: '電        話' },
+    { name: 'covesum', label: '合約金額' }
   ]
   const tbData = ref<SearchData[]>([])
 
@@ -43,33 +46,29 @@
       })
       return
     }
-    const obj: Record<string, any> = {
-      itemno: '',
-      ikindno: '',
-      itemname: '',
-      mkindno: '',
-      ikindname: '',
-      stkpurpc: 0,
-      stksalpc: 0
-    }
-    obj[filter.value.type1] = filter.value.filter1 ?? ''
-    obj[filter.value.type2] = filter.value.filter2 ?? ''
     await callApi({
       method: 'POST',
-      url: api.Item.Item_List,
-      data: obj
+      url: api.Project.Projectlist,
+      data: {
+        pageNumber: 1,
+        pageSize: 1000,
+        query_project_name_1st: filter.value.type1,
+        query_project_value_1st: filter.value.filter1 ?? '',
+        query_project_name_2nd: filter.value.type2,
+        query_project_value_2nd: filter.value.filter2 ?? ''
+      }
     }).then((res: any) => {
       if (res?.status === 200) {
-        const { _Lists } = res?.data ?? []
-        if (_Lists && Array.isArray(_Lists)) tbData.value = _Lists
+        const { data } = res?.data ?? []
+        if (data && Array.isArray(data)) tbData.value = data
       }
     })
   }
   // 清空查詢條件
   const handleClear = () => {
     filter.value = {
-      type1: 'itemno',
-      type2: 'itemname',
+      type1: 'protno',
+      type2: 'protname',
       filter1: '',
       filter2: ''
     }
@@ -93,7 +92,7 @@
   <c-dialog v-model="isOpen" width="1100" @afterLeave="handleDialogClose" title-divider>
     <template v-slot:title>
       <v-row dense :align="'center'">
-        <v-col>選擇工料</v-col>
+        <v-col>選擇工程</v-col>
         <v-col cols="auto">
           <c-button kind="cancel" icon="mdi-close-circle" @click="isOpen = false">關閉</c-button>
         </v-col>
@@ -155,15 +154,15 @@
       hover
     >
       <template v-slot:head>
-        <th class="text-center">工料編號</th>
-        <th class="text-center">工料名稱</th>
-        <th class="text-center">工料分類</th>
+        <th class="text-center">工程編號</th>
+        <th class="text-center">工程簡稱</th>
+        <th class="text-center">業主簡稱</th>
         <th></th>
       </template>
       <template v-slot:body="{ scope }">
-        <td class="text-center">{{ scope.itemno }}</td>
-        <td class="text-center">{{ scope.itemname }}</td>
-        <td class="text-center">{{ scope.mkindname }}</td>
+        <td class="text-center">{{ scope.protno }}</td>
+        <td class="text-center">{{ scope.protabbr }}</td>
+        <td class="text-center">{{ scope.custabbr }}</td>
         <td>
           <v-row dense justify="center">
             <v-col cols="auto">
