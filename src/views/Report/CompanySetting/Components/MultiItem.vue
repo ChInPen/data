@@ -5,22 +5,15 @@
   import api from '@/api'
   import { message } from '@/components/Message/service'
   type SearchData = {
-    custno: string
-    custname: string
-    custabbr: string
-    con: string
-    tel: string
-    mobitel: string
-    uniform: string
-    ckindname: string
-    akindc: string
-    fax: string
-    boss: string
-    taxkindno: string
-    taxkindc: string
-    a_user: string
-    m_user: string
+    itemno: string
+    itemname: string
+    ikindname: string
+    mkindname: string
+    stkpurpc: number
+    stksalpc: number
+    [key: string]: any
   }
+
   const isOpen = defineModel({ default: false })
   const emits = defineEmits<{
     (e: 'pick', value: SearchData[]): void
@@ -31,60 +24,62 @@
   const rightChecked = ref<Set<string>>(new Set())
 
   const filter = ref({
-    type1: 'custno',
-    type2: 'custabbr',
+    type1: 'itemno',
+    type2: 'itemname',
     filter1: '',
     filter2: ''
   })
   const filterDDL = [
-    { name: 'custno', label: '業主編號' },
-    { name: 'custabbr', label: '業主簡稱' },
-    { name: 'custname', label: '業主名稱' },
-    { name: 'tel', label: '電    話' },
-    { name: 'fax', label: '傳    真' },
-    { name: 'con', label: '聯 絡 人' },
-    { name: 'boss', label: '負 責 人' }
+    { name: 'itemno', label: '工料編號' },
+    { name: 'itemname', label: '工料名稱' },
+    { name: 'ikindname', label: '類別編號' },
+    { name: 'mkindname', label: '類別分類' },
+    { name: 'stkpurpc', label: '進        價' },
+    { name: 'stksalpc', label: '售        價' }
   ]
   // 左側實際顯示：查詢結果扣掉已選，避免重覆
   const leftList = computed(() => {
-    const chosen = new Set(picked.value.map((x) => x.custno))
-    return tbData.value.filter((x) => !chosen.has(x.custno))
+    const chosen = new Set(picked.value.map((x) => x.itemno))
+    return tbData.value.filter((x) => !chosen.has(x.itemno))
   })
 
-  // === 查詢 ===
+  // 查詢
   const handleSearch = async () => {
-    if (filter.value.type1 === filter.value.type2) {
-      message.alert({ type: 'warning', message: '查詢條件不可相同' })
+    if (filter.value.type1 == filter.value.type2) {
+      message.alert({
+        type: 'warning',
+        message: '查詢條件不可相同'
+      })
       return
     }
     const obj: Record<string, any> = {
-      custno: '',
-      custabbr: '',
-      custname: '',
-      con: '',
-      mobitel: '',
-      tel: '',
-      uniform: '',
-      fax: '',
-      boss: ''
+      itemno: '',
+      ikindno: '',
+      itemname: '',
+      mkindno: '',
+      ikindname: '',
+      stkpurpc: 0,
+      stksalpc: 0
     }
-    if (filter.value?.type1) obj[filter.value.type1] = filter.value?.filter1 ?? ''
-    if (filter.value?.type2) obj[filter.value.type2] = filter.value?.filter2 ?? ''
-
-    await callApi({ method: 'POST', url: api.Cust.Custlist, data: obj }).then((res: any) => {
+    obj[filter.value.type1] = filter.value.filter1 ?? ''
+    obj[filter.value.type2] = filter.value.filter2 ?? ''
+    await callApi({
+      method: 'POST',
+      url: api.Item.Item_List,
+      data: obj
+    }).then((res: any) => {
       if (res?.status === 200) {
-        const data: any[] = res?.data ?? []
-        tbData.value = data
-        leftChecked.value.clear()
-        rightChecked.value.clear()
+        const { _Lists } = res?.data ?? []
+        if (_Lists && Array.isArray(_Lists)) tbData.value = _Lists
       }
+      console.log(tbData.value)
     })
   }
 
   // === 清空查詢條件 ===
   const handleClear = () => {
     // 只清空查詢條件
-    filter.value = { type1: 'custno', type2: 'custabbr', filter1: '', filter2: '' }
+    filter.value = { type1: 'itemno', type2: 'itemname', filter1: '', filter2: '' }
   }
   const handleReset = () => {
     handleClear()
@@ -95,7 +90,7 @@
   // === 單筆選擇===
   const handleChoose = (raw: SearchData) => {
     // 單筆加入右側（避免重覆）
-    if (!picked.value.find((x) => x.custno === raw.custno)) {
+    if (!picked.value.find((x) => x.itemno === raw.itemno)) {
       picked.value.push(raw)
       console.log('picked', picked.value)
     }
@@ -118,7 +113,7 @@
   }
   // 刪除方法
   const handleRemove = (raw: SearchData) => {
-    picked.value = picked.value.filter((x) => x.custno !== raw.custno)
+    picked.value = picked.value.filter((x) => x.itemno !== raw.itemno)
   }
 </script>
 
@@ -126,7 +121,7 @@
   <c-dialog v-model="isOpen" width="85%" @afterLeave="handleDialogClose" title-divider>
     <template #title>
       <v-row dense align="center">
-        <v-col>選擇人員（可多選）</v-col>
+        <v-col>選擇工料（可多選）</v-col>
         <v-col cols="auto">
           <c-button kind="cancel" icon="mdi-close-circle" @click="isOpen = false">關閉</c-button>
         </v-col>
@@ -188,19 +183,15 @@
         <div class="text-subtitle-2 mb-1">查詢結果（{{ leftList.length }}）</div>
         <c-table :model-value="leftList" striped="even" height="420" fixed-header hover>
           <template #head>
-            <th class="text-center">業主編號</th>
-            <th class="text-center">業主簡稱</th>
-            <th class="text-center">聯絡人</th>
-            <th class="text-center">電話</th>
-            <th class="text-center">行動電話</th>
+            <th class="text-center">工料編號</th>
+            <th class="text-center">工料名稱</th>
+            <th class="text-center">類別分類</th>
             <th class="text-center"></th>
           </template>
           <template #body="{ scope }">
-            <td class="text-center">{{ scope.custno }}</td>
-            <td class="text-center">{{ scope.custabbr }}</td>
-            <td class="text-center">{{ scope.con }}</td>
-            <td class="text-center">{{ scope.tel }}</td>
-            <td class="text-center">{{ scope.mobitel }}</td>
+            <td class="text-center">{{ scope.itemno }}</td>
+            <td class="text-center">{{ scope.itemname }}</td>
+            <td class="text-center">{{ scope.mkindname }}</td>
             <td class="text-center">
               <c-button
                 kind="choose"
@@ -219,19 +210,15 @@
         <div class="text-subtitle-2 mb-1">已選清單（{{ picked.length }}）</div>
         <c-table :model-value="picked" striped="even" height="420" fixed-header hover>
           <template #head>
-            <th class="text-center">業主編號</th>
-            <th class="text-center">業主簡稱</th>
-            <th class="text-center">聯絡人</th>
-            <th class="text-center">電話</th>
-            <th class="text-center">行動電話</th>
+            <th class="text-center">工料編號</th>
+            <th class="text-center">工料名稱</th>
+            <th class="text-center">類別分類</th>
             <th class="text-center"></th>
           </template>
           <template #body="{ scope }">
-            <td class="text-center">{{ scope.custno }}</td>
-            <td class="text-center">{{ scope.custabbr }}</td>
-            <td class="text-center">{{ scope.con }}</td>
-            <td class="text-center">{{ scope.tel }}</td>
-            <td class="text-center">{{ scope.mobitel }}</td>
+            <td class="text-center">{{ scope.itemno }}</td>
+            <td class="text-center">{{ scope.itemname }}</td>
+            <td class="text-center">{{ scope.mkindname }}</td>
             <td class="text-center">
               <c-button
                 kind="cancel"
