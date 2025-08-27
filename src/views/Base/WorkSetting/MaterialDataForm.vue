@@ -334,8 +334,46 @@
 
   //選擇工料彈窗
   const pickItemDS = ref(false)
-  const handlePickItemOpen = () => {
+  const pickItemTarget = ref<'e3' | 'es' | ''>('')
+  const handlePickItemOpen = (target: 'e3' | 'es') => {
+    pickItemTarget.value = target
     pickItemDS.value = true
+  }
+  const handleItemPick = (data: any[]) => {
+    if (Array.isArray(data)) {
+      data = data.map(({ itemno, itemname, ibompqty, stkunit, stksalpc }) => ({
+        ibomno: itemno,
+        ibomname: itemname,
+        ibomsqty: ibompqty,
+        ibomunit: stkunit,
+        ibomsalpc: stksalpc
+      }))
+      if (pickItemTarget.value === 'e3') {
+        let selectIndex = e3Table.value?.selectIndex?.[0]
+        data.forEach((item, index) => {
+          if (index === 0) {
+            Object.assign(e3DataList.value[selectIndex], item)
+          } else {
+            e3DataList.value.splice(selectIndex, 0, { ...e3Empty, ...item })
+          }
+          handleE3totalCount(e3DataList.value[selectIndex])
+          selectIndex++
+        })
+        GenerateRec(e3DataList.value, 'ibomrec') //自動編號
+      } else if (pickItemTarget.value === 'es') {
+        let selectIndex = esTable.value?.selectIndex?.[0]
+        data.forEach((item, index) => {
+          if (index === 0) {
+            Object.assign(esDataList.value[selectIndex], item)
+          } else {
+            esDataList.value.splice(selectIndex, 0, { ...esEmpty, ...item })
+          }
+          handleEStotalCount(esDataList.value[selectIndex])
+          selectIndex++
+        })
+        GenerateRec(esDataList.value, 'ibomrec') //自動編號
+      }
+    }
   }
 </script>
 
@@ -624,7 +662,7 @@
                 <c-input
                   v-model="scope.ibomno"
                   :disabled="store.isDetail"
-                  @button="handlePickItemOpen"
+                  @button="handlePickItemOpen('e3')"
                 />
               </td>
               <td><c-input v-model="scope.ibomname" :disabled="true" /></td>
@@ -703,7 +741,7 @@
                 <c-input
                   v-model="scope.ibomno"
                   :disabled="store.isDetail"
-                  @button="handlePickItemOpen"
+                  @button="handlePickItemOpen('es')"
                 />
               </td>
               <td><c-input v-model="scope.ibomname" :disabled="true" /></td>
@@ -779,5 +817,5 @@
   />
 
   <project-type v-model="projectTypeDS" :items="projectTypeItems" @save="handlePJTsave" />
-  <pick-item v-model="pickItemDS" @pick="(data) => console.log(data)" />
+  <pick-item v-model="pickItemDS" @pick="handleItemPick" />
 </template>

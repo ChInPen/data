@@ -1,14 +1,6 @@
 <script lang="ts" setup>
   import { ref, nextTick } from 'vue'
-  import {
-    cInput,
-    cSelect,
-    cCheckbox,
-    cDialog,
-    cButton,
-    cTable,
-    cDataTable
-  } from '@/components/Common'
+  import { cInput, cSelect, cCheckbox, cDialog, cButton, cDataTable } from '@/components/Common'
   import type { DataTableHeader } from 'vuetify'
   import { callApi } from '@/utils/uapi'
   import api from '@/api'
