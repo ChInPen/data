@@ -5,6 +5,8 @@
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
   import config from '@/config/config'
+  import { useSearchSupp } from '@/store/searchSupp'
+  const store = useSearchSupp()
 
   const isOpen = defineModel({ default: false })
 
@@ -50,19 +52,30 @@
       }
     })
   }
+
+  //用 v-model 操控的方式
   const searchSuppDS = ref(false)
-  const flag = ref<'initNo' | 'finalNo'>('initNo')
+  //用 ref實例的open() 操控的方式
+  const searchRef = ref()
   const chooseInit = () => {
-    flag.value = 'initNo'
-    searchSuppDS.value = true
+    store.set(printForm, [{ from: 'suppno', to: 'initNo' }], {
+      open: searchRef.value?.open
+    })
+  }
+  const keydownInit = (e: KeyboardEvent) => {
+    store.keyEnter(e, printForm, [{ from: 'suppno', to: 'initNo' }], printForm.value.initNo, {
+      open: searchRef.value?.open
+    })
   }
   const chooseFinal = () => {
-    flag.value = 'finalNo'
-    searchSuppDS.value = true
+    store.set(printForm, [{ from: 'suppno', to: 'finalNo' }], {
+      open: searchRef.value?.open
+    })
   }
-  const searchPick = (data: any) => {
-    if (flag.value === 'initNo') printForm.value.initNo = data.suppno
-    if (flag.value === 'finalNo') printForm.value.finalNo = data.suppno
+  const keydownFinal = (e: KeyboardEvent) => {
+    store.keyEnter(e, printForm, [{ from: 'suppno', to: 'finalNo' }], printForm.value.finalNo, {
+      open: searchRef.value?.open
+    })
   }
 </script>
 
@@ -81,10 +94,20 @@
         />
       </v-col>
       <v-col cols="12">
-        <c-input v-model="printForm.initNo" label="起始廠商編號" @button="chooseInit" />
+        <c-input
+          v-model="printForm.initNo"
+          label="起始廠商編號"
+          @button="chooseInit"
+          @keydown="keydownInit"
+        />
       </v-col>
       <v-col cols="12">
-        <c-input v-model="printForm.finalNo" label="終止廠商編號" @button="chooseFinal" />
+        <c-input
+          v-model="printForm.finalNo"
+          label="終止廠商編號"
+          @button="chooseFinal"
+          @keydown="keydownFinal"
+        />
       </v-col>
       <v-col cols="12"></v-col>
       <v-responsive width="100%"></v-responsive>
@@ -108,5 +131,5 @@
     </template>
   </c-dialog>
 
-  <search-supp v-model="searchSuppDS" @pick="searchPick" />
+  <search-supp ref="searchRef" v-model="searchSuppDS" @pick="store.pick" />
 </template>

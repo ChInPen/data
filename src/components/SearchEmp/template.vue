@@ -1,19 +1,18 @@
 <script lang="ts" setup>
-  import { ref, nextTick } from 'vue'
+  import { ref, watch, nextTick } from 'vue'
   import { cInput, cSelect, cDialog, cButton, cTable } from '@/components/Common'
   import { callApi } from '@/utils/uapi'
   import api from '@/api'
   import { message } from '@/components/Message/service'
+  import { useSearchEmp } from '@/store/searchEmp'
+  const store = useSearchEmp()
+  import type { SearchData } from './type'
 
-  const isOpen = defineModel({ default: false })
+  const model = defineModel({ default: false })
   const emits = defineEmits(['pick'])
 
-  type SearchData = {
-    empno: string
-    empname: string
-    tel1: string
-    mobitel: string
-  }
+  // dialog 開關
+  const isOpen = ref(false)
 
   const filter = ref({
     type1: 'empno',
@@ -71,18 +70,48 @@
     isOpen.value = false
   }
 
+  // dialog 開啟時 (父層控制)
+  watch(
+    () => model.value,
+    async (newVal) => {
+      if (newVal) {
+        if (store.isSearch) {
+          filter.value.filter1 = store.searchText
+          await handleSearch()
+          if (tbData.value.length == 1) {
+            emits('pick', tbData.value[0])
+            handleDialogClose()
+            return
+          }
+        }
+        isOpen.value = true
+      } else {
+        isOpen.value = false
+      }
+    }
+  )
+
   // dialog 關閉時
   const handleDialogClose = () => {
     nextTick(() => {
       handleClear() //清空查詢條件
       tbData.value = []
+      store.clear()
+      model.value = false
     })
   }
 
   //開啟時先查詢一次
   const handleDialogOpen = () => {
-    handleSearch()
+    if (!store.isSearch) handleSearch()
   }
+
+  const open = () => {
+    model.value = true
+  }
+  defineExpose({
+    open
+  })
 </script>
 
 <template>
@@ -101,7 +130,7 @@
         </v-col>
       </v-row>
     </template>
-    <v-card color="#1b2b36" rounded="3">
+    <v-card color="#1b2b36" rounded="3" v-show="!store.isSearch">
       <v-card-text>
         <v-row dense>
           <v-col>

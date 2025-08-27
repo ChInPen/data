@@ -2,7 +2,6 @@
   import { ref, nextTick } from 'vue'
   import { cButton, cInput, cSelect, cDialog } from '@/components/Common' //共用元件
   import { searchItem } from '@/components/SearchItem'
-  import { searchProt } from '@/components/SearchProt'
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
   import config from '@/config/config'
