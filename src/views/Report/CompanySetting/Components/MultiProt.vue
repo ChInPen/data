@@ -5,42 +5,44 @@
   import api from '@/api'
   import { message } from '@/components/Message/service'
   type SearchData = {
-    itemno: string
-    itemname: string
-    ikindname: string
-    mkindname: string
-    stkpurpc: number
-    stksalpc: number
+    taxkindno: string
+    taxkindc: string
+    protno: string
+    protabbr: string
+    protname: string
+    custno: string
+    custabbr: string
+    protaddr: string
     [key: string]: any
   }
-
-  const isOpen = defineModel({ default: false })
-  const emits = defineEmits<{
-    (e: 'pick', value: SearchData[]): void
-  }>()
-  const tbData = ref<SearchData[]>([]) // 查詢結果
-  const picked = ref<SearchData[]>([]) // 右側已選
-  const leftChecked = ref<Set<string>>(new Set())
-  const rightChecked = ref<Set<string>>(new Set())
-
   const filter = ref({
-    type1: 'itemno',
-    type2: 'itemname',
+    type1: 'protno',
+    type2: 'protname',
     filter1: '',
     filter2: ''
   })
   const filterDDL = [
-    { name: 'itemno', label: '工料編號' },
-    { name: 'itemname', label: '工料名稱' },
-    { name: 'ikindname', label: '類別編號' },
-    { name: 'mkindname', label: '類別分類' },
-    { name: 'stkpurpc', label: '進        價' },
-    { name: 'stksalpc', label: '售        價' }
+    { name: 'protno', label: '工程編號' },
+    { name: 'protabbr', label: '工程簡稱' },
+    { name: 'protname', label: '工程名稱' },
+    { name: 'custno', label: '業主編號' },
+    { name: 'custabbr', label: '業主簡稱' },
+    { name: 'tel', label: '電        話' },
+    { name: 'covesum', label: '合約金額' }
   ]
+  const tbData = ref<SearchData[]>([]) // 查詢結果
+  const isOpen = defineModel({ default: false })
+  const emits = defineEmits<{
+    (e: 'pick', value: SearchData[]): void
+  }>()
+  const picked = ref<SearchData[]>([]) // 右側已選
+  const leftChecked = ref<Set<string>>(new Set())
+  const rightChecked = ref<Set<string>>(new Set())
+
   // 左側實際顯示：查詢結果扣掉已選，避免重覆
   const leftList = computed(() => {
-    const chosen = new Set(picked.value.map((x) => x.itemno))
-    return tbData.value.filter((x) => !chosen.has(x.itemno))
+    const chosen = new Set(picked.value.map((x) => x.protno))
+    return tbData.value.filter((x) => !chosen.has(x.protno))
   })
 
   // 查詢
@@ -53,24 +55,23 @@
       return
     }
     const obj: Record<string, any> = {
-      itemno: '',
-      ikindno: '',
-      itemname: '',
-      mkindno: '',
-      ikindname: '',
-      stkpurpc: 0,
-      stksalpc: 0
+      pageNumber: 1,
+      pageSize: 1000,
+      query_project_name_1st: filter.value.type1,
+      query_project_value_1st: filter.value.filter1 ?? '',
+      query_project_name_2nd: filter.value.type2,
+      query_project_value_2nd: filter.value.filter2 ?? ''
     }
     obj[filter.value.type1] = filter.value.filter1 ?? ''
     obj[filter.value.type2] = filter.value.filter2 ?? ''
     await callApi({
       method: 'POST',
-      url: api.Item.Item_List,
+      url: api.Project.Projectlist,
       data: obj
     }).then((res: any) => {
       if (res?.status === 200) {
-        const { _Lists } = res?.data ?? []
-        if (_Lists && Array.isArray(_Lists)) tbData.value = _Lists
+        const { data } = res?.data ?? []
+        if (data && Array.isArray(data)) tbData.value = data
       }
       console.log(tbData.value)
     })
@@ -79,7 +80,7 @@
   // === 清空查詢條件 ===
   const handleClear = () => {
     // 只清空查詢條件
-    filter.value = { type1: 'itemno', type2: 'itemname', filter1: '', filter2: '' }
+    filter.value = { type1: 'protno', type2: 'protname', filter1: '', filter2: '' }
   }
   const handleReset = () => {
     handleClear()
@@ -90,7 +91,7 @@
   // === 單筆選擇===
   const handleChoose = (raw: SearchData) => {
     // 單筆加入右側（避免重覆）
-    if (!picked.value.find((x) => x.itemno === raw.itemno)) {
+    if (!picked.value.find((x) => x.protno === raw.protno)) {
       picked.value.push(raw)
       console.log('picked', picked.value)
     }
@@ -113,16 +114,16 @@
   }
   // 刪除方法
   const handleRemove = (raw: SearchData) => {
-    picked.value = picked.value.filter((x) => x.itemno !== raw.itemno)
+    picked.value = picked.value.filter((x) => x.protno !== raw.protno)
   }
 
   //  === 全選 ===
   const pushToPickedUniq = (rows: SearchData[]) => {
-    const seen = new Set(picked.value.map((x) => x.itemno))
+    const seen = new Set(picked.value.map((x) => x.protno))
     rows.forEach((r) => {
-      if (!seen.has(r.itemno)) {
+      if (!seen.has(r.protno)) {
         picked.value.push(r)
-        seen.add(r.itemno)
+        seen.add(r.protno)
       }
     })
   }
@@ -140,7 +141,7 @@
   <c-dialog v-model="isOpen" width="85%" @afterLeave="handleDialogClose" title-divider>
     <template #title>
       <v-row dense align="center">
-        <v-col>選擇工料（可多選）</v-col>
+        <v-col>選擇工程（可多選）</v-col>
         <v-col cols="auto">
           <c-button kind="cancel" icon="mdi-close-circle" @click="isOpen = false">關閉</c-button>
         </v-col>
@@ -202,9 +203,9 @@
         <div class="text-subtitle-2 mb-1">查詢結果（{{ leftList.length }}）</div>
         <c-table :model-value="leftList" striped="even" height="420" fixed-header hover>
           <template #head>
-            <th class="text-center">工料編號</th>
-            <th class="text-center">工料名稱</th>
-            <th class="text-center">類別分類</th>
+            <th class="text-center">工程編號</th>
+            <th class="text-center">工程簡稱</th>
+            <th class="text-center">業主簡稱</th>
             <th class="text-center">
               <input
                 type="Checkbox"
@@ -216,9 +217,9 @@
             </th>
           </template>
           <template #body="{ scope }">
-            <td class="text-center">{{ scope.itemno }}</td>
-            <td class="text-center">{{ scope.itemname }}</td>
-            <td class="text-center">{{ scope.mkindname }}</td>
+            <td class="text-center">{{ scope.protno }}</td>
+            <td class="text-center">{{ scope.protabbr }}</td>
+            <td class="text-center">{{ scope.custabbr }}</td>
             <td class="text-center">
               <c-button
                 kind="choose"
@@ -237,15 +238,15 @@
         <div class="text-subtitle-2 mb-1">已選清單（{{ picked.length }}）</div>
         <c-table :model-value="picked" striped="even" height="420" fixed-header hover>
           <template #head>
-            <th class="text-center">工料編號</th>
-            <th class="text-center">工料名稱</th>
-            <th class="text-center">類別分類</th>
+            <th class="text-center">工程編號</th>
+            <th class="text-center">工程簡稱</th>
+            <th class="text-center">業主簡稱</th>
             <th class="text-center"></th>
           </template>
           <template #body="{ scope }">
-            <td class="text-center">{{ scope.itemno }}</td>
-            <td class="text-center">{{ scope.itemname }}</td>
-            <td class="text-center">{{ scope.mkindname }}</td>
+            <td class="text-center">{{ scope.protno }}</td>
+            <td class="text-center">{{ scope.protabbr }}</td>
+            <td class="text-center">{{ scope.custabbr }}</td>
             <td class="text-center">
               <c-button
                 kind="cancel"

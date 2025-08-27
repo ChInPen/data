@@ -226,7 +226,13 @@ const menu: MenuEntry[] = [
       {
         title: '工務',
         children: [
-          { title: '報價作業', path: '' },
+          {
+            title: '報價作業',
+            path: 'Quotation',
+            name: 'C01報價作業查詢',
+            component: () => import('@/views/Report/CompanySetting/Quotation.vue')
+          },
+
           { title: '請款作業', path: '' },
           { title: '應收總表', path: '' },
           { title: '進貨資料', path: '' },

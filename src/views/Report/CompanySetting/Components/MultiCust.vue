@@ -1,9 +1,10 @@
 <script lang="ts" setup>
-  import { ref, nextTick, computed, watch } from 'vue'
+  import { ref, nextTick, computed } from 'vue'
   import { cInput, cSelect, cDialog, cButton, cTable } from '@/components/Common'
   import { callApi } from '@/utils/uapi'
   import api from '@/api'
   import { message } from '@/components/Message/service'
+  // 資料庫進來的Cust
   type SearchData = {
     custno: string
     custname: string
@@ -21,6 +22,8 @@
     a_user: string
     m_user: string
   }
+
+  // 控制開關
   const isOpen = defineModel({ default: false })
   const emits = defineEmits<{
     (e: 'pick', value: SearchData[]): void
@@ -99,6 +102,24 @@
       picked.value.push(raw)
       console.log('picked', picked.value)
     }
+  }
+  //  === 全選 ===
+  const pushToPickedUniq = (rows: SearchData[]) => {
+    const seen = new Set(picked.value.map((x) => x.custno))
+    rows.forEach((r) => {
+      if (!seen.has(r.custno)) {
+        picked.value.push(r)
+        seen.add(r.custno)
+      }
+    })
+  }
+  function handleSelectAllLeft() {
+    pushToPickedUniq(leftList.value)
+    // 清掉暫時的選取
+    leftChecked.value.clear()
+    // 取消表頭的打勾
+    const el = document.getElementById('selectAllLeft') as HTMLInputElement | null
+    if (el) el.checked = false
   }
 
   // === 確認回傳 ===
@@ -193,7 +214,15 @@
             <th class="text-center">聯絡人</th>
             <th class="text-center">電話</th>
             <th class="text-center">行動電話</th>
-            <th class="text-center"></th>
+            <th class="text-center">
+              <input
+                type="Checkbox"
+                id="selectAllLeft"
+                class="me-2"
+                @change="handleSelectAllLeft"
+              />
+              <label for="selectAllLeft" class="text-center">全選</label>
+            </th>
           </template>
           <template #body="{ scope }">
             <td class="text-center">{{ scope.custno }}</td>
