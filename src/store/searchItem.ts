@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { SearchData } from '@/components/SearchCust/type'
+import type { SearchData } from '@/components/SearchItem/type'
 
 type PickSetting = {
   from: keyof SearchData
@@ -7,7 +7,7 @@ type PickSetting = {
   valueType?: 'string' | 'number'
 }
 
-export const useSearchCust = defineStore('searchCust', {
+export const useSearchItem = defineStore('searchItem', {
   state: () => ({
     target: {} as { value?: any; row?: number },
     pickSetting: [] as PickSetting[],

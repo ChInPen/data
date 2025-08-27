@@ -89,7 +89,7 @@
           await handleSearch()
           if (tbData.value.length == 1) {
             emits('pick', tbData.value[0])
-            model.value = false
+            handleDialogClose()
             return
           }
         }

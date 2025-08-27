@@ -2,9 +2,12 @@
   import { ref, nextTick } from 'vue'
   import { cButton, cInput, cSelect, cDialog } from '@/components/Common' //共用元件
   import { searchItem } from '@/components/SearchItem'
+  import { searchProt } from '@/components/SearchProt'
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
   import config from '@/config/config'
+  import { useSearchItem } from '@/store/searchItem'
+  const store = useSearchItem()
 
   const isOpen = defineModel({ default: false })
 
@@ -48,19 +51,30 @@
       }
     })
   }
+
+  //用 v-model 操控的方式
   const searchItemDS = ref(false)
-  const flag = ref<'initNo' | 'finalNo'>('initNo')
+  //用 ref實例的open() 操控的方式
+  const searchRef = ref()
   const chooseInit = () => {
-    flag.value = 'initNo'
-    searchItemDS.value = true
+    store.set(printForm, [{ from: 'itemno', to: 'itemNo_S' }], {
+      open: searchRef.value?.open
+    })
+  }
+  const keydownInit = (e: KeyboardEvent) => {
+    store.keyEnter(e, printForm, [{ from: 'itemno', to: 'itemNo_S' }], printForm.value.itemNo_S, {
+      open: searchRef.value?.open
+    })
   }
   const chooseFinal = () => {
-    flag.value = 'finalNo'
-    searchItemDS.value = true
+    store.set(printForm, [{ from: 'itemno', to: 'itemNo_E' }], {
+      open: searchRef.value?.open
+    })
   }
-  const searchPick = (data: any) => {
-    if (flag.value === 'initNo') printForm.value.itemNo_S = data.itemno
-    if (flag.value === 'finalNo') printForm.value.itemNo_E = data.itemno
+  const keydownFinal = (e: KeyboardEvent) => {
+    store.keyEnter(e, printForm, [{ from: 'itemno', to: 'itemNo_E' }], printForm.value.itemNo_E, {
+      open: searchRef.value?.open
+    })
   }
 </script>
 
@@ -93,10 +107,20 @@
         />
       </v-col>
       <v-col cols="12">
-        <c-input v-model="printForm.itemNo_S" label="起始工料編號" @button="chooseInit" />
+        <c-input
+          v-model="printForm.itemNo_S"
+          label="起始工料編號"
+          @button="chooseInit"
+          @keydown="keydownInit"
+        />
       </v-col>
       <v-col cols="12">
-        <c-input v-model="printForm.itemNo_E" label="終止工料編號" @button="chooseFinal" />
+        <c-input
+          v-model="printForm.itemNo_E"
+          label="終止工料編號"
+          @button="chooseFinal"
+          @keydown="keydownFinal"
+        />
       </v-col>
       <v-col cols="12"></v-col>
       <v-responsive width="100%"></v-responsive>
@@ -120,5 +144,5 @@
     </template>
   </c-dialog>
 
-  <search-item v-model="searchItemDS" @pick="searchPick" />
+  <search-item ref="searchRef" v-model="searchItemDS" @pick="store.pick" />
 </template>
