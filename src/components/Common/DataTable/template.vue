@@ -2,8 +2,10 @@
   import { ref, computed, watch, useSlots } from 'vue'
   import type { PropType } from 'vue'
   import type { DataTableHeader } from 'vuetify'
+  import { cCheckbox } from '@/components/Common'
 
   const model = defineModel<T[]>({ default: [] })
+  const selected = defineModel<any[]>('selected', { default: [] })
   const props = defineProps({
     headers: Array as PropType<DataTableHeader[]>,
     pageSize: {
@@ -32,7 +34,12 @@
     multiSelect: {
       type: Boolean,
       default: false
-    }
+    },
+    showSelect: {
+      type: Boolean,
+      default: false
+    },
+    itemValue: String
   })
   //分頁屬性
   const currentPage = ref(1)
@@ -159,12 +166,24 @@
     }
   }
 
+  //表格勾選
+  const checkedRows = computed(() => {
+    if (props.itemValue) {
+      const itemvalue = props.itemValue
+      return model.value.filter((x) => selected.value.includes(x[itemvalue]))
+    }
+    return []
+  })
+
   defineExpose({
     get selected() {
       return selectRows.value
     },
     get selectIndex() {
       return modelSelectIndexs.value
+    },
+    get checked() {
+      return checkedRows.value
     }
   })
 </script>
@@ -172,6 +191,7 @@
 <template>
   <v-data-table
     class="c-data-table"
+    v-model="selected"
     v-model:page="currentPage"
     :headers="headers"
     :items="model"
@@ -181,28 +201,52 @@
       class: 'c-data-table-th' + (headerProps?.class ?? '')
     }"
     @keydown="handleKeydownArrow"
+    :show-select="showSelect"
+    :item-value="itemValue"
+    no-data-text=""
   >
-    <template v-slot:body="{ items }">
+    <template v-slot:item="{ item, index, internalItem, isSelected, toggleSelect, columns }">
       <tr
-        v-for="(row, index) in items"
-        :key="`tb-row-${index}`"
         :class="{
-          'tr-selected': selectRows.includes(row)
+          'tr-selected': selectRows.includes(item) || checkedRows.includes(item)
         }"
-        @click="selectable ? handleRowSelect(row) : null"
+        @click="selectable ? handleRowSelect(item) : null"
       >
-        <td
-          v-for="col in headers"
-          class="c-data-table-td"
-          :class="col?.align ? `text-${col.align}` : ''"
-        >
-          <template v-if="!itemSlotList.includes(`item.${col?.key ?? ''}`)">
-            {{ col?.key ? row[col.key] : '' }}
-          </template>
-          <template v-else>
-            <slot :name="`item.${col?.key ?? ''}`" :scope="row" :index="computIndex(row)"></slot>
-          </template>
-        </td>
+        <template v-for="col in columns" :key="col.key ?? ''">
+          <!-- 勾選框 -->
+          <td
+            v-if="col.key === 'data-table-select'"
+            class="c-data-table-td"
+            :class="col?.align ? `text-${col.align}` : ''"
+          >
+            <c-checkbox
+              size="3"
+              icon-justify="center"
+              :model-value="isSelected(internalItem)"
+              @click="(e: MouseEvent) => toggleSelect(internalItem, index, e)"
+            />
+          </td>
+          <!-- 資料欄位 -->
+          <td
+            v-else
+            class="c-data-table-td"
+            :class="col?.align ? `text-${col.align}` : ''"
+            @click="
+              showSelect && !isSelected(internalItem) ? toggleSelect(internalItem, index) : null
+            "
+          >
+            <template v-if="!itemSlotList.includes(`item.${col?.key ?? ''}`)">
+              {{ col?.key ? item[col.key] : '' }}
+            </template>
+            <template v-else>
+              <slot
+                :name="`item.${col?.key ?? ''}`"
+                :scope="item"
+                :index="computIndex(item)"
+              ></slot>
+            </template>
+          </td>
+        </template>
       </tr>
     </template>
 
@@ -298,5 +342,9 @@
   .v-select {
     height: 40px;
     width: 97px;
+  }
+
+  :deep(.v-data-table-rows-no-data) > td {
+    font-size: 1rem;
   }
 </style>
