@@ -45,11 +45,15 @@
       itemname: '',
       mkindno: '',
       ikindname: '',
-      stkpurpc: 0,
-      stksalpc: 0
+      stkpurpc: null,
+      stksalpc: null
     }
-    obj[filter.value.type1] = filter.value.filter1 ?? ''
-    obj[filter.value.type2] = filter.value.filter2 ?? ''
+    obj[filter.value.type1] = ['stkpurpc', 'stksalpc'].includes(filter.value.type1)
+      ? Number(filter.value.filter1)
+      : (filter.value.filter1 ?? '')
+    obj[filter.value.type2] = ['stkpurpc', 'stksalpc'].includes(filter.value.type2)
+      ? Number(filter.value.filter2)
+      : (filter.value.filter2 ?? '')
     await callApi({
       method: 'POST',
       url: api.Item.Item_List,
@@ -57,7 +61,11 @@
     }).then((res: any) => {
       if (res?.status === 200) {
         const { _Lists } = res?.data ?? []
-        if (_Lists && Array.isArray(_Lists)) tbData.value = _Lists
+        if (_Lists && Array.isArray(_Lists)) {
+          const list = _Lists as SearchData[]
+          list.sort((x, y) => x.itemno.localeCompare(y.itemno))
+          tbData.value = list
+        }
       }
     })
   }

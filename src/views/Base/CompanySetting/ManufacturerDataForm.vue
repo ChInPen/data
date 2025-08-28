@@ -93,6 +93,10 @@
   const saveData = () => {
     //存檔需要的欄位
     const data = { ...formData.value }
+    delete data.a_USER
+    delete data.a_DATE1
+    delete data.m_USER
+    delete data.m_DATE1
     // //數字欄位
     data.emckday = formData.value?.emckday ?? 25
     data.afterck = formData.value?.afterck ?? 0

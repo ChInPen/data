@@ -172,8 +172,10 @@
           @click="selectable ? handleRowSelect(index) : null"
           :class="selectIndexs.includes(index) ? 'tr-selected' : ''"
         >
-          <td v-show="showIndex" class="text-center">{{ pageStart + index + 1 }}</td>
-          <slot name="body" :scope="item" :index="pageStart + index"></slot>
+          <td v-show="showIndex" class="text-center">
+            {{ model.findIndex((x) => x === item) + 1 || '' }}
+          </td>
+          <slot name="body" :scope="item" :index="model.findIndex((x) => x === item)"></slot>
         </tr>
       </tbody>
 

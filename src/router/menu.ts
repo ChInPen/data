@@ -35,7 +35,18 @@ const menu: MenuEntry[] = [
       {
         title: '工務',
         children: [
-          { title: '工程資料', path: 'Construction' },
+          {
+            title: '工程資料',
+            path: 'Construction',
+            name: 'A13工程資料建檔',
+            component: () => import('@/views/Base/WorkSetting/Construction.vue')
+          },
+          {
+            title: '工程資料',
+            path: 'ConstructionForm',
+            component: () => import('@/views/Base/WorkSetting/ConstructionForm.vue'),
+            meta: { from: ['/menu/Construction'] }
+          },
           {
             title: '工料類別',
             path: 'Material',

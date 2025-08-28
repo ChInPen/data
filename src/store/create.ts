@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import type { Router } from 'vue-router'
 
+/* 建立查詢頁和明細頁之間的狀態控制 store 方法 (用 persist 可將狀態存至 storage) */
 export const createCrudStore = <K extends string>(options: {
   id: string // store id
   keyName: K // 主鍵名稱 (empno/custno...)
@@ -66,24 +67,41 @@ export const createCrudStore = <K extends string>(options: {
   })
 }
 
-type PickSetting<T> = {
-  from: keyof T
+/* 建立查詢彈窗與輸入框的互動狀態 */
+export type PickSetting<T = unknown> = {
+  from: unknown extends T ? string : keyof T
   to: string
   valueType?: 'string' | 'number'
 }
 
-export const createSearchStore = <T extends Record<string, any>>(id: string) => {
+type SetOption = { row?: number; open?: Function }
+
+export const GeneratePickObj = <T = unknown>(settings: PickSetting<T>[], pickData: any) => {
+  const obj: { [key: string]: any } = {}
+  settings.forEach((setting) => {
+    let fromVal = pickData?.[setting.from] ?? ''
+    if (setting?.valueType === 'string') fromVal = String(fromVal)
+    else if (setting?.valueType === 'number') fromVal = Number(fromVal)
+    obj[setting.to] = fromVal
+  })
+  return obj
+}
+
+export const createSearchStore = <T extends Record<string, any> | undefined = undefined>(
+  id: string
+) => {
   return defineStore(id, {
     state: () => ({
       target: {} as { value?: any; row?: number },
       pickSetting: [] as PickSetting<T>[],
       isSearch: false,
-      searchText: ''
+      searchText: '',
+      temp: '' as any //給父層暫存任何狀態
     }),
     actions: {
-      set(ref: any, pickSetting: PickSetting<T>[], options?: { row?: number; open?: Function }) {
+      set(ref: any, pickSetting: PickSetting<T>[], options?: SetOption) {
         this.target.value = ref
-        if (options?.row && typeof options.row === 'number') this.target.row = options.row
+        if (typeof options?.row === 'number') this.target.row = options.row
         this.pickSetting = pickSetting as any[]
         options?.open?.()
       },
@@ -92,7 +110,7 @@ export const createSearchStore = <T extends Record<string, any>>(id: string) => 
         ref: any,
         pickSetting: PickSetting<T>[],
         searchText: string,
-        options?: { row?: number; open?: Function }
+        options?: SetOption
       ) {
         // 如果還在輸入法組字中，就不要攔截
         if (e.isComposing) return
@@ -115,7 +133,7 @@ export const createSearchStore = <T extends Record<string, any>>(id: string) => 
           if (setting?.valueType === 'string') fromVal = String(fromVal)
           else if (setting?.valueType === 'number') fromVal = Number(fromVal)
 
-          if (this.target?.row && typeof this.target.row === 'number') {
+          if (typeof this.target.row === 'number') {
             if (Array.isArray(this.target.value) && this.target.row < this.target.value.length) {
               if (setting.to in this.target.value[this.target.row]) {
                 this.target.value[this.target.row][setting.to] = fromVal
@@ -131,6 +149,7 @@ export const createSearchStore = <T extends Record<string, any>>(id: string) => 
         this.pickSetting = []
         this.isSearch = false
         this.searchText = ''
+        this.temp = ''
       }
     }
   })

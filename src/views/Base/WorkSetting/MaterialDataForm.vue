@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-  import { ref, onMounted, computed } from 'vue'
+  import { ref, onMounted, computed, watch } from 'vue'
   import {
     cButton,
     cInput,
@@ -18,6 +18,11 @@
   import { GenerateRec } from '@/utils/ucommon'
   import { projectType } from '@/components/ProjectType'
   import { pickItem } from '@/components/PickItem'
+  import { usePickItem } from '@/store/pickItem'
+  const pickItemStore = usePickItem()
+  import { searchItem } from '@/components/SearchItem'
+  import { useSearchItem } from '@/store/searchItem'
+  const searchItemStore = useSearchItem()
 
   const store = useMaterialDataStore()
   const router = useRouter()
@@ -147,6 +152,12 @@
   const kind1Dis = computed(() => formData.value.mkindno !== '1')
   const tab2Dis = computed(() => formData.value.mkindno !== '4')
   const tab3Dis = computed(() => formData.value.kindno !== '1')
+  watch(
+    () => tab2Dis.value,
+    (val) => {
+      if (val) tabpage.value = 'normal'
+    }
+  )
 
   //取消&返回 按鈕
   const handleCancel = () => {
@@ -154,102 +165,131 @@
   }
   //檢查欄位規則
   const checkData = () => {
-    //必填:custno, custname, custabbr, taxkindno, invokindno
-    // const requiredFields = [
-    //   { key: 'custno', label: '業主編號' },
-    //   { key: 'custname', label: '業主名稱' },
-    //   { key: 'custabbr', label: '業主簡稱' },
-    //   { key: 'taxkindno', label: '營業稅' },
-    //   { key: 'invokindno', label: '發票種類' }
-    // ]
-    // const missing = requiredFields
-    //   .filter((field) => !formData.value?.[field.key])
-    //   .map((field) => field.label)
-    //   .join('、')
-    // return missing ? `${missing}不可為空白` : ''
+    //必填:itemno，itemname，ikindno，mkindno
+    const requiredFields = [
+      { key: 'itemno', label: '工料編號' },
+      { key: 'ikindno', label: '工料類別' },
+      { key: 'itemname', label: '工料名稱' },
+      { key: 'mkindno', label: '工料分類' }
+    ]
+    let missing = requiredFields
+      .filter((field) => !formData.value?.[field.key])
+      .map((field) => field.label)
+      .join('、')
+    if (missing) missing = `${missing}不可為空白`
+
+    //檢查工程分析
+    let missingE3 = e3DataList.value
+      .map((s, i) => (!s.ibomno ? i + 1 : ''))
+      .filter(Boolean)
+      .join('、')
+    if (missingE3) missingE3 = `工程分析: 第${missingE3}筆工料編號不可為空白`
+
+    //檢查組裝組件建檔
+    let missingES = esDataList.value
+      .map((s, i) => (!s.ibomno ? i + 1 : ''))
+      .filter(Boolean)
+      .join('、')
+    if (missingES) missingES = `組裝組件建檔: 第${missingES}筆工料編號不可為空白`
+
+    const missing2 = missingE3 && missingES ? `${missingE3}\n${missingES}` : missingE3 || missingES
+    return missing && missing2 ? `${missing}\n${missing2}` : missing || missing2
   }
   //送出存檔
   const saveData = () => {
     //存檔需要的欄位
-    // const cust = { ...formData.value }
-    // //數字欄位
-    // cust.custud3 = formData.value?.custud3 ?? 0
-    // cust.emckday = formData.value?.emckday ?? 25
-    // cust.afterck = formData.value?.afterck ?? 0
-    // //其他
-    // cust.m_user = ''
-    // cust.m_date1 = ''
-    // cust.m_date2 = ''
-    // cust.m_date3 = ''
-    // //聯絡人清單
-    // const list = conList.value.map((obj: any) => ({
-    //   ...obj,
-    //   custno: formData.value?.custno ?? ''
-    // }))
-    // return { cust, conList: list }
+    const item = { ...formData.value }
+    delete item.a_USER
+    delete item.a_DATE1
+    delete item.m_USER
+    delete item.m_DATE1
+    //數字欄位
+    item.costcal = '1'
+    item.stkpurpc = formData.value?.stkpurpc ?? 0
+    item.stksalpc = formData.value?.stksalpc ?? 0
+    item.unitcost = formData.value?.unitcost ?? 0
+    item.pkgqty = formData.value?.pkgqty ?? 0
+    item.pkgpurpc = formData.value?.pkgpurpc ?? 0
+    item.pkgsalpc = formData.value?.pkgsalpc ?? 0
+    //工程分析
+    const e3List = e3DataList.value.map((obj: any) => ({
+      ...obj,
+      itemno: formData.value.itemno ?? ''
+    }))
+    //組裝組件建檔
+    const esList = esDataList.value.map((obj: any) => ({
+      ...obj,
+      itemno: formData.value.itemno ?? ''
+    }))
+
+    return {
+      ...item,
+      e3: e3List,
+      es: esList
+    }
   }
   const callCreateApi = () => {
-    // callApi({
-    //   method: 'POST',
-    //   url: api.Cust.Cust_Add,
-    //   data: saveData()
-    // }).then((res: any) => {
-    //   if (res?.status === 200) {
-    //     const data = res?.data
-    //     if (data && data.state === 'success') {
-    //       message.alert({
-    //         type: 'success',
-    //         // message: data?.msg ?? '存檔成功',
-    //         message: '存檔成功',
-    //         autoClose: 2,
-    //         onConfirm: () => {
-    //           handleCancel()
-    //         }
-    //       })
-    //     }
-    //   }
-    // })
+    callApi({
+      method: 'POST',
+      url: api.Item.Item_Create,
+      data: saveData()
+    }).then((res: any) => {
+      if (res?.status === 200) {
+        const data = res?.data
+        if (data === '') {
+          message.alert({
+            type: 'success',
+            message: '存檔成功',
+            autoClose: 2,
+            onConfirm: () => {
+              handleCancel()
+            }
+          })
+        }
+      }
+    })
   }
   const callEditApi = () => {
-    // callApi({
-    //   method: 'PUT',
-    //   url: api.Cust.Cust_Upd,
-    //   data: saveData()
-    // }).then((res: any) => {
-    //   const data = res?.data
-    //   if (data && data.state === 'success') {
-    //     message.alert({
-    //       type: 'success',
-    //       // message: data?.msg ?? '存檔成功',
-    //       message: '存檔成功',
-    //       autoClose: 2,
-    //       onConfirm: () => {
-    //         handleCancel()
-    //       }
-    //     })
-    //   }
-    // })
+    callApi({
+      method: 'POST',
+      url: api.Item.Item_EDIT,
+      data: saveData()
+    }).then((res: any) => {
+      if (res?.status === 200) {
+        const data = res?.data
+        if (data === '') {
+          message.alert({
+            type: 'success',
+            message: '存檔成功',
+            autoClose: 2,
+            onConfirm: () => {
+              handleCancel()
+            }
+          })
+        }
+      }
+    })
   }
   const handleSave = () => {
-    // const check = checkData()
-    // if (check) {
-    //   message.alert({
-    //     type: 'warning',
-    //     message: check
-    //   })
-    //   return
-    // }
-    // message.confirm({
-    //   type: 'question',
-    //   message: `確定要送出業主資料？`,
-    //   onConfirm: () => {
-    //     if (store.action === 'edit') {
-    //       callEditApi()
-    //     } else {
-    //       callCreateApi()
-    //     }
-    //   }
-    // })
+    const check = checkData()
+    if (check) {
+      message.alert({
+        type: 'warning',
+        message: check
+      })
+      return
+    }
+    message.confirm({
+      type: 'question',
+      message: `確定要送出工料資料？`,
+      onConfirm: () => {
+        if (store.action === 'edit') {
+          callEditApi()
+        } else {
+          callCreateApi()
+        }
+      }
+    })
   }
 
   //新增狀態呼叫 Renew api
@@ -282,22 +322,40 @@
             itemno: ['edit', 'detail'].includes(store.action) ? (item[0]?.itemno ?? '') : ''
           }
         }
+        if (e3 && Array.isArray(e3) && e3.length > 0) {
+          e3DataList.value = e3
+        }
+        if (es && Array.isArray(es) && es.length > 0) {
+          esDataList.value = es
+        }
       }
     })
   }
 
   //欄位金額計算
-  const handleE3totalCount = (row: typeof e3Empty) => {
-    const qty = typeof row.ibomsqty === 'number' ? row.ibomsqty : 0
-    const price = typeof row.ibomsalpc === 'number' ? row.ibomsalpc : 0
-    row.ibomsalto = qty * price
+  const handleE3totalCount = (data?: typeof e3Empty) => {
+    const singleCount = (row: typeof e3Empty) => {
+      const qty = typeof row.ibomsqty === 'number' ? row.ibomsqty : 0
+      const price = typeof row.ibomsalpc === 'number' ? row.ibomsalpc : 0
+      row.ibomsalto = qty * price
+    }
+    if (data) singleCount(data)
+    else {
+      e3DataList.value.forEach((e3data) => singleCount(e3data))
+    }
   }
-  const handleEStotalCount = (row: typeof esEmpty) => {
-    const qty = typeof row.ibomsqty === 'number' ? row.ibomsqty : 0
-    const price = typeof row.ibomsalpc === 'number' ? row.ibomsalpc : 0
-    const cprice = typeof row.ibomcpc === 'number' ? row.ibomcpc : 0
-    row.ibomsalto = qty * price
-    row.ibomcto = qty * cprice
+  const handleEStotalCount = (data?: typeof esEmpty) => {
+    const singleCount = (row: typeof esEmpty) => {
+      const qty = typeof row.ibomsqty === 'number' ? row.ibomsqty : 0
+      const price = typeof row.ibomsalpc === 'number' ? row.ibomsalpc : 0
+      const cprice = typeof row.ibomcpc === 'number' ? row.ibomcpc : 0
+      row.ibomsalto = qty * price
+      row.ibomcto = qty * cprice
+    }
+    if (data) singleCount(data)
+    else {
+      esDataList.value.forEach((esdata) => singleCount(esdata))
+    }
   }
 
   //起始動作
@@ -334,46 +392,111 @@
 
   //選擇工料彈窗
   const pickItemDS = ref(false)
-  const pickItemTarget = ref<'e3' | 'es' | ''>('')
-  const handlePickItemOpen = (target: 'e3' | 'es') => {
-    pickItemTarget.value = target
-    pickItemDS.value = true
+  const handlePickItemOpenE3 = (selectIndex: number) => {
+    if (typeof selectIndex === 'number' && selectIndex >= 0) {
+      pickItemStore.set(
+        e3DataList,
+        [
+          { from: 'itemno', to: 'ibomno' },
+          { from: 'itemname', to: 'ibomname' },
+          { from: 'ibompqty', to: 'ibomsqty', valueType: 'number' },
+          { from: 'stkunit', to: 'ibomunit' },
+          { from: 'stksalpc', to: 'ibomsalpc', valueType: 'number' }
+        ],
+        {
+          mode: 'insert',
+          row: selectIndex,
+          empty: { ...e3Empty }
+        }
+      )
+      pickItemStore.temp = () => {
+        GenerateRec(e3DataList.value, 'ibomrec') //自動編號
+        handleE3totalCount()
+      }
+      pickItemDS.value = true
+    }
+  }
+  const handlePickItemOpenES = (selectIndex: number) => {
+    if (typeof selectIndex === 'number' && selectIndex >= 0) {
+      pickItemStore.set(
+        esDataList,
+        [
+          { from: 'itemno', to: 'ibomno' },
+          { from: 'itemname', to: 'ibomname' },
+          { from: 'ibompqty', to: 'ibomsqty', valueType: 'number' },
+          { from: 'stkunit', to: 'ibomunit' },
+          { from: 'stksalpc', to: 'ibomsalpc', valueType: 'number' },
+          { from: 'stkpurpc', to: 'ibomcpc', valueType: 'number' }
+        ],
+        {
+          mode: 'insert',
+          row: selectIndex,
+          empty: { ...esEmpty }
+        }
+      )
+      pickItemStore.temp = () => {
+        GenerateRec(esDataList.value, 'ibomrec') //自動編號
+        handleEStotalCount()
+      }
+      pickItemDS.value = true
+    }
   }
   const handleItemPick = (data: any[]) => {
-    if (Array.isArray(data)) {
-      data = data.map(({ itemno, itemname, ibompqty, stkunit, stksalpc }) => ({
-        ibomno: itemno,
-        ibomname: itemname,
-        ibomsqty: ibompqty,
-        ibomunit: stkunit,
-        ibomsalpc: stksalpc
-      }))
-      if (pickItemTarget.value === 'e3') {
-        let selectIndex = e3Table.value?.selectIndex?.[0]
-        data.forEach((item, index) => {
-          if (index === 0) {
-            Object.assign(e3DataList.value[selectIndex], item)
-          } else {
-            e3DataList.value.splice(selectIndex, 0, { ...e3Empty, ...item })
-          }
-          handleE3totalCount(e3DataList.value[selectIndex])
-          selectIndex++
-        })
-        GenerateRec(e3DataList.value, 'ibomrec') //自動編號
-      } else if (pickItemTarget.value === 'es') {
-        let selectIndex = esTable.value?.selectIndex?.[0]
-        data.forEach((item, index) => {
-          if (index === 0) {
-            Object.assign(esDataList.value[selectIndex], item)
-          } else {
-            esDataList.value.splice(selectIndex, 0, { ...esEmpty, ...item })
-          }
-          handleEStotalCount(esDataList.value[selectIndex])
-          selectIndex++
-        })
-        GenerateRec(esDataList.value, 'ibomrec') //自動編號
+    pickItemStore.pick(data)
+    pickItemStore.temp?.()
+  }
+  //查詢工料彈窗
+  const searchRef = ref()
+  const keydownSearchItemE3 = (e: KeyboardEvent, value: string, index: number) => {
+    searchItemStore.keyEnter(
+      e,
+      e3DataList,
+      [
+        { from: 'itemno', to: 'ibomno' },
+        { from: 'itemname', to: 'ibomname' },
+        { from: 'stkunit', to: 'ibomunit' },
+        { from: 'stksalpc', to: 'ibomsalpc', valueType: 'number' }
+      ],
+      value,
+      {
+        row: index,
+        open: () => {
+          searchRef.value?.open()
+        }
       }
+    )
+    searchItemStore.temp = () => {
+      GenerateRec(e3DataList.value, 'ibomrec') //自動編號
+      handleE3totalCount(e3DataList.value[index])
     }
+  }
+  const keydownSearchItemES = (e: KeyboardEvent, value: string, index: number) => {
+    searchItemStore.keyEnter(
+      e,
+      esDataList,
+      [
+        { from: 'itemno', to: 'ibomno' },
+        { from: 'itemname', to: 'ibomname' },
+        { from: 'stkunit', to: 'ibomunit' },
+        { from: 'stksalpc', to: 'ibomsalpc', valueType: 'number' },
+        { from: 'stkpurpc', to: 'ibomcpc', valueType: 'number' }
+      ],
+      value,
+      {
+        row: index,
+        open: () => {
+          searchRef.value?.open()
+        }
+      }
+    )
+    searchItemStore.temp = () => {
+      GenerateRec(esDataList.value, 'ibomrec') //自動編號
+      handleEStotalCount(esDataList.value[index])
+    }
+  }
+  const searchItemPick = (data: any) => {
+    searchItemStore.pick(data)
+    searchItemStore.temp?.()
   }
 </script>
 
@@ -656,13 +779,14 @@
               <th width="200">售價小計</th>
               <th width="200">說明</th>
             </template>
-            <template v-slot:body="{ scope }">
+            <template v-slot:body="{ scope, index }">
               <td>{{ scope.ibomrec }}</td>
               <td>
                 <c-input
                   v-model="scope.ibomno"
                   :disabled="store.isDetail"
-                  @button="handlePickItemOpen('e3')"
+                  @button="handlePickItemOpenE3(index)"
+                  @keydown="(e: KeyboardEvent) => keydownSearchItemE3(e, scope.ibomno, index)"
                 />
               </td>
               <td><c-input v-model="scope.ibomname" :disabled="true" /></td>
@@ -735,13 +859,14 @@
               <th width="200">成本小計</th>
               <th width="200">說明</th>
             </template>
-            <template v-slot:body="{ scope }">
+            <template v-slot:body="{ scope, index }">
               <td>{{ scope.ibomrec }}</td>
               <td>
                 <c-input
                   v-model="scope.ibomno"
                   :disabled="store.isDetail"
-                  @button="handlePickItemOpen('es')"
+                  @button="handlePickItemOpenES(index)"
+                  @keydown="(e: KeyboardEvent) => keydownSearchItemES(e, scope.ibomno, index)"
                 />
               </td>
               <td><c-input v-model="scope.ibomname" :disabled="true" /></td>
@@ -818,4 +943,5 @@
 
   <project-type v-model="projectTypeDS" :items="projectTypeItems" @save="handlePJTsave" />
   <pick-item v-model="pickItemDS" @pick="handleItemPick" />
+  <search-item ref="searchRef" @pick="searchItemPick" />
 </template>

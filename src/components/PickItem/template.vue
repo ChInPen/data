@@ -4,6 +4,9 @@
   import type { DataTableHeader } from 'vuetify'
   import { callApi } from '@/utils/uapi'
   import api from '@/api'
+  import { usePickItem } from '@/store/pickItem'
+  const store = usePickItem()
+  import type { SearchData } from './type'
 
   const isOpen = defineModel({ default: false })
   defineProps({
@@ -13,17 +16,6 @@
     }
   })
   const emits = defineEmits(['pick'])
-
-  type SearchData = {
-    itemno: string
-    itemname: string
-    ibompqty: number
-    stkunit: string
-    mkindno: string
-    stkpurpc: number
-    stksalpc: number
-    [key: string]: any
-  }
 
   //查詢條件
   const filter = ref({
@@ -105,8 +97,16 @@
     nextTick(() => {
       handleClear() //清空查詢條件
       tbData.value = []
+      store.clear()
     })
   }
+
+  const open = () => {
+    isOpen.value = true
+  }
+  defineExpose({
+    open
+  })
 </script>
 
 <template>
