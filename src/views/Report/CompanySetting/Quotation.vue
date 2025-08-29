@@ -1,4 +1,4 @@
-<script setup>
+<script lang="ts" setup>
   import { computed, ref } from 'vue'
   import { cButton, cInput, cBread } from '@/components/Common' //匯入自定義的UI元件
   import { searchCust } from '@/components/SearchCust' //業主彈窗元件查詢
@@ -38,7 +38,7 @@
 
   // 業主選單 / 多選控制
   // 業主單選彈窗開關
-  const ownerPickOpen = ref(false)
+  const ownerPickOpen = ref()
   // 業主多選彈窗開關
   const MultiCustDs = ref(false)
   // 判斷業主是否為多選的狀態
@@ -67,7 +67,7 @@
   }
 
   // 工料單選控制
-  const itemPickOpen = ref(false)
+  const itemPickOpen = ref()
 
   const openItemPicker = (t) => {
     const toKey = t === 'from' ? 'itemNoFrom' : 'itemNoTo'
@@ -97,7 +97,7 @@
   }
 
   //工程單選/多選控制
-  const projectPickOpen = ref(false)
+  const projectPickOpen = ref()
   const isMultiProt = ref(false) // 是否為多選狀態
   const MulitProtDs = ref(false) //多選視窗控制
   const openProjectPicked = (t) => {
@@ -173,7 +173,7 @@
         if (!w) {
           const a = document.createElement('a')
           a.href = fileURL
-          a.download = filePath.split('/').pop() || '報價單.pdf'
+          // a.download = filePath.split('/').pop() || '報價單.pdf'
           a.target = '_blank'
           document.body.appendChild(a)
           a.click()
