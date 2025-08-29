@@ -187,5 +187,11 @@ export default {
   //圖檔
   Photo: {
     GetPhoto2: `${apiuridoc}/api/Photo/GetPhoto2`
+  },
+  // 報價作業查詢
+  SqteBrow: {
+    Search: '/api/SqteBrow/SqteBrow_Search',
+    Print: '/api/SqteBrow/SqteBrow_Print',
+    Excel: '/api/SqteBrow/SqteBrow_Excel'
   }
 }

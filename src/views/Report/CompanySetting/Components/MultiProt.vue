@@ -5,59 +5,56 @@
   import api from '@/api'
   import { message } from '@/components/Message/service'
 
-  // 資料庫進來的Cust
   type SearchData = {
-    custno: string
-    custname: string
-    custabbr: string
-    con: string
-    tel: string
-    mobitel: string
-    uniform: string
-    ckindname: string
-    akindc: string
-    fax: string
-    boss: string
     taxkindno: string
     taxkindc: string
-    a_user: string
-    m_user: string
+    protno: string
+    protabbr: string
+    protname: string
+    custno: string
+    custabbr: string
+    protaddr: string
+    [key: string]: any
   }
 
-  // 父層可傳入目前已選
+  // 與 CustPickerDialog 一致：可由父層傳入已選項目
   const props = defineProps<{ preselected?: SearchData[] }>()
 
-  // 對話框控制
   const isOpen = defineModel({ default: false })
   const emits = defineEmits<{ (e: 'pick', value: SearchData[]): void }>()
 
-  // 狀態
   const tbData = ref<SearchData[]>([]) // 查詢結果
-  const picked = ref<SearchData[]>([]) // 對話框內的暫存已選
-  const snapshot = ref<SearchData[]>([]) // picked快照
+  const picked = ref<SearchData[]>([]) // 右側已選（暫存）
+  const snapshot = ref<SearchData[]>([]) // 快照：供取消/關閉還原
   const leftChecked = ref<Set<string>>(new Set())
   const rightChecked = ref<Set<string>>(new Set())
 
   const filter = ref({
-    type1: 'custno',
-    type2: 'custabbr',
+    type1: 'protno',
+    type2: 'protname',
     filter1: '',
     filter2: ''
   })
   const filterDDL = [
+    { name: 'protno', label: '工程編號' },
+    { name: 'protabbr', label: '工程簡稱' },
+    { name: 'protname', label: '工程名稱' },
     { name: 'custno', label: '業主編號' },
     { name: 'custabbr', label: '業主簡稱' },
-    { name: 'custname', label: '業主名稱' },
-    { name: 'tel', label: '電    話' },
-    { name: 'fax', label: '傳    真' },
-    { name: 'con', label: '聯 絡 人' },
-    { name: 'boss', label: '負 責 人' }
+    { name: 'tel', label: '電        話' },
+    { name: 'covesum', label: '合約金額' }
   ]
 
-  // 拷貝
+  // 拷貝工具
   const cloneArr = <T extends object>(arr: T[]) => arr.map((x) => ({ ...x }))
 
-  // 開窗時
+  // 左側實際顯示：查詢結果扣掉已選，避免重覆
+  const leftList = computed(() => {
+    const chosen = new Set(picked.value.map((x) => x.protno))
+    return tbData.value.filter((x) => !chosen.has(x.protno))
+  })
+
+  // 開窗時行為（與 CustPickerDialog 一致）
   watch(
     () => isOpen.value,
     (open) => {
@@ -73,65 +70,57 @@
     }
   )
 
-  // 左側實際顯示：查詢結果扣掉已選，避免重覆
-  const leftList = computed(() => {
-    const chosen = new Set(picked.value.map((x) => x.custno))
-    return tbData.value.filter((x) => !chosen.has(x.custno))
-  })
-
-  // === 查詢 ===
+  // 查詢
   const handleSearch = async () => {
-    if (filter.value.type1 === filter.value.type2) {
+    if (filter.value.type1 == filter.value.type2) {
       message.alert({ type: 'warning', message: '查詢條件不可相同' })
       return
     }
     const obj: Record<string, any> = {
-      custno: '',
-      custabbr: '',
-      custname: '',
-      con: '',
-      mobitel: '',
-      tel: '',
-      uniform: '',
-      fax: '',
-      boss: ''
+      pageNumber: 1,
+      pageSize: 1000,
+      query_project_name_1st: filter.value.type1,
+      query_project_value_1st: filter.value.filter1 ?? '',
+      query_project_name_2nd: filter.value.type2,
+      query_project_value_2nd: filter.value.filter2 ?? ''
     }
-    if (filter.value?.type1) obj[filter.value.type1] = filter.value?.filter1 ?? ''
-    if (filter.value?.type2) obj[filter.value.type2] = filter.value?.filter2 ?? ''
+    if (filter.value?.type1) obj[filter.value.type1] = filter.value.filter1 ?? ''
+    if (filter.value?.type2) obj[filter.value.type2] = filter.value.filter2 ?? ''
 
-    const res: any = await callApi({ method: 'POST', url: api.Cust.Custlist, data: obj })
-    if (res?.status === 200) {
-      const data: any[] = res?.data ?? []
-      tbData.value = data
-      leftChecked.value.clear()
-      rightChecked.value.clear()
-    }
+    await callApi({ method: 'POST', url: api.Project.Projectlist, data: obj }).then((res: any) => {
+      if (res?.status === 200) {
+        const { data } = res?.data ?? []
+        if (data && Array.isArray(data)) tbData.value = data
+        leftChecked.value.clear()
+        rightChecked.value.clear()
+      }
+    })
   }
 
   // === 清空查詢條件 ===
   const handleClear = () => {
-    filter.value = { type1: 'custno', type2: 'custabbr', filter1: '', filter2: '' }
+    filter.value = { type1: 'protno', type2: 'protname', filter1: '', filter2: '' }
   }
   const handleReset = () => {
     handleClear()
-    picked.value = []
-    tbData.value = []
+    picked.value = [] // 清空已選
+    tbData.value = [] // 清空查詢結果
   }
 
   // === 單筆選擇 ===
   const handleChoose = (raw: SearchData) => {
-    if (!picked.value.find((x) => x.custno === raw.custno)) {
+    if (!picked.value.find((x) => x.protno === raw.protno)) {
       picked.value.push(raw)
     }
   }
 
-  // === 全選 ===
+  // === 全選（左） ===
   const pushToPickedUniq = (rows: SearchData[]) => {
-    const seen = new Set(picked.value.map((x) => x.custno))
+    const seen = new Set(picked.value.map((x) => x.protno))
     rows.forEach((r) => {
-      if (!seen.has(r.custno)) {
+      if (!seen.has(r.protno)) {
         picked.value.push(r)
-        seen.add(r.custno)
+        seen.add(r.protno)
       }
     })
   }
@@ -141,19 +130,20 @@
     const el = document.getElementById('selectAllLeft') as HTMLInputElement | null
     if (el) el.checked = false
   }
-  // === 全刪 ===
+
+  // === 全刪（右） ===
   function handleSelectAllRight() {
     if (!picked.value.length) return
     picked.value = []
     rightChecked.value.clear()
-    // 取消勾選
     const el = document.getElementById('selectAllRight') as HTMLInputElement | null
     if (el) el.checked = false
   }
+
   // === 確認回傳 ===
   const handleConfirm = () => {
     const out = cloneArr(picked.value)
-    emits('pick', out) // 存回父層
+    emits('pick', out)
     snapshot.value = cloneArr(out)
     isOpen.value = false
   }
@@ -175,9 +165,9 @@
     })
   }
 
-  // 刪除暫存選項
+  // 刪除方法（單筆）
   const handleRemove = (raw: SearchData) => {
-    picked.value = picked.value.filter((x) => x.custno !== raw.custno)
+    picked.value = picked.value.filter((x) => x.protno !== raw.protno)
   }
 </script>
 
@@ -185,7 +175,7 @@
   <c-dialog v-model="isOpen" width="85%" @afterLeave="handleDialogClose" title-divider>
     <template #title>
       <v-row dense align="center">
-        <v-col>選擇人員（可多選）</v-col>
+        <v-col>選擇工程（可多選）</v-col>
         <v-col cols="auto">
           <c-button kind="cancel" icon="mdi-close-circle" @click="isOpenOut">關閉</c-button>
         </v-col>
@@ -254,14 +244,12 @@
           class="equal-6"
         >
           <template #head>
-            <th class="text-center">業主編號</th>
+            <th class="text-center">工程編號</th>
+            <th class="text-center">工程簡稱</th>
             <th class="text-center">業主簡稱</th>
-            <th class="text-center">聯絡人</th>
-            <th class="text-center">電話</th>
-            <th class="text-center">行動電話</th>
             <th class="text-center">
               <input
-                type="checkbox"
+                type="Checkbox"
                 id="selectAllLeft"
                 class="me-2"
                 @change="handleSelectAllLeft"
@@ -270,11 +258,9 @@
             </th>
           </template>
           <template #body="{ scope }">
-            <td class="text-center">{{ scope.custno }}</td>
+            <td class="text-center">{{ scope.protno }}</td>
+            <td class="text-center">{{ scope.protabbr }}</td>
             <td class="text-center">{{ scope.custabbr }}</td>
-            <td class="text-center">{{ scope.con }}</td>
-            <td class="text-center">{{ scope.tel }}</td>
-            <td class="text-center">{{ scope.mobitel }}</td>
             <td class="text-center">
               <c-button kind="choose" icon="fa-solid fa-check" @click="handleChoose(scope)">
                 選擇
@@ -283,8 +269,7 @@
           </template>
         </c-table>
       </v-col>
-
-      <!-- 右：已選清單（暫存） -->
+      <!-- 右：已選清單 -->
       <v-col>
         <div class="text-subtitle-2 mb-1">已選清單（{{ picked.length }}）</div>
         <c-table
@@ -296,11 +281,9 @@
           class="equal-6"
         >
           <template #head>
-            <th class="text-center">業主編號</th>
+            <th class="text-center">工程編號</th>
+            <th class="text-center">工程簡稱</th>
             <th class="text-center">業主簡稱</th>
-            <th class="text-center">聯絡人</th>
-            <th class="text-center">電話</th>
-            <th class="text-center">行動電話</th>
             <th class="text-center">
               <input
                 type="checkbox"
@@ -312,11 +295,9 @@
             </th>
           </template>
           <template #body="{ scope }">
-            <td class="text-center">{{ scope.custno }}</td>
+            <td class="text-center">{{ scope.protno }}</td>
+            <td class="text-center">{{ scope.protabbr }}</td>
             <td class="text-center">{{ scope.custabbr }}</td>
-            <td class="text-center">{{ scope.con }}</td>
-            <td class="text-center">{{ scope.tel }}</td>
-            <td class="text-center">{{ scope.mobitel }}</td>
             <td class="text-center">
               <c-button kind="cancel" icon="fa-solid fa-trash" @click="handleRemove(scope)">
                 刪除
@@ -339,13 +320,13 @@
 </template>
 
 <style scoped>
-  /* 讓表格用固定佈局，欄寬才會照你設定 */
+  /* 表格用固定佈局，欄寬才會照你設定 */
   .equal-6 :deep(.v-table__wrapper > table),
   .equal-6 :deep(table) {
     table-layout: fixed;
     width: 100%;
   }
-  /* 最後一欄（按鈕欄）固定 120px */
+  /* 最後一欄（按鈕欄） */
   .equal-6 :deep(th:last-child),
   .equal-6 :deep(td:last-child) {
     width: 105px;
