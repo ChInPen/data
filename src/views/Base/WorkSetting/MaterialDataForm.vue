@@ -620,6 +620,7 @@
                     icon="fa-solid fa-dollar-sign"
                     :disabled="store.isDetail"
                     :format="{ thousands: true }"
+                    :maxlength="12"
                   />
                 </v-col>
                 <v-col :cols="5" :offset="1" class="px-2">

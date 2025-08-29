@@ -73,6 +73,7 @@ export default {
     Project_EDIT: 'api/Project/Project_EDIT',
     Project_DEL: 'api/Project/Project_DeleAll',
     Project_Data: 'api/Project/Project_GetSingleAll',
+    Project_ReNew: 'api/Project/Renew',
     Project_Print: 'api/Project/Project_Print',
     Project_HeadDetSec: 'api/Project/Project_GetHeadDetSec'
   },

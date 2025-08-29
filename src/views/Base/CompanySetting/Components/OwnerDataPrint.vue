@@ -55,9 +55,8 @@
   //用 ref實例的open() 操控的方式
   const searchRef = ref()
   const chooseInit = () => {
-    store.set(printForm, [{ from: 'custno', to: 'initNo' }], {
-      open: searchRef.value?.open
-    })
+    store.set(printForm, [{ from: 'custno', to: 'initNo' }])
+    searchRef.value?.open()
   }
   const keydownInit = (e: KeyboardEvent) => {
     store.keyEnter(e, printForm, [{ from: 'custno', to: 'initNo' }], printForm.value.initNo, {
@@ -65,19 +64,16 @@
     })
   }
   const chooseFinal = () => {
-    store.set(printForm, [{ from: 'custno', to: 'finalNo' }], {
+    store.set(printForm, [{ from: 'custno', to: 'finalNo' }])
+    searchCustDS.value = true
+  }
+  const keydownFinal = (e: KeyboardEvent) => {
+    store.keyEnter(e, printForm, [{ from: 'custno', to: 'finalNo' }], printForm.value.finalNo, {
       open: () => {
         searchCustDS.value = true
       }
     })
   }
-  // const keydownFinal = (e: KeyboardEvent) => {
-  //   store.keyEnter(e, printForm, [{ from: 'custno', to: 'finalNo' }], printForm.value.initNo, {
-  //     open: () => {
-  //       searchCustDS.value = true
-  //     }
-  //   })
-  // }
 </script>
 
 <template>
@@ -107,16 +103,8 @@
           v-model="printForm.finalNo"
           label="終止業主編號"
           @button="chooseFinal"
-          @keydown="
-            (e: KeyboardEvent) =>
-              store.keyEnter(e, printForm, [{ from: 'custno', to: 'finalNo' }], printForm.finalNo, {
-                open: () => {
-                  searchCustDS = true
-                }
-              })
-          "
+          @keydown="keydownFinal"
         />
-        <!--@keydown="keydownFinal"-->
       </v-col>
       <v-col cols="12"></v-col>
       <v-responsive width="100%"></v-responsive>

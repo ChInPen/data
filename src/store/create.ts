@@ -70,7 +70,7 @@ export const createCrudStore = <K extends string>(options: {
 /* 建立查詢彈窗與輸入框的互動狀態 */
 export type PickSetting<T = unknown> = {
   from: unknown extends T ? string : keyof T
-  to: string
+  to?: string
   valueType?: 'string' | 'number'
 }
 
@@ -82,7 +82,9 @@ export const GeneratePickObj = <T = unknown>(settings: PickSetting<T>[], pickDat
     let fromVal = pickData?.[setting.from] ?? ''
     if (setting?.valueType === 'string') fromVal = String(fromVal)
     else if (setting?.valueType === 'number') fromVal = Number(fromVal)
-    obj[setting.to] = fromVal
+
+    const to = (setting.to ?? setting.from) as string
+    obj[to] = fromVal
   })
   return obj
 }
@@ -128,21 +130,17 @@ export const createSearchStore = <T extends Record<string, any> | undefined = un
       pick(data: any) {
         if (!this.target?.value) return
 
-        this.pickSetting.forEach((setting) => {
-          let fromVal = data?.[setting.from] ?? ''
-          if (setting?.valueType === 'string') fromVal = String(fromVal)
-          else if (setting?.valueType === 'number') fromVal = Number(fromVal)
-
-          if (typeof this.target.row === 'number') {
-            if (Array.isArray(this.target.value) && this.target.row < this.target.value.length) {
-              if (setting.to in this.target.value[this.target.row]) {
-                this.target.value[this.target.row][setting.to] = fromVal
-              }
+        const pickObj = GeneratePickObj([...(this.pickSetting as any[])], { ...data })
+        if (typeof this.target.row === 'number') {
+          if (Array.isArray(this.target.value) && this.target.row < this.target.value.length) {
+            this.target.value[this.target.row] = {
+              ...this.target.value[this.target.row],
+              ...pickObj
             }
-          } else {
-            if (setting.to in this.target.value) this.target.value[setting.to] = fromVal
           }
-        })
+        } else {
+          this.target.value = { ...this.target.value, ...pickObj }
+        }
       },
       clear() {
         this.target = {}

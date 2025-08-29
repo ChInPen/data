@@ -56,9 +56,8 @@
   //用 ref實例的open() 操控的方式
   const searchRef = ref()
   const chooseInit = () => {
-    store.set(printForm, [{ from: 'itemno', to: 'itemNo_S' }], {
-      open: searchRef.value?.open
-    })
+    store.set(printForm, [{ from: 'itemno', to: 'itemNo_S' }])
+    searchRef.value?.open()
   }
   const keydownInit = (e: KeyboardEvent) => {
     store.keyEnter(e, printForm, [{ from: 'itemno', to: 'itemNo_S' }], printForm.value.itemNo_S, {
@@ -66,9 +65,8 @@
     })
   }
   const chooseFinal = () => {
-    store.set(printForm, [{ from: 'itemno', to: 'itemNo_E' }], {
-      open: searchRef.value?.open
-    })
+    store.set(printForm, [{ from: 'itemno', to: 'itemNo_E' }])
+    searchRef.value?.open()
   }
   const keydownFinal = (e: KeyboardEvent) => {
     store.keyEnter(e, printForm, [{ from: 'itemno', to: 'itemNo_E' }], printForm.value.itemNo_E, {

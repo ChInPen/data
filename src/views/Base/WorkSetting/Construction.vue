@@ -75,31 +75,31 @@
   }
   //表格-編輯按鈕
   const handleEdit = (row: iData) => {
-    store.edit(row.itemno, router)
+    store.edit(row.protno, router)
   }
   //表格-複製按鈕
   const handleCopy = (row: iData) => {
-    store.copy(row.itemno, router)
+    store.copy(row.protno, router)
   }
   //表格-瀏覽按鈕
   const handleBrowse = (row: iData) => {
-    store.browse(row.itemno, router)
+    store.browse(row.protno, router)
   }
   //表格-刪除按鈕
   const handleDelete = (row: iData) => {
     message.confirm({
       type: 'question',
-      message: `確定要刪除「${row.itemno}」${row.itemname}？`,
+      message: `確定要刪除「${row.protno}」${row.protabbr}？`,
       onConfirm: () => {
         //刪除
         callApi({
           method: 'POST',
-          url: api.Item.Item_DEL,
-          data: { itemno: row.itemno }
+          url: api.Project.Project_DEL,
+          params: { protno: row.protno }
         }).then((res: any) => {
           if (res?.status === 200) {
             const data = res?.data
-            if (data === '') {
+            if (data && data.state === 'success') {
               message.alert({
                 type: 'success',
                 message: '刪除成功',
@@ -210,11 +210,11 @@
               瀏覽
             </c-button>
           </v-col>
-          <!-- <v-col cols="auto">
+          <v-col cols="auto">
             <c-button kind="delete" icon="fa-solid fa-trash" @click="handleDelete(scope)">
               刪除
             </c-button>
-          </v-col> -->
+          </v-col>
         </v-row>
       </td>
     </template>

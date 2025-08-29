@@ -38,7 +38,12 @@
       type: String,
       default: 'text'
     },
-    format: Object as PropType<tFormat>
+    format: Object as PropType<tFormat>,
+    maxlength: Number,
+    lengthAutoWidth: {
+      type: Boolean,
+      default: true
+    }
   })
   const emit = defineEmits(['change', 'button'])
 
@@ -108,6 +113,29 @@
   }
   const disabled = computed(() => attr?.disabled ?? false)
   const redicon = computed(() => props.isRequired && disabled.value === false)
+  //自動計算輸入框寬度
+  const lengthWidth = computed(() => {
+    const padding = 24
+    const icon = props.icon || props.isRequired ? 28.01 : 0
+    const label = props.label ? props.label.length * 20.3 : 0
+    const password = props.type === 'password' ? 28 : 0
+    const btn = hasButtonEvent.value ? 40 : 0
+    const clear = attr.clearable || attr.clearable == '' ? 34 : 8
+    if (props.lengthAutoWidth && props.maxlength) {
+      return props.maxlength * 20.3 + 12 + padding + icon + label + password + btn + clear
+    } else {
+      return undefined
+    }
+  })
+  //輸入框限制字數
+  const maxLength = computed(() => {
+    if (!props.maxlength) return undefined
+
+    if (props.type === 'number' && props.format?.thousands) {
+      return props.maxlength + Math.floor((model.value.toString().length - 1) / 3)
+    }
+    return props.maxlength
+  })
 
   //密碼用(type="password")
   const lookPass = ref(false)
@@ -191,6 +219,8 @@
       'input-text-end': type === 'number' || format?.number === true
     }"
     @focusin="handleFocusin"
+    :width="lengthWidth"
+    :maxlength="maxLength"
   >
     <template v-slot:prepend-inner>
       <div class="prepend-inner-content">

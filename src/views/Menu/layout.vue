@@ -29,7 +29,7 @@
       )
 
       const index = focusable.indexOf(target)
-      if (index >= 0) {
+      if (index >= 0 && index < focusable.length - 1) {
         const next = focusable[index + 1]
         if (next) {
           next.focus()
