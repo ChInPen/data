@@ -4,6 +4,8 @@
   import { callApi } from '@/utils/uapi'
   import api from '@/api'
   import { message } from '@/components/Message/service'
+
+  // 資料庫進來的Item
   type SearchData = {
     itemno: string
     itemname: string
@@ -14,12 +16,17 @@
     [key: string]: any
   }
 
+  // 父層可傳入目前已選
+  const props = defineProps<{ preselected?: SearchData[] }>()
+
   const isOpen = defineModel({ default: false })
   const emits = defineEmits<{
     (e: 'pick', value: SearchData[]): void
   }>()
+
   const tbData = ref<SearchData[]>([]) // 查詢結果
-  const picked = ref<SearchData[]>([]) // 右側已選
+  const picked = ref<SearchData[]>([]) // 右側已選（暫存）
+  const snapshot = ref<SearchData[]>([]) // picked 快照
   const leftChecked = ref<Set<string>>(new Set())
   const rightChecked = ref<Set<string>>(new Set())
 
@@ -37,19 +44,35 @@
     { name: 'stkpurpc', label: '進        價' },
     { name: 'stksalpc', label: '售        價' }
   ]
+
+  // 拷貝
+  const cloneArr = <T extends object>(arr: T[]) => arr.map((x) => ({ ...x }))
+
   // 左側實際顯示：查詢結果扣掉已選，避免重覆
   const leftList = computed(() => {
     const chosen = new Set(picked.value.map((x) => x.itemno))
     return tbData.value.filter((x) => !chosen.has(x.itemno))
   })
 
+  watch(
+    () => isOpen.value,
+    (open) => {
+      if (open) {
+        const base = props.preselected ?? snapshot.value
+        picked.value = cloneArr(base)
+        snapshot.value = cloneArr(base)
+        tbData.value = []
+        leftChecked.value.clear()
+        rightChecked.value.clear()
+        handleClear()
+      }
+    }
+  )
+
   // 查詢
   const handleSearch = async () => {
     if (filter.value.type1 == filter.value.type2) {
-      message.alert({
-        type: 'warning',
-        message: '查詢條件不可相同'
-      })
+      message.alert({ type: 'warning', message: '查詢條件不可相同' })
       return
     }
     const obj: Record<string, any> = {
@@ -61,24 +84,21 @@
       stkpurpc: 0,
       stksalpc: 0
     }
-    obj[filter.value.type1] = filter.value.filter1 ?? ''
-    obj[filter.value.type2] = filter.value.filter2 ?? ''
-    await callApi({
-      method: 'POST',
-      url: api.Item.Item_List,
-      data: obj
-    }).then((res: any) => {
+    if (filter.value?.type1) obj[filter.value.type1] = filter.value.filter1 ?? ''
+    if (filter.value?.type2) obj[filter.value.type2] = filter.value.filter2 ?? ''
+
+    await callApi({ method: 'POST', url: api.Item.Item_List, data: obj }).then((res: any) => {
       if (res?.status === 200) {
         const { _Lists } = res?.data ?? []
         if (_Lists && Array.isArray(_Lists)) tbData.value = _Lists
+        leftChecked.value.clear()
+        rightChecked.value.clear()
       }
-      console.log(tbData.value)
     })
   }
 
   // === 清空查詢條件 ===
   const handleClear = () => {
-    // 只清空查詢條件
     filter.value = { type1: 'itemno', type2: 'itemname', filter1: '', filter2: '' }
   }
   const handleReset = () => {
@@ -87,36 +107,14 @@
     tbData.value = [] // 清空查詢結果
   }
 
-  // === 單筆選擇===
+  // === 單筆選擇 ===
   const handleChoose = (raw: SearchData) => {
-    // 單筆加入右側（避免重覆）
     if (!picked.value.find((x) => x.itemno === raw.itemno)) {
       picked.value.push(raw)
-      console.log('picked', picked.value)
     }
   }
 
-  // === 確認回傳 ===
-  const handleConfirm = () => {
-    emits('pick', picked.value)
-    isOpen.value = false
-  }
-
-  // dialog 關閉時
-  const handleDialogClose = () => {
-    nextTick(() => {
-      handleClear()
-      tbData.value = []
-      leftChecked.value.clear()
-      rightChecked.value.clear()
-    })
-  }
-  // 刪除方法
-  const handleRemove = (raw: SearchData) => {
-    picked.value = picked.value.filter((x) => x.itemno !== raw.itemno)
-  }
-
-  //  === 全選 ===
+  // === 全選（左） ===
   const pushToPickedUniq = (rows: SearchData[]) => {
     const seen = new Set(picked.value.map((x) => x.itemno))
     rows.forEach((r) => {
@@ -128,11 +126,48 @@
   }
   function handleSelectAllLeft() {
     pushToPickedUniq(leftList.value)
-    // 清掉暫時的選取
     leftChecked.value.clear()
-    // 取消表頭的打勾
     const el = document.getElementById('selectAllLeft') as HTMLInputElement | null
     if (el) el.checked = false
+  }
+
+  // === 全刪（右） ===
+  function handleSelectAllRight() {
+    if (!picked.value.length) return
+    picked.value = []
+    rightChecked.value.clear()
+    const el = document.getElementById('selectAllRight') as HTMLInputElement | null
+    if (el) el.checked = false
+  }
+
+  // === 確認回傳 ===
+  const handleConfirm = () => {
+    const out = cloneArr(picked.value)
+    emits('pick', out)
+    snapshot.value = cloneArr(out)
+    isOpen.value = false
+  }
+
+  // 取消/關閉：不儲存、還原暫存為快照
+  const isOpenOut = () => {
+    picked.value = cloneArr(snapshot.value)
+    isOpen.value = false
+  }
+
+  // dialog 關閉後：清理視圖狀態，並確保暫存回到快照
+  const handleDialogClose = () => {
+    nextTick(() => {
+      picked.value = cloneArr(snapshot.value)
+      handleClear()
+      tbData.value = []
+      leftChecked.value.clear()
+      rightChecked.value.clear()
+    })
+  }
+
+  // 刪除方法（單筆）
+  const handleRemove = (raw: SearchData) => {
+    picked.value = picked.value.filter((x) => x.itemno !== raw.itemno)
   }
 </script>
 
@@ -142,7 +177,7 @@
       <v-row dense align="center">
         <v-col>選擇工料（可多選）</v-col>
         <v-col cols="auto">
-          <c-button kind="cancel" icon="mdi-close-circle" @click="isOpen = false">關閉</c-button>
+          <c-button kind="cancel" icon="mdi-close-circle" @click="isOpenOut">關閉</c-button>
         </v-col>
       </v-row>
     </template>
@@ -200,7 +235,14 @@
       <!-- 左：查詢結果 -->
       <v-col>
         <div class="text-subtitle-2 mb-1">查詢結果（{{ leftList.length }}）</div>
-        <c-table :model-value="leftList" striped="even" height="420" fixed-header hover>
+        <c-table
+          :model-value="leftList"
+          striped="even"
+          height="420"
+          fixed-header
+          hover
+          class="equal-6"
+        >
           <template #head>
             <th class="text-center">工料編號</th>
             <th class="text-center">工料名稱</th>
@@ -220,12 +262,7 @@
             <td class="text-center">{{ scope.itemname }}</td>
             <td class="text-center">{{ scope.mkindname }}</td>
             <td class="text-center">
-              <c-button
-                kind="choose"
-                icon="fa-solid fa-check"
-                size="sm"
-                @click="handleChoose(scope)"
-              >
+              <c-button kind="choose" icon="fa-solid fa-check" @click="handleChoose(scope)">
                 選擇
               </c-button>
             </td>
@@ -235,24 +272,34 @@
       <!-- 右：已選清單 -->
       <v-col>
         <div class="text-subtitle-2 mb-1">已選清單（{{ picked.length }}）</div>
-        <c-table :model-value="picked" striped="even" height="420" fixed-header hover>
+        <c-table
+          :model-value="picked"
+          striped="even"
+          height="420"
+          fixed-header
+          hover
+          class="equal-6"
+        >
           <template #head>
             <th class="text-center">工料編號</th>
             <th class="text-center">工料名稱</th>
             <th class="text-center">類別分類</th>
-            <th class="text-center"></th>
+            <th class="text-center">
+              <input
+                type="checkbox"
+                id="selectAllRight"
+                class="me-2"
+                @change="handleSelectAllRight"
+              />
+              <label for="selectAllRight" class="text-center">全刪</label>
+            </th>
           </template>
           <template #body="{ scope }">
             <td class="text-center">{{ scope.itemno }}</td>
             <td class="text-center">{{ scope.itemname }}</td>
             <td class="text-center">{{ scope.mkindname }}</td>
             <td class="text-center">
-              <c-button
-                kind="cancel"
-                icon="fa-solid fa-trash"
-                size="sm"
-                @click="handleRemove(scope)"
-              >
+              <c-button kind="cancel" icon="fa-solid fa-trash" @click="handleRemove(scope)">
                 刪除
               </c-button>
             </td>
@@ -266,10 +313,33 @@
         <c-button kind="choose" icon="fa-solid fa-check" @click="handleConfirm">確認</c-button>
       </v-col>
       <v-col cols="auto">
-        <c-button kind="cancel" class="me-2" @click="isOpen = false">取消</c-button>
+        <c-button kind="cancel" class="me-2" @click="isOpenOut">取消</c-button>
       </v-col>
     </v-row>
   </c-dialog>
 </template>
 
-<style scoped></style>
+<style scoped>
+  /* 讓表格用固定佈局，欄寬才會照你設定 */
+  .equal-6 :deep(.v-table__wrapper > table),
+  .equal-6 :deep(table) {
+    table-layout: fixed;
+    width: 100%;
+  }
+  /* 最後一欄（按鈕欄）固定 120px */
+  .equal-6 :deep(th:last-child),
+  .equal-6 :deep(td:last-child) {
+    width: 105px;
+  }
+  /* 其餘 5 欄平均分配剩餘寬度 */
+  .equal-6 :deep(th:not(:last-child)),
+  .equal-6 :deep(td:not(:last-child)) {
+    width: calc((100% - 120px) / 5);
+  }
+  /* 長字處理，避免撐寬 */
+  .equal-6 :deep(td) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>

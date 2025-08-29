@@ -238,7 +238,7 @@ const menu: MenuEntry[] = [
         title: '工務',
         children: [
           {
-            title: '報價作業',
+            title: '報價作業查詢',
             path: 'Quotation',
             name: 'C01報價作業查詢',
             component: () => import('@/views/Report/CompanySetting/Quotation.vue')
