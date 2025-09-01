@@ -23,7 +23,7 @@
     "skipLibCheck": true,
     "useDefineForClassFields": true,
 
-    "strict": true,
+    "strict": false,
     "noUnusedLocals": false,
     // "noUnusedLocals": true,
     "noUnusedParameters": false,

@@ -193,5 +193,11 @@ export default {
     Search: '/api/SqteBrow/SqteBrow_Search',
     Print: '/api/SqteBrow/SqteBrow_Print',
     Excel: '/api/SqteBrow/SqteBrow_Excel'
+  },
+  // 請款作業查詢
+  Billing: {
+    Search: '/api/Billbrow/Billbrow_Search',
+    Print: '/api/Billbrow/Billbrow_Search_Print',
+    Excel: '/api/Billbrow/Billbrow_Search_Excel'
   }
 }
