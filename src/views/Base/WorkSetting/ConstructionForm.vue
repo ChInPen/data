@@ -8,7 +8,8 @@
     cBread,
     cDivider,
     cRadioGroup,
-    cDataTable
+    cDataTable,
+    cDialog
   } from '@/components/Common' //共用元件
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
@@ -30,8 +31,8 @@
   const searchCustStore = useSearchCust()
   import { searchItem } from '@/components/SearchItem'
   import { useSearchItem } from '@/store/searchItem'
-  import { fa } from 'vuetify/locale'
   const searchItemStore = useSearchItem()
+  import hdsItem from './Components/ConstructionFormHDS.vue'
 
   const store = useConstructionStore()
   const router = useRouter()
@@ -107,6 +108,7 @@
   //工程資料
   const formData = ref<Record<string, any>>({})
   const tabpage = ref('normal') //頁籤
+  const tabpageHDS = ref('head') //頁籤(大中細項目)
 
   //取消&返回 按鈕
   const handleCancel = () => {
@@ -271,6 +273,14 @@
     })
   }
 
+  //大項目
+  const headItemList = ref<any[]>([])
+  //中項目
+  const detItemList = ref<any[]>([])
+  //細項目
+  const secItemList = ref<any[]>([])
+  //合約明細
+
   //工程類別預估
   const protIKindEmpty = {
     protno: '',
@@ -423,9 +433,9 @@
   </v-card>
 
   <v-card class="mt-3">
-    <v-tabs v-model="tabpage" bg-color="primary" class="c-tabs">
+    <v-tabs v-model="tabpage" class="c-tabs">
       <v-tab value="normal">一般資料</v-tab>
-      <v-tab value="a">合約明細</v-tab>
+      <v-tab value="protdet">合約明細</v-tab>
       <v-tab value="sign">工程標示</v-tab>
       <v-tab value="protikind">工程類別預估</v-tab>
     </v-tabs>
@@ -652,7 +662,55 @@
           </v-row>
         </v-tabs-window-item>
 
-        <v-tabs-window-item value="a"></v-tabs-window-item>
+        <v-tabs-window-item value="protdet">
+          <v-row dense>
+            <v-col cols="auto">
+              <c-button kind="create" icon="mdi-plus-circle">新增</c-button>
+            </v-col>
+            <v-col cols="auto">
+              <c-button kind="insert" icon="mdi-arrow-down-circle">插入</c-button>
+            </v-col>
+            <v-col cols="auto">
+              <c-button kind="delete" icon="fa-solid fa-trash">刪除</c-button>
+            </v-col>
+            <v-col cols="auto">
+              <c-button kind="photo" icon="fa-solid fa-images">看圖</c-button>
+            </v-col>
+            <v-col cols="auto">
+              <c-button kind="boms" icon="fa-solid fa-search-dollar">單價分析</c-button>
+            </v-col>
+            <v-col cols="auto">
+              <c-button kind="protype" icon="fa-solid fa-clipboard-list">規格說明</c-button>
+            </v-col>
+          </v-row>
+          <c-table class="mt-3 mb-2" striped="even" hover selectable>
+            <template v-slot:head>
+              <th>序號</th>
+              <th>大</th>
+              <th>中</th>
+              <th>細</th>
+              <th>工料編號</th>
+              <th>工料名稱</th>
+              <th>數量A</th>
+              <th>單位</th>
+              <th>單價B</th>
+              <th>複價C</th>
+              <th>請款已轉D</th>
+              <th>請款未轉</th>
+              <th>採購已轉</th>
+              <th>採購未轉</th>
+              <th>比例設定(分子)</th>
+              <th>比例設定(分母)</th>
+              <th>說明</th>
+              <th>類別</th>
+            </template>
+          </c-table>
+          <hdsItem
+            v-model:head="headItemList"
+            v-model:det="detItemList"
+            v-model:sec="secItemList"
+          />
+        </v-tabs-window-item>
         <v-tabs-window-item value="sign">
           <v-row dense :align="'center'">
             <v-col :cols="6" class="px-2">

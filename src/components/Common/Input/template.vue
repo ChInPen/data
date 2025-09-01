@@ -115,6 +115,7 @@
   const redicon = computed(() => props.isRequired && disabled.value === false)
   //自動計算輸入框寬度
   const lengthWidth = computed(() => {
+    const word = isNumber.value ? 11.2 : 20.3
     const padding = 24
     const icon = props.icon || props.isRequired ? 28.01 : 0
     const label = props.label ? props.label.length * 20.3 : 0
@@ -122,7 +123,8 @@
     const btn = hasButtonEvent.value ? 40 : 0
     const clear = attr.clearable || attr.clearable == '' ? 34 : 8
     if (props.lengthAutoWidth && props.maxlength) {
-      return props.maxlength * 20.3 + 12 + padding + icon + label + password + btn + clear
+      const len = maxLength.value
+      return len * word + 12 + padding + icon + label + password + btn + clear
     } else {
       return undefined
     }
@@ -132,9 +134,15 @@
     if (!props.maxlength) return undefined
 
     if (props.type === 'number' && props.format?.thousands) {
-      return props.maxlength + Math.floor((model.value.toString().length - 1) / 3)
+      return props.maxlength + Math.floor((props.maxlength - 1) / 3)
     }
     return props.maxlength
+  })
+  //判斷數字欄位要置右
+  const isNumber = computed(() => {
+    const isDigit =
+      props.format && Object.keys(props.format).length === 1 && props.format.number === true
+    return props.type === 'number' || isDigit
   })
 
   //密碼用(type="password")
@@ -177,7 +185,7 @@
 
   //數字欄位時自動反白內容
   const handleFocusin = (event: FocusEvent) => {
-    if (props.type === 'number' || props.format?.number === true) {
+    if (isNumber.value) {
       //自動選取文字
       const target = event.target
       if (target instanceof HTMLInputElement && target.type === 'text') {
@@ -216,7 +224,7 @@
     @compositionend="onCompositionEnd"
     @change="nameChange"
     :class="{
-      'input-text-end': type === 'number' || format?.number === true
+      'input-text-end': isNumber
     }"
     @focusin="handleFocusin"
     :width="lengthWidth"

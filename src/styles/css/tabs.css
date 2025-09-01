@@ -19,5 +19,29 @@
 
 .v-card:has(.c-tabs) > .v-card-text {
   /* 設置父層 card 的 card-text 區塊背景色 */
-  background-color: #1b2b36;
+  background-color: var(--card-bg-color);
+}
+
+.c-sub-tabs > .v-slide-group__container > .v-slide-group__content {
+  /* 讓 tab 按鈕區背景色和card背景色相同 */
+  background-color: var(--card-bg-color);
+}
+
+.v-card--variant-elevated:has(.c-sub-tabs) {
+  /* 移除父層 card 的陰影、圓角 */
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.c-sub-tabs .v-btn {
+  /* 設置 tab 按鈕的顏色 */
+  background-color: #05547e;
+  color: #f0f4f8;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.v-card:has(.c-sub-tabs):not(:has(.c-tabs)) > .v-card-text {
+  /* 設置父層 card 的 card-text 區塊背景色 */
+  background-color: var(--sub-card-bg-color);
 }

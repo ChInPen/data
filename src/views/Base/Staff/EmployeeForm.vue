@@ -349,6 +349,7 @@
             icon="fa-solid fa-user"
             :disabled="store.isDetail"
             :format="{ number: true, english: true }"
+            :maxlength="12"
           />
         </v-col>
         <v-col :cols="2" class="px-2">

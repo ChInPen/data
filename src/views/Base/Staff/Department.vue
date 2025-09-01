@@ -158,11 +158,22 @@
   <v-card color="#1b2b36" rounded="3">
     <v-card-text>
       <v-row dense>
-        <v-col :cols="3">
-          <c-input v-model="filter.deparno" label="部門編號" icon="fa-solid fa-building-user" />
+        <v-col cols="auto">
+          <c-input
+            v-model="filter.deparno"
+            label="部門編號"
+            icon="fa-solid fa-building-user"
+            :format="{ number: true, english: true }"
+            :maxlength="4"
+          />
         </v-col>
-        <v-col :cols="3">
-          <c-input v-model="filter.deparname" label="部門名稱" icon="fa-solid fa-building-user" />
+        <v-col cols="auto">
+          <c-input
+            v-model="filter.deparname"
+            label="部門名稱"
+            icon="fa-solid fa-building-user"
+            :maxlength="16"
+          />
         </v-col>
       </v-row>
       <v-row justify="end" dense>
@@ -221,22 +232,27 @@
   <c-dialog
     v-model="dialogOpen"
     :title="(dialogAction === 'create' ? '新增' : '編輯') + '部門資料'"
+    width="auto"
   >
-    <v-row>
-      <v-col :cols="6">
-        <!-- :is-required="true" 代表必填欄位 -->
-        <c-input
-          v-model="dialogForm.deparno"
-          label="部門編號"
-          :is-required="true"
-          :readonly="dialogAction === 'edit' ? true : false"
-        />
-      </v-col>
-      <v-col :cols="6">
-        <!-- :is-required="true" 代表必填欄位 -->
-        <c-input v-model="dialogForm.deparname" label="部門名稱" :is-required="true" />
-      </v-col>
-    </v-row>
+    <div class="d-flex flex-column gap-3">
+      <!-- :is-required="true" 代表必填欄位 -->
+      <c-input
+        v-model="dialogForm.deparno"
+        label="部門編號"
+        :is-required="true"
+        :readonly="dialogAction === 'edit' ? true : false"
+        :format="{ number: true, english: true }"
+        :maxlength="4"
+      />
+
+      <!-- :is-required="true" 代表必填欄位 -->
+      <c-input
+        v-model="dialogForm.deparname"
+        label="部門名稱"
+        :is-required="true"
+        :maxlength="16"
+      />
+    </div>
     <template v-slot:buttons>
       <div class="col-auto">
         <c-button icon="mdi-close-circle" kind="cancel" @click="handleDialogClose">取消</c-button>
