@@ -244,7 +244,12 @@ const menu: MenuEntry[] = [
             component: () => import('@/views/Report/CompanySetting/Quotation.vue')
           },
 
-          { title: '請款作業', path: '' },
+          {
+            title: '請款作業查詢',
+            path: 'Billing',
+            name: 'C02請款作業查詢',
+            component: () => import('@/views/Report/CompanySetting/Billing.vue')
+          },
           { title: '應收總表', path: '' },
           { title: '進貨資料', path: '' },
           { title: '銷貨資料', path: '' },
