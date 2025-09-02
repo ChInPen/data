@@ -257,7 +257,12 @@ const menu: MenuEntry[] = [
           { title: '日期別-已收帳款', path: '' },
           { title: '詢價作業', path: '' },
           { title: '請購作業', path: '' },
-          { title: '採購作業', path: '' },
+          {
+            title: '採購作業查詢',
+            path: 'PordBrowQuery',
+            name: '採購作業查詢',
+            component: () => import('@/views/Report/CompanySetting/PordBrowQuery.vue')
+          },
           { title: '採購估驗', path: '' },
           { title: '發包作業', path: '' },
           { title: '發包估驗', path: '' },

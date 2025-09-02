@@ -5,15 +5,13 @@
   import { searchProt } from '@/components/SearchProt' //工程彈窗元件查詢
   import MultiCust from './Components/MultiCust.vue' //業主彈窗(多選)
   import MultiProt from './Components/MultiProt.vue'
-  import { callApi } from '@/utils/uapi' //呼叫api的方法
-  import api from '@/api' //api清單
+  import { message } from '@/components/Message/service' // 彈窗訊息
+  import BillingDataPrint from './Components/BillingDataPrint.vue' //列印彈窗
+  import BillingDataExcel from './Components/BillingDataExcel.vue' //EXCEL彈窗
   import { useSearchCust } from '@/store/searchCust'
   const storeCust = useSearchCust()
-  import { useSearchItem } from '@/store/searchItem'
-  const storeItem = useSearchItem()
   import { useSearchProt } from '@/store/searchProt'
   const storeProt = useSearchProt()
-
   // 查詢的資料(結果)
   const formData = ref({
     quotationDateFrom: '',
@@ -92,71 +90,57 @@
     }
   }
 
-  // 列印表單
+  // 列印+EXCEL表單
+
   const printForm = ref({
     dates: { begin: '', end: '' },
     custNOs: { begin: '', end: '', limiteds: [''] },
-    protNOs: { begin: '', end: '', limiteds: [''] }
+    protNOs: { begin: '', end: '', limiteds: [''] },
+    feetNo: '05',
+    printType: 0,
+    customType: ''
   })
 
   // 列印作業
+  const isPrintOpen = ref(false) //控制列印彈窗
   const handlePrint = async () => {
-    try {
-      printForm.value.dates.begin = formData.value.quotationDateFrom
-      printForm.value.dates.end = formData.value.quotationDateTo
-      printForm.value.custNOs.begin = formData.value.ownerNoFrom
-      printForm.value.custNOs.end = formData.value.ownerNoTo
-      printForm.value.custNOs.limiteds = formData.value.ownerNosLimiteds
-      printForm.value.protNOs.begin = formData.value.projectNoFrom
-      printForm.value.protNOs.end = formData.value.projectNoTo
-      printForm.value.protNOs.limiteds = formData.value.projectNosLimiteds
-      console.log(printForm.value)
-      const res = await callApi({
-        method: 'POST',
-        url: api.Billing.Print,
-        data: printForm.value
+    if (!formData.value.quotationDateFrom || !formData.value.quotationDateTo) {
+      message.alert({
+        type: 'error',
+        message: '請先輸入報價日期！'
       })
-      const path = String(res).trim()
-
-      if (typeof path === 'string' && path.startsWith('PDF')) {
-        const fileURL = new URL(path, 'http://192.168.0.107:8096/').href
-        const w = window.open(fileURL)
-      } else return console.warn('沒有取得檔名')
-    } catch (err) {
-      console.error(err)
+      return
     }
+    printForm.value.dates.begin = formData.value.quotationDateFrom
+    printForm.value.dates.end = formData.value.quotationDateTo
+    printForm.value.custNOs.begin = formData.value.ownerNoFrom
+    printForm.value.custNOs.end = formData.value.ownerNoTo
+    printForm.value.custNOs.limiteds = formData.value.ownerNosLimiteds
+    printForm.value.protNOs.begin = formData.value.projectNoFrom
+    printForm.value.protNOs.end = formData.value.projectNoTo
+    printForm.value.protNOs.limiteds = formData.value.projectNosLimiteds
+    isPrintOpen.value = true
   }
 
   // EXCEL下載
+  const isExcelOpen = ref(false) //控制EXCEL彈窗
   const handleExportExcel = async () => {
-    try {
-      printForm.value.dates.begin = formData.value.quotationDateFrom
-      printForm.value.dates.end = formData.value.quotationDateTo
-      printForm.value.custNOs.begin = formData.value.ownerNoFrom
-      printForm.value.custNOs.end = formData.value.ownerNoTo
-      printForm.value.custNOs.limiteds = formData.value.ownerNosLimiteds
-      printForm.value.protNOs.begin = formData.value.projectNoFrom
-      printForm.value.protNOs.end = formData.value.projectNoTo
-      printForm.value.protNOs.limiteds = formData.value.projectNosLimiteds
-      const res = await callApi({
-        method: 'POST',
-        url: api.Billing.Excel,
-        data: printForm.value
+    if (!formData.value.quotationDateFrom || !formData.value.quotationDateTo) {
+      message.alert({
+        type: 'error',
+        message: '請先輸入報價日期！'
       })
-
-      const path = String(res).trim()
-
-      if (typeof path === 'string' && path.startsWith('Excel')) {
-        const fileURL = new URL(path, 'http://192.168.0.107:8096/').href
-        const a = document.createElement('a')
-        a.href = fileURL
-        document.body.appendChild(a)
-        a.click()
-        a.remove()
-      } else return console.warn('沒有取得檔名')
-    } catch (err) {
-      console.error(err)
+      return
     }
+    printForm.value.dates.begin = formData.value.quotationDateFrom
+    printForm.value.dates.end = formData.value.quotationDateTo
+    printForm.value.custNOs.begin = formData.value.ownerNoFrom
+    printForm.value.custNOs.end = formData.value.ownerNoTo
+    printForm.value.custNOs.limiteds = formData.value.ownerNosLimiteds
+    printForm.value.protNOs.begin = formData.value.projectNoFrom
+    printForm.value.protNOs.end = formData.value.projectNoTo
+    printForm.value.protNOs.limiteds = formData.value.projectNosLimiteds
+    isExcelOpen.value = true
   }
 
   // 共用過濾：只留英數，截到指定長度
@@ -405,6 +389,7 @@
   </v-card>
 
   <!-- 彈窗元件 -->
+
   <!-- 業主單選視窗 -->
   <search-cust ref="ownerPickOpen" @pick="storeCust.pick" />
   <!-- 工程單選視窗 -->
@@ -413,6 +398,10 @@
   <Multi-cust v-model="MultiCustDs" @pick="onMultiOwnerPicks" :preselected="formData.owners" />
   <!-- 工程多選彈窗 -->
   <Multi-prot v-model="MulitProtDs" @pick="onMulitProtPicks" :preselected="formData.prot" />
+  <!-- 列印彈窗 -->
+  <billing-data-print v-model="isPrintOpen" :print-form="printForm" />
+  <!-- EXCEL彈窗 -->
+  <billing-data-excel v-model="isExcelOpen" :print-form="printForm" />
 </template>
 <style scoped>
   .u-wch {
@@ -469,8 +458,6 @@
     .stack-1470 {
       flex: 0 0 100% !important;
       max-width: 100% !important;
-    }
-    .sep-1470 {
     }
   }
 </style>

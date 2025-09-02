@@ -199,5 +199,11 @@ export default {
     Search: '/api/Billbrow/Billbrow_Search',
     Print: '/api/Billbrow/Billbrow_Search_Print',
     Excel: '/api/Billbrow/Billbrow_Search_Excel'
+  },
+  // 採購作業查詢
+  PordBrow: {
+    Search: '/api/PordBrow/PordBrow_Search',
+    Print: '/api/PordBrow/PordBrow_Print',
+    Excel: '/api/PordBrow/PordBrow_Excel'
   }
 }
