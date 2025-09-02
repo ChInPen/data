@@ -39,7 +39,11 @@
       type: Boolean,
       default: false
     },
-    itemValue: String
+    itemValue: String,
+    layout: {
+      type: String as PropType<'auto' | 'fixed'>,
+      default: 'auto'
+    }
   })
   //分頁屬性
   const currentPage = ref(1)
@@ -191,6 +195,9 @@
 <template>
   <v-data-table
     class="c-data-table"
+    :class="{
+      'table-layout-fixed': layout === 'fixed'
+    }"
     v-model="selected"
     v-model:page="currentPage"
     :headers="headers"
@@ -346,5 +353,10 @@
 
   :deep(.v-data-table-rows-no-data) > td {
     font-size: 1rem;
+  }
+
+  .c-data-table.table-layout-fixed > :deep(.v-table__wrapper) > table {
+    /* 橫向卷軸 */
+    table-layout: fixed;
   }
 </style>

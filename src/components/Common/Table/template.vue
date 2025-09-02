@@ -31,6 +31,10 @@
     multiSelect: {
       type: Boolean,
       default: false
+    },
+    layout: {
+      type: String as PropType<'auto' | 'fixed'>,
+      default: 'auto'
     }
   })
   //分頁屬性
@@ -156,7 +160,14 @@
 </script>
 
 <template>
-  <v-table v-bind="$attrs" class="c-table" @keydown="handleKeydownArrow">
+  <v-table
+    v-bind="$attrs"
+    class="c-table"
+    :class="{
+      'table-layout-fixed': layout === 'fixed'
+    }"
+    @keydown="handleKeydownArrow"
+  >
     <template v-slot:default>
       <thead v-if="$slots.head">
         <tr :class="[thAlign]">
@@ -298,5 +309,10 @@
   .v-select {
     height: 40px;
     width: 97px;
+  }
+
+  .c-table.table-layout-fixed > :deep(.v-table__wrapper) > table {
+    /* 橫向卷軸 */
+    table-layout: fixed;
   }
 </style>

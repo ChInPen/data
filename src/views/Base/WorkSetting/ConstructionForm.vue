@@ -39,9 +39,7 @@
 
   //下拉選單
   const empDDL = ref<{ empno: string; empname: string }[]>([])
-  const taxkindDDL = ref<{ taxkind: string; taxkindc: string }[]>([])
-  const invokindDDL = ref<{ invokindno: string; invokindna: string }[]>([])
-  const akindDDL = ref<{ akindno: string; akindname: string }[]>([])
+  const unitDDL = ref<{ content1: string }[]>([])
   //抓人員下拉選單資料
   const getEmpApi = async () => {
     callApi({
@@ -56,50 +54,17 @@
       }
     })
   }
-  //抓營業稅下拉選單資料
-  const getTaxkindApi = async () => {
+  //抓單位下拉選單資料
+  const getUnitApi = async () => {
     callApi({
       method: 'POST',
-      url: api.Taxkind.Taxkind_List,
+      url: api.Phr.UnitBrow,
       params: { indexValue: '' }
     }).then((res: any) => {
       if (res?.status == 200) {
-        const data = res?.data as any[] | undefined
+        const data = res?.data
         if (data && Array.isArray(data)) {
-          taxkindDDL.value = data
-        }
-      }
-    })
-  }
-  //抓發票種類下拉選單資料
-  const getInvokindApi = async () => {
-    callApi({
-      method: 'POST',
-      url: api.Invokind.Invokind_List,
-      params: { indexValue: '' }
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const data = res?.data as any[] | undefined
-        if (data && Array.isArray(data)) {
-          invokindDDL.value = data
-        }
-      }
-    })
-  }
-  //抓結帳類別下拉選單資料
-  const getAkindApi = async () => {
-    callApi({
-      method: 'POST',
-      url: api.Akind.Akind_List,
-      data: {
-        akindno: '',
-        akindname: ''
-      }
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const data = res?.data as any[] | undefined
-        if (data && Array.isArray(data)) {
-          akindDDL.value = data.map(({ akindno, akindname }) => ({ akindno, akindname }))
+          unitDDL.value = data
         }
       }
     })
@@ -253,6 +218,9 @@
         if (protIkinds && Array.isArray(protIkinds)) {
           protIKindList.value = protIkinds
         }
+        if (projectdets && Array.isArray(projectdets)) {
+          protdetList.value = projectdets
+        }
       }
     })
   }
@@ -274,12 +242,209 @@
   }
 
   //大項目
-  const headItemList = ref<any[]>([])
+  const headItemList = ref<any[]>([
+    { headitemno: '001', headitemno1: '壹', headitem: '1' },
+    { headitemno: '002', headitemno1: '貳', headitem: '2' }
+  ])
   //中項目
-  const detItemList = ref<any[]>([])
+  const detItemList = ref<any[]>([
+    {
+      headitemno: '001',
+      headitemno1: '壹',
+      detitemno: '001',
+      detitemno1: '(一)',
+      detitem: '1'
+    },
+    {
+      headitemno: '001',
+      headitemno1: '壹',
+      detitemno: '002',
+      detitemno1: '(二)',
+      detitem: '2'
+    },
+    {
+      headitemno: '002',
+      headitemno1: '貳',
+      detitemno: '001',
+      detitemno1: '(一)',
+      detitem: '3'
+    },
+    {
+      headitemno: '002',
+      headitemno1: '貳',
+      detitemno: '002',
+      detitemno1: '(二)',
+      detitem: '4'
+    },
+    {
+      headitemno: '002',
+      headitemno1: '貳',
+      detitemno: '003',
+      detitemno1: '(三)',
+      detitem: '5'
+    }
+  ])
   //細項目
-  const secItemList = ref<any[]>([])
+  const secItemList = ref<any[]>([
+    {
+      headitemno: '001',
+      headitemno1: '壹',
+      detitemno: '001',
+      detitemno1: '(一)',
+      secitemno: '001',
+      secitemno1: '一',
+      secitem: '1'
+    },
+    {
+      headitemno: '001',
+      headitemno1: '壹',
+      detitemno: '001',
+      detitemno1: '(一)',
+      secitemno: '002',
+      secitemno1: '二',
+      secitem: '2'
+    },
+    {
+      headitemno: '001',
+      headitemno1: '壹',
+      detitemno: '002',
+      detitemno1: '(二)',
+      secitemno: '001',
+      secitemno1: '一',
+      secitem: '3'
+    },
+    {
+      headitemno: '001',
+      headitemno1: '壹',
+      detitemno: '002',
+      detitemno1: '(二)',
+      secitemno: '002',
+      secitemno1: '二',
+      secitem: '4'
+    },
+    {
+      headitemno: '002',
+      headitemno1: '貳',
+      detitemno: '001',
+      detitemno1: '(一)',
+      secitemno: '001',
+      secitemno1: '一',
+      secitem: '5'
+    },
+    {
+      headitemno: '002',
+      headitemno1: '貳',
+      detitemno: '001',
+      detitemno1: '(一)',
+      secitemno: '002',
+      secitemno1: '二',
+      secitem: '6'
+    },
+    {
+      headitemno: '002',
+      headitemno1: '貳',
+      detitemno: '002',
+      detitemno1: '(二)',
+      secitemno: '001',
+      secitemno1: '一',
+      secitem: '7'
+    },
+    {
+      headitemno: '002',
+      headitemno1: '貳',
+      detitemno: '002',
+      detitemno1: '(二)',
+      secitemno: '002',
+      secitemno1: '二',
+      secitem: '8'
+    },
+    {
+      headitemno: '002',
+      headitemno1: '貳',
+      detitemno: '003',
+      detitemno1: '(三)',
+      secitemno: '001',
+      secitemno1: '一',
+      secitem: '9'
+    }
+  ])
   //合約明細
+  const protdetList = ref<(typeof protdetEmpty)[]>([])
+  const protdetEmpty = {
+    headitemn1: '',
+    detitemno1: '',
+    secitemno1: '',
+    headitem: '',
+    detitem: '',
+    secitem: '',
+    mkindno1: '',
+    projectdetboms: [],
+    protno: '',
+    rec1: '',
+    itemno: '',
+    itemname: '',
+    qty: 0,
+    unit: '',
+    price: 0,
+    total1: 0,
+    formula1: '',
+    formula2: '',
+    mkindno: '',
+    descrip: '',
+    sqty: 0,
+    nqty: 0,
+    pjt1: '',
+    pjt2: '',
+    pjt3: '',
+    pjt4: '',
+    pjt5: '',
+    pjt6: '',
+    pjt7: '',
+    pjt8: '',
+    pjt9: '',
+    pjt10: '',
+    sysname1: '',
+    headitemno: '',
+    detitemno: '',
+    secitemno: '',
+    spqty: 0,
+    npqty: 0
+  }
+  const protdetAdd = () => {
+    pickItemStore.set(
+      protdetList,
+      [
+        { from: 'headitemno' },
+        { from: 'headitem' },
+        { from: 'headitemno1', to: 'headitemn1' },
+        { from: 'detitemno' },
+        { from: 'detitem' },
+        { from: 'detitemno1' },
+        { from: 'secitemno' },
+        { from: 'secitem' },
+        { from: 'secitemno1' },
+        { from: 'itemno' },
+        { from: 'itemname' },
+        { from: 'ibompqty', to: 'qty', valueType: 'number' },
+        { from: 'stkunit', to: 'unit' },
+        { from: 'ibompqty', to: 'sqty', valueType: 'number' },
+        { from: 'ibompqty', to: 'spqty', valueType: 'number' },
+        { from: 'mkindno' },
+        { from: 'mkindno1' }
+        // { from: 'stksalpc', to: 'ibomsalpc', valueType: 'number' },
+        // { from: 'stkpurpc', to: 'ibomcpc', valueType: 'number' }
+      ],
+      {
+        mode: 'add',
+        empty: { ...protdetEmpty }
+      }
+    )
+    pickItemStore.temp = () => {
+      // GenerateRec(esDataList.value, 'ibomrec') //自動編號
+      // handleEStotalCount()
+    }
+    pickItemDS.value = true
+  }
 
   //工程類別預估
   const protIKindEmpty = {
@@ -316,7 +481,7 @@
   onMounted(() => {
     //抓下拉選單資料
     getEmpApi()
-    // getUnitApi()
+    getUnitApi()
     //抓單筆資料
     if (store.action === 'create') {
       getRenewApi()
@@ -360,6 +525,21 @@
         }
       }
     )
+  }
+
+  //勾選工料彈窗
+  const pickItemDS = ref(false)
+  const handlePickItems = (data) => {
+    pickItemStore.pick(data)
+    protdetList.value.sort((a: any, b: any) => {
+      const trans = (val: any) => (Number.isNaN(val) ? 0 : Number(val))
+      return (
+        trans(a.headitemno) - trans(b.headitemno) ||
+        trans(a.detitemno) - trans(b.detitemno) ||
+        trans(a.secitemno) - trans(b.secitemno)
+      )
+    })
+    GenerateRec(protdetList.value, 'rec1', 4) //自動編號
   }
 </script>
 
@@ -663,53 +843,143 @@
         </v-tabs-window-item>
 
         <v-tabs-window-item value="protdet">
-          <v-row dense>
-            <v-col cols="auto">
-              <c-button kind="create" icon="mdi-plus-circle">新增</c-button>
-            </v-col>
-            <v-col cols="auto">
-              <c-button kind="insert" icon="mdi-arrow-down-circle">插入</c-button>
-            </v-col>
-            <v-col cols="auto">
-              <c-button kind="delete" icon="fa-solid fa-trash">刪除</c-button>
-            </v-col>
-            <v-col cols="auto">
-              <c-button kind="photo" icon="fa-solid fa-images">看圖</c-button>
-            </v-col>
-            <v-col cols="auto">
-              <c-button kind="boms" icon="fa-solid fa-search-dollar">單價分析</c-button>
-            </v-col>
-            <v-col cols="auto">
-              <c-button kind="protype" icon="fa-solid fa-clipboard-list">規格說明</c-button>
-            </v-col>
-          </v-row>
-          <c-table class="mt-3 mb-2" striped="even" hover selectable>
-            <template v-slot:head>
-              <th>序號</th>
-              <th>大</th>
-              <th>中</th>
-              <th>細</th>
-              <th>工料編號</th>
-              <th>工料名稱</th>
-              <th>數量A</th>
-              <th>單位</th>
-              <th>單價B</th>
-              <th>複價C</th>
-              <th>請款已轉D</th>
-              <th>請款未轉</th>
-              <th>採購已轉</th>
-              <th>採購未轉</th>
-              <th>比例設定(分子)</th>
-              <th>比例設定(分母)</th>
-              <th>說明</th>
-              <th>類別</th>
-            </template>
-          </c-table>
           <hdsItem
             v-model:head="headItemList"
             v-model:det="detItemList"
             v-model:sec="secItemList"
-          />
+            :disabled="store.isDetail"
+          >
+            <v-row dense>
+              <v-col cols="auto">
+                <c-button kind="create" icon="mdi-plus-circle" @click="protdetAdd">新增</c-button>
+              </v-col>
+              <v-col cols="auto">
+                <c-button kind="insert" icon="mdi-arrow-down-circle">插入</c-button>
+              </v-col>
+              <v-col cols="auto">
+                <c-button kind="delete" icon="fa-solid fa-trash">刪除</c-button>
+              </v-col>
+              <v-col cols="auto">
+                <c-button kind="photo" icon="fa-solid fa-images">看圖</c-button>
+              </v-col>
+              <v-col cols="auto">
+                <c-button kind="boms" icon="fa-solid fa-search-dollar">單價分析</c-button>
+              </v-col>
+              <v-col cols="auto">
+                <c-button kind="protype" icon="fa-solid fa-clipboard-list">規格說明</c-button>
+              </v-col>
+            </v-row>
+            <c-table
+              class="mt-3"
+              v-model="protdetList"
+              striped="even"
+              hover
+              height="340"
+              fixed-header
+              selectable
+              layout="fixed"
+            >
+              <template v-slot:head>
+                <th width="80">序號</th>
+                <th width="50">大</th>
+                <th width="50">中</th>
+                <th width="50">細</th>
+                <th width="260">工料編號</th>
+                <th width="600">工料名稱</th>
+                <th width="150">數量A</th>
+                <th width="180">單位</th>
+                <th width="200">單價B</th>
+                <th width="200">複價C</th>
+                <th width="125">請款已轉D</th>
+                <th width="125">請款未轉</th>
+                <th width="125">採購已轉</th>
+                <th width="125">採購未轉</th>
+                <th width="200">比例設定(分子)</th>
+                <th width="200">比例設定(分母)</th>
+                <th width="200">說明</th>
+                <th width="60">類別</th>
+              </template>
+              <template v-slot:body="{ scope }">
+                <td>{{ scope.rec1 }}</td>
+                <td>{{ scope.headitemn1 }}</td>
+                <td>{{ scope.detitemno1 }}</td>
+                <td>{{ scope.secitemno1 }}</td>
+                <td><c-input v-model="scope.itemno" :disabled="store.isDetail" @button="" /></td>
+                <td><c-input v-model="scope.itemname" :disabled="true" /></td>
+                <td>
+                  <c-input
+                    type="number"
+                    v-model="scope.qty"
+                    :disabled="store.isDetail"
+                    :format="{ thousands: true }"
+                  />
+                </td>
+                <td>
+                  <c-select
+                    v-model="scope.unit"
+                    :items="unitDDL"
+                    item-title="content1"
+                    item-value="content1"
+                    hide-search
+                    :disabled="store.isDetail"
+                    clearable
+                  />
+                </td>
+                <td>
+                  <c-input
+                    type="number"
+                    v-model="scope.price"
+                    :disabled="store.isDetail"
+                    :format="{ thousands: true }"
+                  />
+                </td>
+                <td>
+                  <c-input
+                    type="number"
+                    v-model="scope.total1"
+                    :disabled="true"
+                    :format="{ thousands: true }"
+                  />
+                </td>
+                <td>
+                  <c-input
+                    type="number"
+                    v-model="scope.sqty"
+                    :disabled="true"
+                    :format="{ thousands: true }"
+                  />
+                </td>
+                <td>
+                  <c-input
+                    type="number"
+                    v-model="scope.nqty"
+                    :disabled="true"
+                    :format="{ thousands: true }"
+                  />
+                </td>
+                <td>
+                  <c-input
+                    type="number"
+                    v-model="scope.spqty"
+                    :disabled="true"
+                    :format="{ thousands: true }"
+                  />
+                </td>
+                <td>
+                  <c-input
+                    type="number"
+                    v-model="scope.npqty"
+                    :disabled="true"
+                    :format="{ thousands: true }"
+                  />
+                </td>
+                <td><c-input v-model="scope.formula1" :disabled="store.isDetail" /></td>
+                <td><c-input v-model="scope.formula2" :disabled="store.isDetail" /></td>
+                <td><c-input v-model="scope.descrip" :disabled="store.isDetail" /></td>
+                <td>{{ scope.mkindno1 }}</td>
+              </template>
+            </c-table>
+          </hdsItem>
         </v-tabs-window-item>
         <v-tabs-window-item value="sign">
           <v-row dense :align="'center'">
@@ -890,7 +1160,15 @@
 
   <!-- <project-type v-model="projectTypeDS" :items="projectTypeItems" @save="handlePJTsave" /> -->
   <pickIKind v-model="pickIKindDS" @pick="pickIKindStore.pick" />
-  <!-- <pick-item v-model="pickItemDS" @pick="handleItemPick" /> -->
+  <pick-item
+    v-model="pickItemDS"
+    :show-ikind="true"
+    :show-hds="true"
+    :headlist="headItemList"
+    :detlist="detItemList"
+    :seclist="secItemList"
+    @pick="handlePickItems"
+  />
   <search-cust v-model="searchCustDS" @pick="searchCustStore.pick" />
   <!-- <search-item ref="searchRef" @pick="searchItemPick" /> -->
 </template>

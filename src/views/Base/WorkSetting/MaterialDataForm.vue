@@ -7,8 +7,10 @@
     cTable,
     cBread,
     cDivider,
-    cRadioGroup
+    cRadioGroup,
+    cDataTable
   } from '@/components/Common' //共用元件
+  import type { DataTableHeader } from 'vuetify'
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
   import { message } from '@/components/Message/service' //訊息窗元件
@@ -498,6 +500,19 @@
     searchItemStore.pick(data)
     searchItemStore.temp?.()
   }
+
+  const h: DataTableHeader[] = [
+    { title: '序號', key: 'ibomrec', width: '80', sortable: false },
+    { title: '工料編號', key: 'ibomno', width: '250', sortable: false },
+    { title: '工料名稱', key: 'ibomname', width: '400', sortable: false },
+    { title: '單位', key: 'ibomunit', width: '160', sortable: false },
+    { title: '數量', key: 'ibomsqty', width: '150', sortable: false },
+    { title: '售價', key: 'ibomsalpc', width: '200', sortable: false },
+    { title: '售價小計', key: 'ibomsalto', width: '200', sortable: false },
+    { title: '成本', key: 'ibomcpc', width: '200', sortable: false },
+    { title: '成本小計', key: 'ibomcto', width: '200', sortable: false },
+    { title: '說明', key: 'ibommemo', width: '200', sortable: false }
+  ]
 </script>
 
 <template>
@@ -846,7 +861,15 @@
               <c-button kind="delete" icon="fa-solid fa-trash" @click="esListDelete">刪除</c-button>
             </v-col>
           </v-row>
-          <c-table ref="esTable" class="mt-2" v-model="esDataList" striped="even" hover selectable>
+          <c-table
+            ref="esTable"
+            class="mt-2"
+            v-model="esDataList"
+            striped="even"
+            hover
+            selectable
+            layout="fixed"
+          >
             <template v-slot:head>
               <th width="80">序號</th>
               <th width="250">工料編號</th>
@@ -945,3 +968,10 @@
   <pick-item v-model="pickItemDS" @pick="handleItemPick" />
   <search-item ref="searchRef" @pick="searchItemPick" />
 </template>
+
+<style scoped>
+  .tb-div {
+    width: 1000px;
+    overflow-y: auto;
+  }
+</style>

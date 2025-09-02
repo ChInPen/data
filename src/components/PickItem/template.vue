@@ -1,18 +1,46 @@
 <script lang="ts" setup>
-  import { ref, nextTick } from 'vue'
-  import { cInput, cSelect, cCheckbox, cDialog, cButton, cDataTable } from '@/components/Common'
+  import { ref, computed, watch, nextTick } from 'vue'
+  import {
+    cInput,
+    cSelect,
+    cCheckbox,
+    cDialog,
+    cButton,
+    cDataTable,
+    cDivider
+  } from '@/components/Common'
+  import type { PropType } from 'vue'
   import type { DataTableHeader } from 'vuetify'
   import { callApi } from '@/utils/uapi'
   import api from '@/api'
   import { usePickItem } from '@/store/pickItem'
   const store = usePickItem()
   import type { SearchData } from './type'
+  import { pickIKind } from '@/components/PickIKind'
+  import { usePickIKind } from '@/store/pickIKind'
+  const ikindstore = usePickIKind()
 
   const isOpen = defineModel({ default: false })
-  defineProps({
-    ikind: {
+  const props = defineProps({
+    showIkind: {
       type: Boolean,
       default: false
+    },
+    showHds: {
+      type: Boolean,
+      default: false
+    },
+    headlist: {
+      type: Array as PropType<iHeadItem[]>,
+      default: []
+    },
+    detlist: {
+      type: Array as PropType<iDetItem[]>,
+      default: []
+    },
+    seclist: {
+      type: Array as PropType<iSecItem[]>,
+      default: []
     }
   })
   const emits = defineEmits(['pick'])
@@ -33,14 +61,80 @@
     { value: '4', label: '外包' },
     { value: '6', label: '雜支' }
   ])
-  // const filterDDL = [
-  //   { name: 'itemno', label: '工料編號' },
-  //   { name: 'itemname', label: '工料名稱' },
-  //   { name: 'ikindno', label: '類別編號' },
-  //   { name: 'ikindname', label: '類別名稱' },
-  //   { name: 'stkpurpc', label: '進        價' },
-  //   { name: 'stksalpc', label: '售        價' }
-  // ]
+  //大中小項目
+  const filterHDS = ref({
+    headitemno: '',
+    headitemno1: '',
+    headitem: '',
+    detitemno: '',
+    detitemno1: '',
+    detitem: '',
+    secitemno: '',
+    secitemno1: '',
+    secitem: ''
+  })
+  const detListDDL = computed(() => {
+    const { headitemno } = filterHDS.value
+    if (!headitemno) return []
+    return props.detlist.filter((x) => x.headitemno === headitemno)
+  })
+  const secListDDL = computed(() => {
+    const { headitemno, detitemno } = filterHDS.value
+    if (!headitemno || !detitemno) return []
+    return props.seclist.filter((x) => x.headitemno === headitemno && x.detitemno === detitemno)
+  })
+  //監聽
+  watch(
+    () => filterHDS.value.headitemno,
+    (newVal) => {
+      const item = props.headlist.find((x) => x.headitemno === newVal)
+      if (item) {
+        filterHDS.value.headitemno1 = item.headitemno1
+        filterHDS.value.headitem = item.headitem
+      }
+      filterHDS.value = {
+        ...filterHDS.value,
+        detitemno: '',
+        detitemno1: '',
+        detitem: '',
+        secitemno: '',
+        secitemno1: '',
+        secitem: ''
+      }
+    }
+  )
+  watch(
+    () => filterHDS.value.detitemno,
+    (newVal) => {
+      const headitemno = filterHDS.value.headitemno
+      const item = props.detlist.find((x) => x.headitemno === headitemno && x.detitemno === newVal)
+      if (item) {
+        filterHDS.value.detitemno1 = item.detitemno1
+        filterHDS.value.detitem = item.detitem
+      }
+      filterHDS.value = {
+        ...filterHDS.value,
+        secitemno: '',
+        secitemno1: '',
+        secitem: ''
+      }
+    }
+  )
+  watch(
+    () => filterHDS.value.secitemno,
+    (newVal) => {
+      const headitemno = filterHDS.value.headitemno
+      const detitemno = filterHDS.value.detitemno
+      const item = props.seclist.find(
+        (x) => x.headitemno === headitemno && x.detitemno === detitemno && x.secitemno === newVal
+      )
+      if (item) {
+        filterHDS.value.secitemno1 = item.secitemno1
+        filterHDS.value.secitem = item.secitem
+      }
+    }
+  )
+
   //表格資料
   const tbData = ref<SearchData[]>([])
   const selected = ref([])
@@ -88,14 +182,47 @@
   }
   // 取回
   const handleSend = () => {
-    emits('pick', itemTableRef.value?.checked ?? [])
+    const checkList: any[] = itemTableRef.value?.checked ?? []
+    emits(
+      'pick',
+      checkList.map((x) => ({
+        ...x,
+        ...filterHDS.value,
+        mkindno1:
+          x.mkindno == '1'
+            ? '材料'
+            : x.mkindno == '2'
+              ? '工資'
+              : x.mkindno == '3'
+                ? '費用'
+                : x.mkindno == '4'
+                  ? '外包'
+                  : x.mkindno == '6'
+                    ? '雜支'
+                    : ''
+      }))
+    )
     isOpen.value = false
   }
 
   // dialog 關閉時
   const handleDialogClose = () => {
     nextTick(() => {
-      handleClear() //清空查詢條件
+      //清空查詢條件
+      handleClear()
+      filterHDS.value = {
+        headitemno: '',
+        headitemno1: '',
+        headitem: '',
+        detitemno: '',
+        detitemno1: '',
+        detitem: '',
+        secitemno: '',
+        secitemno1: '',
+        secitem: ''
+      }
+      //清空表格資料和勾選
+      handleCancelAll()
       tbData.value = []
       store.clear()
     })
@@ -107,10 +234,31 @@
   defineExpose({
     open
   })
+
+  //選擇工料類別彈窗
+  const pickIKindRef = ref()
+  const handleIKindOpen = () => {
+    pickIKindRef.value?.open()
+  }
+  const handleIKindKeyEnter = (e: KeyboardEvent) => {
+    const searchText = filter.value.ikindno
+    ikindstore.keyEnter(e, '', [], searchText, { open: pickIKindRef.value?.open })
+  }
+  const handleIKindPick = (data) => {
+    const { ikindno, ikindname } = data
+    if (ikindno) filter.value.ikindno = ikindno
+    if (ikindname) filter.value.ikindname = ikindname
+  }
 </script>
 
 <template>
-  <c-dialog v-model="isOpen" width="1100" @afterLeave="handleDialogClose" title-divider>
+  <c-dialog
+    v-model="isOpen"
+    v-bind="$attrs"
+    width="1100"
+    @afterLeave="handleDialogClose"
+    title-divider
+  >
     <template v-slot:title>
       <v-row dense :align="'center'">
         <v-col>選擇工料</v-col>
@@ -121,6 +269,39 @@
     </template>
     <v-card color="#1b2b36" rounded="3">
       <v-card-text>
+        <v-row dense v-if="showHds">
+          <v-col :cols="4">
+            <c-select
+              v-model="filterHDS.headitemno"
+              label="大項目"
+              :items="headlist"
+              :item-title="(item) => (item ? `${item.headitemno1} - ${item.headitem}` : '')"
+              item-value="headitemno"
+              hide-search
+            />
+          </v-col>
+          <v-col :cols="4" class="px-2">
+            <c-select
+              v-model="filterHDS.detitemno"
+              label="中項目"
+              :items="detListDDL"
+              :item-title="(item) => (item ? `${item.detitemno1} - ${item.detitem}` : '')"
+              item-value="detitemno"
+              hide-search
+            />
+          </v-col>
+          <v-col :cols="4">
+            <c-select
+              v-model="filterHDS.secitemno"
+              label="細項目"
+              :items="secListDDL"
+              :item-title="(item) => (item ? `${item.secitemno1} - ${item.secitem}` : '')"
+              item-value="secitemno"
+              hide-search
+            />
+          </v-col>
+        </v-row>
+        <c-divider v-if="showHds" />
         <v-row dense>
           <v-col :cols="4">
             <c-input v-model="filter.itemno" label="工料編號" />
@@ -156,10 +337,15 @@
           </v-col>
         </v-row>
         <v-row dense :align="'start'">
-          <v-col :cols="4" v-if="ikind">
-            <c-input v-model="filter.ikindno" label="工料類別" @button="" />
+          <v-col :cols="4" v-if="showIkind">
+            <c-input
+              v-model="filter.ikindno"
+              label="工料類別"
+              @button="handleIKindOpen"
+              @keydown="handleIKindKeyEnter"
+            />
           </v-col>
-          <v-col :cols="3" v-if="ikind">
+          <v-col :cols="3" v-if="showIkind">
             <c-input v-model="filter.ikindname" disabled />
           </v-col>
           <v-col></v-col>
@@ -183,7 +369,7 @@
       class="mt-3"
       :headers="headers"
       striped="even"
-      height="500"
+      :height="showHds ? '420' : '500'"
       fixed-header
       show-select
       item-value="itemno"
@@ -193,6 +379,8 @@
       </template>
     </c-data-table>
   </c-dialog>
+
+  <pickIKind ref="pickIKindRef" @pick="handleIKindPick" />
 </template>
 
 <style scoped></style>

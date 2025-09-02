@@ -8,7 +8,7 @@
     disabled: Boolean
   })
 
-  const tabpageHDS = ref('head') //頁籤(大中細項目)
+  const tabpageHDS = ref('protdet') //頁籤(大中細項目)
 
   //大項目
   const headList = defineModel<any[]>('head', { default: [] })
@@ -344,6 +344,7 @@
 <template>
   <v-card>
     <v-tabs v-model="tabpageHDS" class="c-sub-tabs">
+      <v-tab value="protdet">明細</v-tab>
       <v-tab value="head">大項目</v-tab>
       <v-tab value="det">中項目</v-tab>
       <v-tab value="sec">細項目</v-tab>
@@ -351,6 +352,9 @@
 
     <v-card-text>
       <v-tabs-window v-model="tabpageHDS">
+        <v-tabs-window-item value="protdet">
+          <slot></slot>
+        </v-tabs-window-item>
         <v-tabs-window-item value="head">
           <v-row dense>
             <v-col cols="auto">
@@ -373,7 +377,7 @@
             hover
             selectable
             :pagination="false"
-            height="209"
+            height="380"
             fixed-header
           >
             <template v-slot:item.headitem="{ scope }">
@@ -403,7 +407,7 @@
             hover
             selectable
             :pagination="false"
-            height="209"
+            height="380"
             fixed-header
           >
             <template v-slot:item.detitem="{ scope }">
@@ -433,7 +437,7 @@
             hover
             selectable
             :pagination="false"
-            height="209"
+            height="380"
             fixed-header
           >
             <template v-slot:item.secitem="{ scope }">

@@ -79,7 +79,7 @@
   }
 
   const open = () => {
-    isOpen.value = true
+    model.value = true
   }
   defineExpose({
     open
