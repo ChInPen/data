@@ -5,55 +5,63 @@
   import api from '@/api'
   import { message } from '@/components/Message/service'
 
-  // 資料庫進來的Item
+  // 資料庫進來的Cust
   type SearchData = {
-    itemno: string
-    itemname: string
-    ikindname: string
-    mkindname: string
-    stkpurpc: number
-    stksalpc: number
-    [key: string]: any
+    suppno: string
+    suppabbr: string
+    suppname: string
+    con1: string
+    con2: string
+    boss: string
+    tel1: string
+    tel2: string
+    fax: string
+    mobitel1: string
+    mobitel2: string
+    mobitel3: string
+    compaddr: string
   }
 
   // 父層可傳入目前已選
   const props = defineProps<{ preselected?: SearchData[] }>()
 
+  // 對話框控制
   const isOpen = defineModel({ default: false })
-  const emits = defineEmits<{
-    (e: 'pick', value: SearchData[]): void
-  }>()
+  const emits = defineEmits<{ (e: 'pick', value: SearchData[]): void }>()
 
+  // 狀態
   const tbData = ref<SearchData[]>([]) // 查詢結果
-  const picked = ref<SearchData[]>([]) // 右側已選（暫存）
-  const snapshot = ref<SearchData[]>([]) // picked 快照
+  const picked = ref<SearchData[]>([]) // 對話框內的暫存已選
+  const snapshot = ref<SearchData[]>([]) // picked快照
   const leftChecked = ref<Set<string>>(new Set())
   const rightChecked = ref<Set<string>>(new Set())
 
   const filter = ref({
-    type1: 'itemno',
-    type2: 'itemname',
+    type1: 'suppno',
+    type2: 'suppname',
     filter1: '',
     filter2: ''
   })
   const filterDDL = [
-    { name: 'itemno', label: '工料編號' },
-    { name: 'itemname', label: '工料名稱' },
-    { name: 'ikindname', label: '類別編號' },
-    { name: 'mkindname', label: '類別分類' },
-    { name: 'stkpurpc', label: '進        價' },
-    { name: 'stksalpc', label: '售        價' }
+    { name: 'suppno', label: '廠商編號' },
+    { name: 'suppabbr', label: '廠商簡稱' },
+    { name: 'suppname', label: '廠商名稱' },
+    { name: 'con1', label: '聯 絡 人1' },
+    { name: 'con2', label: '聯 絡 人2' },
+    { name: 'boss', label: '負 責 人' },
+    { name: 'tel1', label: '電 話1' },
+    { name: 'tel2', label: '電 話2' },
+    { name: 'fax', label: '傳 真' },
+    { name: 'mobitel1', label: '行動電話1' },
+    { name: 'mobitel2', label: '行動電話2' },
+    { name: 'mobitel3', label: '行動電話3' },
+    { name: 'compaddr', label: '公司地址' }
   ]
 
   // 拷貝
   const cloneArr = <T extends object>(arr: T[]) => arr.map((x) => ({ ...x }))
 
-  // 左側實際顯示：查詢結果扣掉已選，避免重覆
-  const leftList = computed(() => {
-    const chosen = new Set(picked.value.map((x) => x.itemno))
-    return tbData.value.filter((x) => !chosen.has(x.itemno))
-  })
-
+  // 開窗時
   watch(
     () => isOpen.value,
     (open) => {
@@ -69,63 +77,61 @@
     }
   )
 
-  // 查詢
+  // 左側實際顯示：查詢結果扣掉已選，避免重覆
+  const leftList = computed(() => {
+    const chosen = new Set(picked.value.map((x) => x.suppno))
+    return tbData.value.filter((x) => !chosen.has(x.suppno))
+  })
+
+  // === 查詢 ===
   const handleSearch = async () => {
     if (filter.value.type1 == filter.value.type2) {
-      message.alert({ type: 'warning', message: '查詢條件不可相同' })
+      message.alert({
+        type: 'warning',
+        message: '查詢條件不可相同'
+      })
       return
     }
-    const obj: Record<string, any> = {
-      itemno: '',
-      ikindno: '',
-      itemname: '',
-      mkindno: '',
-      ikindname: '',
-      stkpurpc: null,
-      stksalpc: null
-    }
-    if (filter.value?.type1) obj[filter.value.type1] = filter.value.filter1 ?? ''
-    if (filter.value?.type2) obj[filter.value.type2] = filter.value.filter2 ?? ''
     await callApi({
       method: 'POST',
-      url: api.Item.Item_List,
-      data: obj
+      url: api.Supp.Supp_Brow,
+      data: {
+        query_project_name: filter.value.type1,
+        query_project_value: filter.value.filter1 ?? '',
+        query_project_name2: filter.value.type2,
+        query_project_value2: filter.value.filter2 ?? ''
+      }
     }).then((res: any) => {
       if (res?.status === 200) {
-        const { _Lists } = res?.data ?? []
-        if (_Lists && Array.isArray(_Lists)) {
-          const list = _Lists as SearchData[]
-          list.sort((x, y) => x.itemno.localeCompare(y.itemno))
-          tbData.value = list
-        }
+        const data: any[] = res?.data ?? []
+        tbData.value = data
       }
     })
   }
-
   // === 清空查詢條件 ===
   const handleClear = () => {
-    filter.value = { type1: 'itemno', type2: 'itemname', filter1: '', filter2: '' }
+    filter.value = { type1: 'suppno', type2: 'suppname', filter1: '', filter2: '' }
   }
   const handleReset = () => {
     handleClear()
-    picked.value = [] // 清空已選
-    tbData.value = [] // 清空查詢結果
+    picked.value = []
+    tbData.value = []
   }
 
   // === 單筆選擇 ===
   const handleChoose = (raw: SearchData) => {
-    if (!picked.value.find((x) => x.itemno === raw.itemno)) {
+    if (!picked.value.find((x) => x.suppno === raw.suppno)) {
       picked.value.push(raw)
     }
   }
 
-  // === 全選（左） ===
+  // === 全選 ===
   const pushToPickedUniq = (rows: SearchData[]) => {
-    const seen = new Set(picked.value.map((x) => x.itemno))
+    const seen = new Set(picked.value.map((x) => x.suppno))
     rows.forEach((r) => {
-      if (!seen.has(r.itemno)) {
+      if (!seen.has(r.suppno)) {
         picked.value.push(r)
-        seen.add(r.itemno)
+        seen.add(r.suppno)
       }
     })
   }
@@ -135,20 +141,19 @@
     const el = document.getElementById('selectAllLeft') as HTMLInputElement | null
     if (el) el.checked = false
   }
-
-  // === 全刪（右） ===
+  // === 全刪 ===
   function handleSelectAllRight() {
     if (!picked.value.length) return
     picked.value = []
     rightChecked.value.clear()
+    // 取消勾選
     const el = document.getElementById('selectAllRight') as HTMLInputElement | null
     if (el) el.checked = false
   }
-
   // === 確認回傳 ===
   const handleConfirm = () => {
     const out = cloneArr(picked.value)
-    emits('pick', out)
+    emits('pick', out) // 存回父層
     snapshot.value = cloneArr(out)
     isOpen.value = false
   }
@@ -170,9 +175,9 @@
     })
   }
 
-  // 刪除方法（單筆）
+  // 刪除暫存選項
   const handleRemove = (raw: SearchData) => {
-    picked.value = picked.value.filter((x) => x.itemno !== raw.itemno)
+    picked.value = picked.value.filter((x) => x.suppno !== raw.suppno)
   }
 </script>
 
@@ -180,7 +185,7 @@
   <c-dialog v-model="isOpen" width="85%" @afterLeave="handleDialogClose" title-divider>
     <template #title>
       <v-row dense align="center">
-        <v-col>選擇工料（可多選）</v-col>
+        <v-col>選擇人員（可多選）</v-col>
         <v-col cols="auto">
           <c-button kind="cancel" icon="mdi-close-circle" @click="isOpenOut">關閉</c-button>
         </v-col>
@@ -249,12 +254,14 @@
           class="equal-6"
         >
           <template #head>
-            <th class="text-center">工料編號</th>
-            <th class="text-center">工料名稱</th>
-            <th class="text-center">類別分類</th>
+            <th class="text-center">業主編號</th>
+            <th class="text-center">業主簡稱</th>
+            <th class="text-center">聯絡人</th>
+            <th class="text-center">電話</th>
+            <th class="text-center">行動電話</th>
             <th class="text-center">
               <input
-                type="Checkbox"
+                type="checkbox"
                 id="selectAllLeft"
                 class="me-2"
                 @change="handleSelectAllLeft"
@@ -263,9 +270,11 @@
             </th>
           </template>
           <template #body="{ scope }">
-            <td class="text-center">{{ scope.itemno }}</td>
-            <td class="text-center">{{ scope.itemname }}</td>
-            <td class="text-center">{{ scope.mkindname }}</td>
+            <td class="text-center">{{ scope.suppno }}</td>
+            <td class="text-center">{{ scope.suppname }}</td>
+            <td class="text-center">{{ scope.con1 }}</td>
+            <td class="text-center">{{ scope.tel1 }}</td>
+            <td class="text-center">{{ scope.con2 }}</td>
             <td class="text-center">
               <c-button kind="choose" icon="fa-solid fa-check" @click="handleChoose(scope)">
                 選擇
@@ -274,7 +283,8 @@
           </template>
         </c-table>
       </v-col>
-      <!-- 右：已選清單 -->
+
+      <!-- 右：已選清單（暫存） -->
       <v-col>
         <div class="text-subtitle-2 mb-1">已選清單（{{ picked.length }}）</div>
         <c-table
@@ -286,9 +296,11 @@
           class="equal-6"
         >
           <template #head>
-            <th class="text-center">工料編號</th>
-            <th class="text-center">工料名稱</th>
-            <th class="text-center">類別分類</th>
+            <th class="text-center">業主編號</th>
+            <th class="text-center">業主簡稱</th>
+            <th class="text-center">聯絡人</th>
+            <th class="text-center">電話</th>
+            <th class="text-center">行動電話</th>
             <th class="text-center">
               <input
                 type="checkbox"
@@ -300,9 +312,11 @@
             </th>
           </template>
           <template #body="{ scope }">
-            <td class="text-center">{{ scope.itemno }}</td>
-            <td class="text-center">{{ scope.itemname }}</td>
-            <td class="text-center">{{ scope.mkindname }}</td>
+            <td class="text-center">{{ scope.suppno }}</td>
+            <td class="text-center">{{ scope.suppname }}</td>
+            <td class="text-center">{{ scope.con1 }}</td>
+            <td class="text-center">{{ scope.tel1 }}</td>
+            <td class="text-center">{{ scope.con2 }}</td>
             <td class="text-center">
               <c-button kind="cancel" icon="fa-solid fa-trash" @click="handleRemove(scope)">
                 刪除

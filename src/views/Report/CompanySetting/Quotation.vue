@@ -1,6 +1,6 @@
 <script lang="ts" setup>
   import { computed, ref } from 'vue'
-  import { cButton, cInput, cBread } from '@/components/Common' //匯入自定義的UI元件
+  import { cButton, cInput, cBread, cSelect } from '@/components/Common' //匯入自定義的UI元件
   import { searchCust } from '@/components/SearchCust' //業主彈窗元件查詢
   import { searchItem } from '@/components/SearchItem' //工料彈窗元件查詢
   import { searchProt } from '@/components/SearchProt' //工程彈窗元件查詢
@@ -35,7 +35,19 @@
     items: [],
     prot: []
   })
-
+  // 表尾註腳
+  const feetNoDDL = ref({
+    list: [
+      { feetno: '01', feetname: '第一組' },
+      { feetno: '02', feetname: '第二組' },
+      { feetno: '03', feetname: '第三組' },
+      { feetno: '04', feetname: '第四組' },
+      { feetno: '05', feetname: '第五組' },
+      { feetno: '20', feetname: '不列印' }
+    ],
+    value: 'feetno',
+    title: 'feetname'
+  })
   // 業主選單 / 多選控制
   // 業主單選彈窗開關
   const ownerPickOpen = ref()
@@ -128,14 +140,34 @@
 
   // 列印表單
   const printForm = ref({
-    dates: { begin: '0870101', end: '1141231' },
-    custNOs: { begin: '', end: '', limiteds: [''] },
-    itemNOs: { begin: '', end: '', limiteds: [''] },
-    protNOs: { begin: '', end: '', limiteds: [''] },
-    pagination: { start: 0, length: 100, draw: 1 },
+    dates: {
+      begin: '',
+      end: ''
+    },
+    custNOs: {
+      begin: '',
+      end: '',
+      limiteds: ['']
+    },
+    itemNOs: {
+      begin: '',
+      end: '',
+      limiteds: ['']
+    },
+    protNOs: {
+      begin: '',
+      end: '',
+      limiteds: ['']
+    },
+    pagination: {
+      //分頁設定
+      start: 0,
+      length: 10,
+      draw: 1
+    },
     descrip: '',
     sqtedetud: '',
-    feetNo: '05',
+    feetNo: '20',
     printType: ''
   })
 
@@ -154,21 +186,20 @@
       printForm.value.protNOs.begin = formData.value.projectNoFrom
       printForm.value.protNOs.end = formData.value.projectNoTo
       printForm.value.protNOs.limiteds = formData.value.projectNosLimiteds
-      console.log(printForm.value)
       const res = await callApi({
         method: 'POST',
         url: api.SqteBrow.Print,
         data: printForm.value
       })
-
       const path = String(res.data).trim()
       if (typeof path === 'string' && path.startsWith('PDF')) {
         const fileURL = new URL(path, 'http://192.168.0.107:8096/').href
-        // 開新分頁；被阻擋就下載
         const w = window.open(fileURL)
-      } else return console.warn('沒有取得檔名')
+      } else {
+        console.warn('沒有取得檔名', res.data)
+      }
     } catch (err) {
-      console.error(err)
+      console.error('列印失敗：', err)
     }
   }
 
@@ -564,15 +595,23 @@
           />
         </v-col>
       </v-row>
-
       <v-row align="center" dense>
-        <!-- <v-col cols="auto" class="d-flex align-center">
-          <h5 class="text-white mb-0 font-weight-medium title-text">報價自定一</h5>
-        </v-col> -->
         <v-col cols="11">
           <v-row>
             <v-col cols="6" class="u-wch w-20ch">
               <c-input v-model="formData.custom1" label="報價自定一" density="compact" />
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col cols="6" class="u-wch w-7ch">
+              <c-select
+                v-model="printForm.feetNo"
+                label="單行註腳"
+                :items="feetNoDDL.list"
+                :item-title="feetNoDDL.title"
+                :item-value="feetNoDDL.value"
+                hide-search
+              />
             </v-col>
           </v-row>
         </v-col>

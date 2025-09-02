@@ -1,6 +1,6 @@
 import axios from '@/config/axios'
 import type { AxiosRequestConfig, Method } from 'axios'
-
+type ApiConfig = AxiosRequestConfig & { quiet?: boolean } // 👈 新增 quiet
 interface CallApiOptions {
   method: Method
   url: string

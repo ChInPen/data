@@ -1,9 +1,15 @@
 <script setup lang="ts">
-  import { onMounted } from 'vue'
+  import { onMounted, computed } from 'vue'
   import type { PropType } from 'vue'
   import type { DialogType, DialogMode } from './type'
   import { cButton, cIcon, cDialog } from '@/components/Common'
 
+  // 抓取msg內容
+  function sanitizeMsg(rawMsg = ''): string {
+    const m = rawMsg.match(/msg\s*[:=]\s*['"]?([^,'"}\]]+)/i)
+    return (m?.[1] || rawMsg).trim()
+  }
+  const displayMessage = computed(() => sanitizeMsg(props.message))
   //計時器
   let autoCloseTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -94,7 +100,7 @@
         />
       </div>
     </template>
-    <div class="msg-area">{{ message }}</div>
+    <div class="msg-area">{{ displayMessage }}</div>
     <template v-slot:buttons>
       <div class="col-auto">
         <c-button
