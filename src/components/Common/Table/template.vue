@@ -20,10 +20,7 @@
       type: Boolean,
       default: true
     },
-    headerAlign: {
-      type: String as PropType<'start' | 'center' | 'end'>,
-      default: 'start'
-    },
+    headerAlign: String as PropType<'start' | 'center' | 'end'>,
     selectable: {
       type: Boolean,
       default: false
@@ -56,7 +53,7 @@
   })
   //表頭 align
   const thAlign = computed(() => {
-    return `header-${props.headerAlign}`
+    return props.headerAlign ? `header-${props.headerAlign}` : ''
   })
   //選中行
   //存選中行的 index 陣列

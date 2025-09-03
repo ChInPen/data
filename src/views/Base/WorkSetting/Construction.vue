@@ -1,6 +1,6 @@
 <script lang="ts" setup>
   import { ref, onMounted } from 'vue'
-  import { cButton, cInput, cSelect, cCheckbox, cTable, cBread } from '@/components/Common' //共用元件
+  import { cButton, cInput, cTable, cBread } from '@/components/Common' //共用元件
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
   import { message } from '@/components/Message/service' //訊息窗元件

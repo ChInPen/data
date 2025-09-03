@@ -1,8 +1,9 @@
 <script lang="ts" setup>
-  import { ref, onMounted, computed, watch } from 'vue'
+  import { ref, computed, watch } from 'vue'
   import { cButton, cInput, cSelect, cDataTable, cDialog } from '@/components/Common' //共用元件
   import type { DataTableHeader } from 'vuetify'
   import { message } from '@/components/Message/service' //訊息窗元件
+  import { getHeadItemNo1, getDetItemNo1, getSecItemNo1 } from '@/utils/ucommon' //數字轉中文
 
   defineProps({
     disabled: Boolean
@@ -13,7 +14,7 @@
   //大項目
   const headList = defineModel<any[]>('head', { default: [] })
   const headHeaders: DataTableHeader[] = [
-    { title: '編號', key: 'headitemno1', width: '150px', sortable: false },
+    { title: '編號', key: 'headitemno1', width: '150px', sortable: false, align: 'center' },
     { title: '大項目', key: 'headitem', sortable: false }
   ]
   const headTable = ref()
@@ -36,7 +37,7 @@
         headList.value = headList.value.map((item, i) => ({
           ...item,
           headitemno: (i + 1).toString().padStart(3, '0'),
-          headitemno1: headItemHandler.NoToChinese(i + 1)
+          headitemno1: getHeadItemNo1(i + 1)
         }))
       }
     },
@@ -55,50 +56,16 @@
       headList.value.push({
         ...headForm.value,
         headitemno: (len + 1).toString().padStart(3, '0'),
-        headitemno1: headItemHandler.NoToChinese(len + 1)
+        headitemno1: getHeadItemNo1(len + 1)
       })
       headItemDS.value = false
-    },
-    //數字轉中文編號
-    NoToChinese: (no) => {
-      const digits = ['零', '壹', '貳', '參', '肆', '伍', '陸', '柒', '捌', '玖']
-      const units = ['', '拾', '佰', '仟']
-      const bigUnits = ['', '萬', '億', '兆']
-      if (no === 0) return '零'
-      let str = ''
-      let sectionIndex = 0
-      while (no > 0) {
-        let section = no % 10000
-        let sectionStr = ''
-        let zeroFlag = false
-        for (let i = 0; i < 4 && section > 0; i++) {
-          const digit = section % 10
-          if (digit === 0) {
-            if (!zeroFlag && sectionStr.length > 0) {
-              sectionStr = '零' + sectionStr
-              zeroFlag = true
-            }
-          } else {
-            sectionStr = digits[digit] + units[i] + sectionStr
-            zeroFlag = false
-          }
-          section = Math.floor(section / 10)
-        }
-        if (sectionStr !== '') {
-          str = sectionStr + bigUnits[sectionIndex] + str
-        }
-        no = Math.floor(no / 10000)
-        sectionIndex++
-      }
-      // 清除連續零
-      return str.replace(/零+/g, '零').replace(/零$/g, '')
     }
   }
   //中項目
   const detList = defineModel<any[]>('det', { default: [] })
   const detHeaders: DataTableHeader[] = [
-    { title: '大項目', key: 'headitemno1', width: '150px', sortable: false },
-    { title: '編號', key: 'detitemno1', width: '150px', sortable: false },
+    { title: '大項目', key: 'headitemno1', width: '150px', sortable: false, align: 'center' },
+    { title: '編號', key: 'detitemno1', width: '150px', sortable: false, align: 'center' },
     { title: '中項目', key: 'detitem', sortable: false }
   ]
   const detTable = ref()
@@ -129,7 +96,7 @@
           if (i >= selectRow && item.headitemno === headitemno) {
             const xno = Number(item.detitemno)
             item.detitemno = (xno - 1).toString().padStart(3, '0')
-            item.detitemno1 = detItemHandler.NoToChinese(xno - 1)
+            item.detitemno1 = getDetItemNo1(xno - 1)
           }
         })
       }
@@ -155,7 +122,7 @@
       detList.value.push({
         ...detForm.value,
         detitemno: (filters.length + 1).toString().padStart(3, '0'),
-        detitemno1: detItemHandler.NoToChinese(filters.length + 1)
+        detitemno1: getDetItemNo1(filters.length + 1)
       })
       //排序
       detList.value.sort((a, b) => {
@@ -164,55 +131,14 @@
         )
       })
       detItemDS.value = false
-    },
-    //數字轉中文編號
-    NoToChinese: (no) => {
-      const digits = ['〇', '一', '二', '三', '四', '五', '六', '七', '八', '九']
-      const units = ['', '十', '百', '千']
-      const bigUnits = ['', '萬', '億', '兆']
-
-      if (no === 0) return '(〇)'
-
-      let str = ''
-      let sectionIndex = 0
-
-      while (no > 0) {
-        let section = no % 10000
-        let sectionStr = ''
-        let zeroFlag = false
-
-        for (let i = 0; i < 4 && section > 0; i++) {
-          const digit = section % 10
-          if (digit === 0) {
-            if (!zeroFlag && sectionStr.length > 0) {
-              sectionStr = '〇' + sectionStr
-              zeroFlag = true
-            }
-          } else {
-            sectionStr = digits[digit] + units[i] + sectionStr
-            zeroFlag = false
-          }
-          section = Math.floor(section / 10)
-        }
-
-        if (sectionStr !== '') {
-          str = sectionStr + bigUnits[sectionIndex] + str
-        }
-
-        no = Math.floor(no / 10000)
-        sectionIndex++
-      }
-
-      // 清除連續零
-      return '(' + str.replace(/〇+/g, '〇').replace(/〇$/g, '') + ')'
     }
   }
   //細項目
   const secList = defineModel<any[]>('sec', { default: [] })
   const secHeaders: DataTableHeader[] = [
-    { title: '大項目', key: 'headitemno1', width: '150px', sortable: false },
-    { title: '中項目', key: 'detitemno1', width: '150px', sortable: false },
-    { title: '編號', key: 'secitemno1', width: '150px', sortable: false },
+    { title: '大項目', key: 'headitemno1', width: '150px', sortable: false, align: 'center' },
+    { title: '中項目', key: 'detitemno1', width: '150px', sortable: false, align: 'center' },
+    { title: '編號', key: 'secitemno1', width: '150px', sortable: false, align: 'center' },
     { title: '細項目', key: 'secitem', sortable: false }
   ]
   const secTable = ref()
@@ -250,7 +176,7 @@
           if (i >= selectRow && item.headitemno === headitemno && item.detitemno === detitemno) {
             const xno = Number(item.secitemno)
             item.secitemno = (xno - 1).toString().padStart(3, '0')
-            item.secitemno1 = secItemHandler.NoToChinese(xno - 1)
+            item.secitemno1 = getSecItemNo1(xno - 1)
           }
         })
       }
@@ -284,7 +210,7 @@
       secList.value.push({
         ...secForm.value,
         secitemno: (filters.length + 1).toString().padStart(3, '0'),
-        secitemno1: secItemHandler.NoToChinese(filters.length + 1)
+        secitemno1: getSecItemNo1(filters.length + 1)
       })
       //排序
       secList.value.sort((a, b) => {
@@ -295,40 +221,6 @@
         )
       })
       secItemDS.value = false
-    },
-    //數字轉中文編號
-    NoToChinese: (no) => {
-      const digits = ['〇', '一', '二', '三', '四', '五', '六', '七', '八', '九']
-      const units = ['', '十', '百', '千']
-      const bigUnits = ['', '萬', '億', '兆']
-      if (no === 0) return '〇'
-      let str = ''
-      let sectionIndex = 0
-      while (no > 0) {
-        let section = no % 10000
-        let sectionStr = ''
-        let zeroFlag = false
-        for (let i = 0; i < 4 && section > 0; i++) {
-          const digit = section % 10
-          if (digit === 0) {
-            if (!zeroFlag && sectionStr.length > 0) {
-              sectionStr = '〇' + sectionStr
-              zeroFlag = true
-            }
-          } else {
-            sectionStr = digits[digit] + units[i] + sectionStr
-            zeroFlag = false
-          }
-          section = Math.floor(section / 10)
-        }
-        if (sectionStr !== '') {
-          str = sectionStr + bigUnits[sectionIndex] + str
-        }
-        no = Math.floor(no / 10000)
-        sectionIndex++
-      }
-      // 清除連續零
-      return str.replace(/〇+/g, '〇').replace(/〇$/g, '')
     }
   }
   //監聽
@@ -356,7 +248,7 @@
           <slot></slot>
         </v-tabs-window-item>
         <v-tabs-window-item value="head">
-          <v-row dense>
+          <v-row dense v-if="!disabled">
             <v-col cols="auto">
               <c-button kind="create" icon="mdi-plus-circle" @click="headItemHandler.add">
                 新增
@@ -369,7 +261,7 @@
             </v-col>
           </v-row>
           <c-data-table
-            class="mt-3"
+            class="mt-2"
             ref="headTable"
             v-model="headList"
             :headers="headHeaders"
@@ -386,7 +278,7 @@
           </c-data-table>
         </v-tabs-window-item>
         <v-tabs-window-item value="det">
-          <v-row dense>
+          <v-row dense v-if="!disabled">
             <v-col cols="auto">
               <c-button kind="create" icon="mdi-plus-circle" @click="detItemHandler.add">
                 新增
@@ -399,7 +291,7 @@
             </v-col>
           </v-row>
           <c-data-table
-            class="mt-3"
+            class="mt-2"
             ref="detTable"
             v-model="detList"
             :headers="detHeaders"
@@ -416,7 +308,7 @@
           </c-data-table>
         </v-tabs-window-item>
         <v-tabs-window-item value="sec">
-          <v-row dense>
+          <v-row dense v-if="!disabled">
             <v-col cols="auto">
               <c-button kind="create" icon="mdi-plus-circle" @click="secItemHandler.add">
                 新增
@@ -429,7 +321,7 @@
             </v-col>
           </v-row>
           <c-data-table
-            class="mt-3"
+            class="mt-2"
             ref="secTable"
             v-model="secList"
             :headers="secHeaders"

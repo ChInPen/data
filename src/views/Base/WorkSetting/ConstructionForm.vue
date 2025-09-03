@@ -1,15 +1,13 @@
 <script lang="ts" setup>
-  import { ref, onMounted, computed, watch } from 'vue'
+  import { ref, onMounted, computed } from 'vue'
   import {
     cButton,
     cInput,
     cSelect,
     cTable,
     cBread,
-    cDivider,
     cRadioGroup,
-    cDataTable,
-    cDialog
+    cDataTable
   } from '@/components/Common' //共用元件
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
@@ -18,7 +16,7 @@
   import { useRouter } from 'vue-router'
   import { auditInfo } from '@/components/AuditInfo'
   import type { DataTableHeader } from 'vuetify'
-  import { GenerateRec } from '@/utils/ucommon'
+  import { GenerateRec, getHeadItemNo1, getDetItemNo1 } from '@/utils/ucommon'
   import { projectType } from '@/components/ProjectType'
   import { pickIKind } from '@/components/PickIKind'
   import { usePickIKind } from '@/store/pickIKind'
@@ -33,6 +31,8 @@
   import { useSearchItem } from '@/store/searchItem'
   const searchItemStore = useSearchItem()
   import hdsItem from './Components/ConstructionFormHDS.vue'
+  import plle from './Components/ConstructionFormPlle.vue'
+  import { boms } from '@/components/Boms'
 
   const store = useConstructionStore()
   const router = useRouter()
@@ -74,6 +74,7 @@
   const formData = ref<Record<string, any>>({})
   const tabpage = ref('normal') //頁籤
   const tabpageHDS = ref('head') //頁籤(大中細項目)
+  const hdsRef = ref()
 
   //取消&返回 按鈕
   const handleCancel = () => {
@@ -216,17 +217,20 @@
           formData.value = { ...project }
         }
         if (protIkinds && Array.isArray(protIkinds)) {
-          protIKindList.value = protIkinds
+          // protIKindList.value = protIkinds
         }
         if (projectdets && Array.isArray(projectdets)) {
-          protdetList.value = projectdets
+          // protdetList.value = projectdets
+        }
+        if (plledets && Array.isArray(plledets)) {
+          // plledetList.value = plledets
         }
       }
     })
   }
   //編輯、複製、瀏覽呼叫 api
   const getAllDataApi = async () => {
-    //抓業主基本資料
+    //抓工程基本資料
     callApi({
       method: 'GET',
       url: api.Project.Project_Data,
@@ -237,139 +241,71 @@
         if (project) {
           formData.value = { ...project }
         }
+        if (protIkinds && Array.isArray(protIkinds)) {
+          protIKindList.value = protIkinds
+        }
+        if (projectdets && Array.isArray(projectdets)) {
+          protdetList.value = projectdets
+        }
+        if (plledets && Array.isArray(plledets)) {
+          plledetList.value = plledets
+        }
+      }
+    })
+    //抓大中細項
+    callApi({
+      method: 'POST',
+      url: api.Project.Project_HeadDetSec,
+      data: {
+        protno: store.protno,
+        headitemno: '',
+        detitemno: ''
+      }
+    }).then((res: any) => {
+      if (res?.status == 200) {
+        const { headitems, detitems, secitems } = res?.data ?? {}
+        if (headitems && Array.isArray(headitems)) {
+          headItemList.value = headitems
+          headItemList.value.sort((a, b) => Number(a.headitemno) - Number(b.headitemno))
+        }
+        if (detitems && Array.isArray(detitems)) {
+          detItemList.value = detitems.map((item) => ({
+            ...item,
+            headitemno1: Number(item.headitemno) == 0 ? '' : getHeadItemNo1(Number(item.headitemno))
+          }))
+          detItemList.value.sort(
+            (a, b) =>
+              Number(a.headitemno) - Number(b.headitemno) ||
+              Number(a.detitemno) - Number(b.detitemno)
+          )
+        }
+        if (secitems && Array.isArray(secitems)) {
+          secItemList.value = secitems.map((item) => ({
+            ...item,
+            headitemno1:
+              Number(item.headitemno) == 0 ? '' : getHeadItemNo1(Number(item.headitemno)),
+            detitemno1: Number(item.detitemno) == 0 ? '' : getDetItemNo1(Number(item.detitemno))
+          }))
+          secItemList.value.sort(
+            (a, b) =>
+              Number(a.headitemno) - Number(b.headitemno) ||
+              Number(a.detitemno) - Number(b.detitemno) ||
+              Number(a.secitemno) - Number(b.secitemno)
+          )
+        }
       }
     })
   }
 
   //大項目
-  const headItemList = ref<any[]>([
-    { headitemno: '001', headitemno1: '壹', headitem: '1' },
-    { headitemno: '002', headitemno1: '貳', headitem: '2' }
-  ])
+  const headItemList = ref<iHeadItem[]>([])
   //中項目
-  const detItemList = ref<any[]>([
-    {
-      headitemno: '001',
-      headitemno1: '壹',
-      detitemno: '001',
-      detitemno1: '(一)',
-      detitem: '1'
-    },
-    {
-      headitemno: '001',
-      headitemno1: '壹',
-      detitemno: '002',
-      detitemno1: '(二)',
-      detitem: '2'
-    },
-    {
-      headitemno: '002',
-      headitemno1: '貳',
-      detitemno: '001',
-      detitemno1: '(一)',
-      detitem: '3'
-    },
-    {
-      headitemno: '002',
-      headitemno1: '貳',
-      detitemno: '002',
-      detitemno1: '(二)',
-      detitem: '4'
-    },
-    {
-      headitemno: '002',
-      headitemno1: '貳',
-      detitemno: '003',
-      detitemno1: '(三)',
-      detitem: '5'
-    }
-  ])
+  const detItemList = ref<iDetItem[]>([])
   //細項目
-  const secItemList = ref<any[]>([
-    {
-      headitemno: '001',
-      headitemno1: '壹',
-      detitemno: '001',
-      detitemno1: '(一)',
-      secitemno: '001',
-      secitemno1: '一',
-      secitem: '1'
-    },
-    {
-      headitemno: '001',
-      headitemno1: '壹',
-      detitemno: '001',
-      detitemno1: '(一)',
-      secitemno: '002',
-      secitemno1: '二',
-      secitem: '2'
-    },
-    {
-      headitemno: '001',
-      headitemno1: '壹',
-      detitemno: '002',
-      detitemno1: '(二)',
-      secitemno: '001',
-      secitemno1: '一',
-      secitem: '3'
-    },
-    {
-      headitemno: '001',
-      headitemno1: '壹',
-      detitemno: '002',
-      detitemno1: '(二)',
-      secitemno: '002',
-      secitemno1: '二',
-      secitem: '4'
-    },
-    {
-      headitemno: '002',
-      headitemno1: '貳',
-      detitemno: '001',
-      detitemno1: '(一)',
-      secitemno: '001',
-      secitemno1: '一',
-      secitem: '5'
-    },
-    {
-      headitemno: '002',
-      headitemno1: '貳',
-      detitemno: '001',
-      detitemno1: '(一)',
-      secitemno: '002',
-      secitemno1: '二',
-      secitem: '6'
-    },
-    {
-      headitemno: '002',
-      headitemno1: '貳',
-      detitemno: '002',
-      detitemno1: '(二)',
-      secitemno: '001',
-      secitemno1: '一',
-      secitem: '7'
-    },
-    {
-      headitemno: '002',
-      headitemno1: '貳',
-      detitemno: '002',
-      detitemno1: '(二)',
-      secitemno: '002',
-      secitemno1: '二',
-      secitem: '8'
-    },
-    {
-      headitemno: '002',
-      headitemno1: '貳',
-      detitemno: '003',
-      detitemno1: '(三)',
-      secitemno: '001',
-      secitemno1: '一',
-      secitem: '9'
-    }
-  ])
+  const secItemList = ref<iSecItem[]>([])
   //合約明細
   const protdetList = ref<(typeof protdetEmpty)[]>([])
+  const protdetTable = ref()
   const protdetEmpty = {
     headitemn1: '',
     detitemno1: '',
@@ -410,6 +346,21 @@
     spqty: 0,
     npqty: 0
   }
+  const countsQtyAndTotal = (mode: 'qty' | 'total' | 'all', index?: number) => {
+    protdetList.value.forEach((item, idx) => {
+      if (typeof index === 'number' && idx !== index) return // 等同 continue
+
+      if (mode === 'qty' || mode === 'all') {
+        //未轉數量
+        if (item.qty > item.sqty) item.nqty = item.qty - item.sqty
+        if (item.qty > item.spqty) item.npqty = item.qty - item.spqty
+      }
+      if (mode === 'total' || mode === 'all') {
+        //總價
+        if (item.qty && item.price) item.total1 = item.qty * item.price
+      }
+    })
+  }
   const protdetAdd = () => {
     pickItemStore.set(
       protdetList,
@@ -427,23 +378,71 @@
         { from: 'itemname' },
         { from: 'ibompqty', to: 'qty', valueType: 'number' },
         { from: 'stkunit', to: 'unit' },
-        { from: 'ibompqty', to: 'sqty', valueType: 'number' },
-        { from: 'ibompqty', to: 'spqty', valueType: 'number' },
         { from: 'mkindno' },
         { from: 'mkindno1' }
-        // { from: 'stksalpc', to: 'ibomsalpc', valueType: 'number' },
-        // { from: 'stkpurpc', to: 'ibomcpc', valueType: 'number' }
       ],
       {
         mode: 'add',
         empty: { ...protdetEmpty }
       }
     )
-    pickItemStore.temp = () => {
-      // GenerateRec(esDataList.value, 'ibomrec') //自動編號
-      // handleEStotalCount()
-    }
     pickItemDS.value = true
+  }
+  const protdetItemnoSet = (index: number) => {
+    pickItemStore.set(
+      protdetList,
+      [
+        { from: 'headitemno' },
+        { from: 'headitem' },
+        { from: 'headitemno1', to: 'headitemn1' },
+        { from: 'detitemno' },
+        { from: 'detitem' },
+        { from: 'detitemno1' },
+        { from: 'secitemno' },
+        { from: 'secitem' },
+        { from: 'secitemno1' },
+        { from: 'itemno' },
+        { from: 'itemname' },
+        { from: 'ibompqty', to: 'qty', valueType: 'number' },
+        { from: 'stkunit', to: 'unit' },
+        { from: 'mkindno' },
+        { from: 'mkindno1' }
+      ],
+      {
+        row: index,
+        mode: 'insert',
+        empty: { ...protdetEmpty }
+      }
+    )
+    pickItemDS.value = true
+  }
+  const protdetInsert = () => {
+    const selectIndex = protdetTable.value?.selectIndex?.[0]
+    if (typeof selectIndex === 'number' && selectIndex >= 0) {
+      protdetList.value.splice(selectIndex, 0, { ...protdetEmpty })
+    }
+  }
+  const protdetDelete = () => {
+    const selectIndex = protdetTable.value?.selectIndex?.[0]
+    if (typeof selectIndex === 'number' && selectIndex >= 0) {
+      protdetList.value.splice(selectIndex, 1)
+    }
+  }
+  const protdetProType = () => {
+    const selectIndex = protdetTable.value?.selectIndex?.[0]
+    if (typeof selectIndex === 'number' && selectIndex >= 0) {
+      projectTypeDS.value = true
+    }
+  }
+  const protdetBoms = () => {
+    const selectIndex = protdetTable.value?.selectIndex?.[0]
+    if (typeof selectIndex === 'number' && selectIndex >= 0) {
+      const bom = protdetList.value[selectIndex].projectdetboms
+      if (Array.isArray(bom)) {
+        selectBomsList.value = JSON.parse(JSON.stringify(bom))
+      }
+      bomsDS.value = true
+    }
   }
 
   //工程類別預估
@@ -506,6 +505,16 @@
     )
   }
 
+  //追加減金額彈窗
+  const plledetList = ref<any[]>([])
+  const plleDS = ref(false)
+  const handlePlleSave = (data: any[], total: number) => {
+    if (data && Array.isArray(data)) {
+      plledetList.value = [...data]
+    }
+    if (typeof total === 'number') formData.value.chplusless = total
+  }
+
   //選擇工種彈窗
   const pickIKindDS = ref(false)
   const protIKindPick = (index: number) => {
@@ -540,6 +549,76 @@
       )
     })
     GenerateRec(protdetList.value, 'rec1', 4) //自動編號
+    countsQtyAndTotal('all')
+  }
+
+  //查詢工料彈窗
+  const searchItemRef = ref()
+  const protdetItemnoKeyEnter = (e: KeyboardEvent, searchText: string, index: number) => {
+    searchItemStore.keyEnter(
+      e,
+      protdetList,
+      [
+        { from: 'itemno' },
+        { from: 'itemname' },
+        { from: 'stkunit', to: 'unit' },
+        { from: 'mkindno' },
+        { from: 'mkindname', to: 'mkindno1' }
+      ],
+      searchText,
+      {
+        row: index,
+        open: searchItemRef.value?.open
+      }
+    )
+  }
+
+  //規格說明彈窗
+  const projectTypeDS = ref(false)
+  const projectTypeItems = computed(() => {
+    const selectIndex = protdetTable.value?.selectIndex?.[0]
+    if (typeof selectIndex === 'number' && selectIndex >= 0) {
+      const { pjt1, pjt2, pjt3, pjt4, pjt5, pjt6, pjt7, pjt8, pjt9, pjt10 } =
+        protdetList.value[selectIndex]
+      return { pjt1, pjt2, pjt3, pjt4, pjt5, pjt6, pjt7, pjt8, pjt9, pjt10 }
+    }
+    return {}
+  })
+  const handlePJTsave = (data: iPJT) => {
+    const selectIndex = protdetTable.value?.selectIndex?.[0]
+    if (typeof selectIndex === 'number' && selectIndex >= 0) {
+      protdetList.value[selectIndex].pjt1 = data.pjt1
+      protdetList.value[selectIndex].pjt2 = data.pjt2
+      protdetList.value[selectIndex].pjt3 = data.pjt3
+      protdetList.value[selectIndex].pjt4 = data.pjt4
+      protdetList.value[selectIndex].pjt5 = data.pjt5
+      protdetList.value[selectIndex].pjt6 = data.pjt6
+      protdetList.value[selectIndex].pjt7 = data.pjt7
+      protdetList.value[selectIndex].pjt8 = data.pjt8
+      protdetList.value[selectIndex].pjt9 = data.pjt9
+      protdetList.value[selectIndex].pjt10 = data.pjt10
+    }
+  }
+
+  //單價分析彈窗
+  const bomsDS = ref(false)
+  const emptyBoms = {
+    protno: '',
+    rec1: '',
+    rec1_sys: '',
+    itemno: '',
+    itemname: '',
+    unit: '',
+    stkqty: 0,
+    price: 0,
+    amount: 0
+  }
+  const selectBomsList = ref<(typeof emptyBoms)[]>([])
+  const handleBomsSave = (data: any[], _total: number) => {
+    const selectIndex = protdetTable.value?.selectIndex?.[0]
+    if (typeof selectIndex === 'number' && selectIndex >= 0) {
+      protdetList.value[selectIndex].projectdetboms = [...data]
+    }
   }
 </script>
 
@@ -829,7 +908,9 @@
               />
             </v-col>
             <v-col cols="auto" class="px-2">
-              <c-button color="#d48833" icon="fa-solid fa-calculator">追加(減)</c-button>
+              <c-button color="#d48833" icon="fa-solid fa-calculator" @click="plleDS = true">
+                追加(減)
+              </c-button>
             </v-col>
             <v-col :cols="6" class="px-2">
               <c-input
@@ -841,36 +922,45 @@
             </v-col>
           </v-row>
         </v-tabs-window-item>
-
         <v-tabs-window-item value="protdet">
           <hdsItem
+            ref="hdsRef"
             v-model:head="headItemList"
             v-model:det="detItemList"
             v-model:sec="secItemList"
             :disabled="store.isDetail"
           >
             <v-row dense>
-              <v-col cols="auto">
+              <v-col cols="auto" v-if="!store.isDetail">
                 <c-button kind="create" icon="mdi-plus-circle" @click="protdetAdd">新增</c-button>
               </v-col>
-              <v-col cols="auto">
-                <c-button kind="insert" icon="mdi-arrow-down-circle">插入</c-button>
+              <v-col cols="auto" v-if="!store.isDetail">
+                <c-button kind="insert" icon="mdi-arrow-down-circle" @click="protdetInsert">
+                  插入
+                </c-button>
               </v-col>
-              <v-col cols="auto">
-                <c-button kind="delete" icon="fa-solid fa-trash">刪除</c-button>
+              <v-col cols="auto" v-if="!store.isDetail">
+                <c-button kind="delete" icon="fa-solid fa-trash" @click="protdetDelete">
+                  刪除
+                </c-button>
               </v-col>
               <v-col cols="auto">
                 <c-button kind="photo" icon="fa-solid fa-images">看圖</c-button>
               </v-col>
               <v-col cols="auto">
-                <c-button kind="boms" icon="fa-solid fa-search-dollar">單價分析</c-button>
+                <c-button kind="boms" icon="fa-solid fa-search-dollar" @click="protdetBoms">
+                  單價分析
+                </c-button>
               </v-col>
               <v-col cols="auto">
-                <c-button kind="protype" icon="fa-solid fa-clipboard-list">規格說明</c-button>
+                <c-button kind="protype" icon="fa-solid fa-clipboard-list" @click="protdetProType">
+                  規格說明
+                </c-button>
               </v-col>
             </v-row>
             <c-table
-              class="mt-3"
+              class="mt-2"
+              ref="protdetTable"
               v-model="protdetList"
               striped="even"
               hover
@@ -878,6 +968,7 @@
               fixed-header
               selectable
               layout="fixed"
+              header-align="center"
             >
               <template v-slot:head>
                 <th width="80">序號</th>
@@ -887,7 +978,7 @@
                 <th width="260">工料編號</th>
                 <th width="600">工料名稱</th>
                 <th width="150">數量A</th>
-                <th width="180">單位</th>
+                <th width="155">單位</th>
                 <th width="200">單價B</th>
                 <th width="200">複價C</th>
                 <th width="125">請款已轉D</th>
@@ -899,12 +990,19 @@
                 <th width="200">說明</th>
                 <th width="60">類別</th>
               </template>
-              <template v-slot:body="{ scope }">
-                <td>{{ scope.rec1 }}</td>
-                <td>{{ scope.headitemn1 }}</td>
-                <td>{{ scope.detitemno1 }}</td>
-                <td>{{ scope.secitemno1 }}</td>
-                <td><c-input v-model="scope.itemno" :disabled="store.isDetail" @button="" /></td>
+              <template v-slot:body="{ scope, index }">
+                <td class="text-center">{{ scope.rec1 }}</td>
+                <td class="text-center">{{ scope.headitemn1 }}</td>
+                <td class="text-center">{{ scope.detitemno1 }}</td>
+                <td class="text-center">{{ scope.secitemno1 }}</td>
+                <td>
+                  <c-input
+                    v-model="scope.itemno"
+                    :disabled="store.isDetail"
+                    @button="protdetItemnoSet(index)"
+                    @keydown="(e) => protdetItemnoKeyEnter(e, scope.itemno, index)"
+                  />
+                </td>
                 <td><c-input v-model="scope.itemname" :disabled="true" /></td>
                 <td>
                   <c-input
@@ -912,6 +1010,7 @@
                     v-model="scope.qty"
                     :disabled="store.isDetail"
                     :format="{ thousands: true }"
+                    @change="countsQtyAndTotal('all', index)"
                   />
                 </td>
                 <td>
@@ -931,6 +1030,7 @@
                     v-model="scope.price"
                     :disabled="store.isDetail"
                     :format="{ thousands: true }"
+                    @change="countsQtyAndTotal('total', index)"
                   />
                 </td>
                 <td>
@@ -976,7 +1076,7 @@
                 <td><c-input v-model="scope.formula1" :disabled="store.isDetail" /></td>
                 <td><c-input v-model="scope.formula2" :disabled="store.isDetail" /></td>
                 <td><c-input v-model="scope.descrip" :disabled="store.isDetail" /></td>
-                <td>{{ scope.mkindno1 }}</td>
+                <td class="text-center">{{ scope.mkindno1 }}</td>
               </template>
             </c-table>
           </hdsItem>
@@ -1158,7 +1258,12 @@
     :m_user="formData.m_user"
   />
 
-  <!-- <project-type v-model="projectTypeDS" :items="projectTypeItems" @save="handlePJTsave" /> -->
+  <project-type
+    v-model="projectTypeDS"
+    :items="projectTypeItems"
+    @save="handlePJTsave"
+    :disabled="store.isDetail"
+  />
   <pickIKind v-model="pickIKindDS" @pick="pickIKindStore.pick" />
   <pick-item
     v-model="pickItemDS"
@@ -1170,7 +1275,15 @@
     @pick="handlePickItems"
   />
   <search-cust v-model="searchCustDS" @pick="searchCustStore.pick" />
-  <!-- <search-item ref="searchRef" @pick="searchItemPick" /> -->
+  <search-item ref="searchItemRef" @pick="searchItemStore.pick" />
+  <plle v-model="plleDS" :items="plledetList" @save="handlePlleSave" :disabled="store.isDetail" />
+  <boms
+    v-model="bomsDS"
+    :items="selectBomsList"
+    :empty-data="emptyBoms"
+    @save="handleBomsSave"
+    :disabled="store.isDetail"
+  />
 </template>
 
 <style scoped>

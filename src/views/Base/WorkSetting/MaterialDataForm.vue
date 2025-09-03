@@ -310,7 +310,7 @@
   }
   //編輯、複製、瀏覽呼叫 api
   const getAllDataApi = async () => {
-    //抓業主基本資料
+    //抓工料基本資料
     callApi({
       method: 'POST',
       url: api.Item.Item_Data,
@@ -379,7 +379,7 @@
     const { pjT1, pjT2, pjT3, pjT4, pjT5, pjT6, pjT7, pjT8, pjT9, pjT10 } = formData.value
     return { pjT1, pjT2, pjT3, pjT4, pjT5, pjT6, pjT7, pjT8, pjT9, pjT10 }
   })
-  const handlePJTsave = (data: any) => {
+  const handlePJTsave = (data: iPJT) => {
     formData.value.pjT1 = data.pjt1
     formData.value.pjT2 = data.pjt2
     formData.value.pjT3 = data.pjt3
@@ -468,7 +468,6 @@
       }
     )
     searchItemStore.temp = () => {
-      GenerateRec(e3DataList.value, 'ibomrec') //自動編號
       handleE3totalCount(e3DataList.value[index])
     }
   }
@@ -492,7 +491,6 @@
       }
     )
     searchItemStore.temp = () => {
-      GenerateRec(esDataList.value, 'ibomrec') //自動編號
       handleEStotalCount(esDataList.value[index])
     }
   }
@@ -769,7 +767,7 @@
           </v-row>
         </v-tabs-window-item>
 
-        <v-tabs-window-item value="e3">
+        <v-tabs-window-item value="e3" v-if="!store.isDetail">
           <v-row dense>
             <v-col cols="auto">
               <c-button kind="create" icon="mdi-plus-circle" @click="e3ListAdd">新增</c-button>
@@ -783,7 +781,15 @@
               <c-button kind="delete" icon="fa-solid fa-trash" @click="e3ListDelete">刪除</c-button>
             </v-col>
           </v-row>
-          <c-table ref="e3Table" class="mt-2" v-model="e3DataList" striped="even" hover selectable>
+          <c-table
+            ref="e3Table"
+            class="mt-2"
+            v-model="e3DataList"
+            striped="even"
+            hover
+            selectable
+            header-align="center"
+          >
             <template v-slot:head>
               <th width="80">序號</th>
               <th width="250">工料編號</th>
@@ -795,7 +801,7 @@
               <th width="200">說明</th>
             </template>
             <template v-slot:body="{ scope, index }">
-              <td>{{ scope.ibomrec }}</td>
+              <td class="text-center">{{ scope.ibomrec }}</td>
               <td>
                 <c-input
                   v-model="scope.ibomno"
@@ -848,7 +854,7 @@
         </v-tabs-window-item>
 
         <v-tabs-window-item value="es">
-          <v-row dense>
+          <v-row dense v-if="!store.isDetail">
             <v-col cols="auto">
               <c-button kind="create" icon="mdi-plus-circle" @click="esListAdd">新增</c-button>
             </v-col>
@@ -869,6 +875,7 @@
             hover
             selectable
             layout="fixed"
+            header-align="center"
           >
             <template v-slot:head>
               <th width="80">序號</th>
@@ -883,7 +890,7 @@
               <th width="200">說明</th>
             </template>
             <template v-slot:body="{ scope, index }">
-              <td>{{ scope.ibomrec }}</td>
+              <td class="text-center">{{ scope.ibomrec }}</td>
               <td>
                 <c-input
                   v-model="scope.ibomno"
@@ -964,7 +971,12 @@
     :m_user="formData.m_USER"
   />
 
-  <project-type v-model="projectTypeDS" :items="projectTypeItems" @save="handlePJTsave" />
+  <project-type
+    v-model="projectTypeDS"
+    :items="projectTypeItems"
+    @save="handlePJTsave"
+    :disabled="store.isDetail"
+  />
   <pick-item v-model="pickItemDS" @pick="handleItemPick" />
   <search-item ref="searchRef" @pick="searchItemPick" />
 </template>

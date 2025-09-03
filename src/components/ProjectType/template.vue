@@ -8,11 +8,12 @@
     items: {
       type: Object as PropType<Record<string, string>>,
       default: {}
-    }
+    },
+    disabled: Boolean
   })
   const emit = defineEmits(['save'])
 
-  const data = ref({
+  const data = ref<iPJT>({
     pjt1: '',
     pjt2: '',
     pjt3: '',
@@ -73,44 +74,49 @@
     <template v-slot:title>
       <v-row dense :align="'center'">
         <v-col>規格說明</v-col>
-        <v-col cols="auto">
+        <v-col cols="auto" v-if="!disabled">
           <c-button kind="cancel" icon="mdi-close-circle" @click="isOpen = false">放棄</c-button>
         </v-col>
-        <v-col cols="auto">
+        <v-col cols="auto" v-if="!disabled">
           <c-button kind="submit" icon="fa-solid fa-paper-plane" @click="handleSave">取回</c-button>
+        </v-col>
+        <v-col cols="auto" v-if="disabled">
+          <c-button kind="goback" icon="fa-solid fa-circle-left" @click="isOpen = false">
+            返回
+          </c-button>
         </v-col>
       </v-row>
     </template>
     <v-row dense>
       <v-col cols="12">
-        <c-input label="1" v-model="data.pjt1" />
+        <c-input label="1" v-model="data.pjt1" :disabled="disabled" />
       </v-col>
       <v-col cols="12">
-        <c-input label="2" v-model="data.pjt2" />
+        <c-input label="2" v-model="data.pjt2" :disabled="disabled" />
       </v-col>
       <v-col cols="12">
-        <c-input label="3" v-model="data.pjt3" />
+        <c-input label="3" v-model="data.pjt3" :disabled="disabled" />
       </v-col>
       <v-col cols="12">
-        <c-input label="4" v-model="data.pjt4" />
+        <c-input label="4" v-model="data.pjt4" :disabled="disabled" />
       </v-col>
       <v-col cols="12">
-        <c-input label="5" v-model="data.pjt5" />
+        <c-input label="5" v-model="data.pjt5" :disabled="disabled" />
       </v-col>
       <v-col cols="12">
-        <c-input label="6" v-model="data.pjt6" />
+        <c-input label="6" v-model="data.pjt6" :disabled="disabled" />
       </v-col>
       <v-col cols="12">
-        <c-input label="7" v-model="data.pjt7" />
+        <c-input label="7" v-model="data.pjt7" :disabled="disabled" />
       </v-col>
       <v-col cols="12">
-        <c-input label="8" v-model="data.pjt8" />
+        <c-input label="8" v-model="data.pjt8" :disabled="disabled" />
       </v-col>
       <v-col cols="12">
-        <c-input label="9" v-model="data.pjt9" />
+        <c-input label="9" v-model="data.pjt9" :disabled="disabled" />
       </v-col>
       <v-col cols="12">
-        <c-input label="10" v-model="data.pjt10" />
+        <c-input label="10" v-model="data.pjt10" :disabled="disabled" />
       </v-col>
     </v-row>
   </c-dialog>

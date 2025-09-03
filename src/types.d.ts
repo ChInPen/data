@@ -24,3 +24,16 @@ interface iSecItem {
   secitemno1: string
   secitem: string
 }
+//規格說明欄位
+interface iPJT {
+  pjt1: string
+  pjt2: string
+  pjt3: string
+  pjt4: string
+  pjt5: string
+  pjt6: string
+  pjt7: string
+  pjt8: string
+  pjt9: string
+  pjt10: string
+}

@@ -5,5 +5,6 @@ export type SearchData = {
   stkpurpc: number
   ikindname: string
   mkindname: string
-  [key: string]: any
+  mkindno: string
+  stkunit: string
 }
