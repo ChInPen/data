@@ -107,7 +107,7 @@
     if (!formData.value.quotationDateFrom || !formData.value.quotationDateTo) {
       message.alert({
         type: 'error',
-        message: '請先輸入報價日期！'
+        message: '查詢日期不可為空！'
       })
       return
     }
@@ -128,7 +128,7 @@
     if (!formData.value.quotationDateFrom || !formData.value.quotationDateTo) {
       message.alert({
         type: 'error',
-        message: '請先輸入報價日期！'
+        message: '查詢日期不可為空！'
       })
       return
     }
@@ -199,7 +199,7 @@
   <v-card color="#1b2b36" rounded="lg" class="mt-4 sqte-form" elevation="2">
     <v-card-text class="pa-6">
       <!-- 報價日期區間 -->
-      <v-row align="center" class="mb-4" dense>
+      <v-row align="center" class="mb-3" dense>
         <v-col cols="auto" class="d-flex align-center">
           <h5 class="text-white mb-0 font-weight-medium title-text">報價日期</h5>
         </v-col>
@@ -237,7 +237,7 @@
       </v-row>
 
       <!-- 業主編號區間 -->
-      <v-row align="center" class="mb-4" dense>
+      <v-row align="center" class="mb-3" dense>
         <v-col cols="auto" class="d-flex align-center">
           <h5 class="text-white mb-0 font-weight-medium title-text">業主編號</h5>
         </v-col>
@@ -312,7 +312,7 @@
       </v-row>
 
       <!-- 工程編號區間 -->
-      <v-row align="center" class="mb-4" dense>
+      <v-row align="center" class="mb-3" dense>
         <v-col cols="auto" class="d-flex align-center">
           <h5 class="text-white mb-0 font-weight-medium title-text">工程編號</h5>
         </v-col>

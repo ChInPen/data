@@ -7,20 +7,10 @@
 
   // 資料庫進來的Cust
   type SearchData = {
-    suppno: string
-    suppabbr: string
-    suppname: string
-    con1: string
-    con2: string
-    boss: string
+    empno: string
+    empname: string
     tel1: string
-    tel2: string
-    fax: string
-    mobitel1: string
-    mobitel2: string
-    mobitel3: string
-    compaddr: string
-    [key: string]: any
+    mobitel: string
   }
 
   // 父層可傳入目前已選
@@ -38,25 +28,16 @@
   const rightChecked = ref<Set<string>>(new Set())
 
   const filter = ref({
-    type1: 'suppno',
-    type2: 'suppname',
+    type1: 'empno',
+    type2: 'empname',
     filter1: '',
     filter2: ''
   })
   const filterDDL = [
-    { name: 'suppno', label: '廠商編號' },
-    { name: 'suppabbr', label: '廠商簡稱' },
-    { name: 'suppname', label: '廠商名稱' },
-    { name: 'con1', label: '聯 絡 人1' },
-    { name: 'con2', label: '聯 絡 人2' },
-    { name: 'boss', label: '負 責 人' },
-    { name: 'tel1', label: '電 話1' },
-    { name: 'tel2', label: '電 話2' },
-    { name: 'fax', label: '傳 真' },
-    { name: 'mobitel1', label: '行動電話1' },
-    { name: 'mobitel2', label: '行動電話2' },
-    { name: 'mobitel3', label: '行動電話3' },
-    { name: 'compaddr', label: '公司地址' }
+    { name: 'empno', label: '業主編號' },
+    { name: 'empname', label: '業主簡稱' },
+    { name: 'tel1', label: '電    話' },
+    { name: 'mobitel', label: '傳    真' }
   ]
 
   // 拷貝
@@ -80,38 +61,51 @@
 
   // 左側實際顯示：查詢結果扣掉已選，避免重覆
   const leftList = computed(() => {
-    const chosen = new Set(picked.value.map((x) => x.suppno))
-    return tbData.value.filter((x) => !chosen.has(x.suppno))
+    const chosen = new Set(picked.value.map((x) => x.empno))
+    return tbData.value.filter((x) => !chosen.has(x.empno))
   })
 
   // === 查詢 ===
   const handleSearch = async () => {
-    if (filter.value.type1 == filter.value.type2) {
-      message.alert({
-        type: 'warning',
-        message: '查詢條件不可相同'
-      })
+    if (filter.value.type1 === filter.value.type2) {
+      message.alert({ type: 'warning', message: '查詢條件不可相同' })
       return
     }
-    await callApi({
+    const obj: Record<string, any> = {
+      empno: '',
+      empname: '',
+      custname: '',
+      con: '',
+      mobitel: '',
+      tel1: '',
+      uniform: '',
+      boss: ''
+    }
+    if (filter.value?.type1) obj[filter.value.type1] = filter.value?.filter1 ?? ''
+    if (filter.value?.type2) obj[filter.value.type2] = filter.value?.filter2 ?? ''
+
+    const res: any = await callApi({
       method: 'POST',
-      url: api.Supp.Supp_Brow,
+      url: api.Emp.Emp_Search2,
       data: {
-        query_project_name: filter.value.type1,
-        query_project_value: filter.value.filter1 ?? '',
-        query_project_name2: filter.value.type2,
-        query_project_value2: filter.value.filter2 ?? ''
+        pageNumber: 1,
+        pageSize: 10000,
+        query_project_name_1st: filter.value.type1,
+        query_project_value_1st: filter.value.filter1 ?? '',
+        query_project_name_2nd: filter.value.type2,
+        query_project_value_2nd: filter.value.filter2 ?? ''
       }
     }).then((res: any) => {
       if (res?.status === 200) {
-        const data: any[] = res?.data ?? []
+        const data: any[] = res?.data?.data ?? []
         tbData.value = data
       }
     })
   }
+
   // === 清空查詢條件 ===
   const handleClear = () => {
-    filter.value = { type1: 'suppno', type2: 'suppname', filter1: '', filter2: '' }
+    filter.value = { type1: 'empno', type2: 'empname', filter1: '', filter2: '' }
   }
   const handleReset = () => {
     handleClear()
@@ -121,18 +115,18 @@
 
   // === 單筆選擇 ===
   const handleChoose = (raw: SearchData) => {
-    if (!picked.value.find((x) => x.suppno === raw.suppno)) {
+    if (!picked.value.find((x) => x.empno === raw.empno)) {
       picked.value.push(raw)
     }
   }
 
   // === 全選 ===
   const pushToPickedUniq = (rows: SearchData[]) => {
-    const seen = new Set(picked.value.map((x) => x.suppno))
+    const seen = new Set(picked.value.map((x) => x.empno))
     rows.forEach((r) => {
-      if (!seen.has(r.suppno)) {
+      if (!seen.has(r.empno)) {
         picked.value.push(r)
-        seen.add(r.suppno)
+        seen.add(r.empno)
       }
     })
   }
@@ -178,7 +172,7 @@
 
   // 刪除暫存選項
   const handleRemove = (raw: SearchData) => {
-    picked.value = picked.value.filter((x) => x.suppno !== raw.suppno)
+    picked.value = picked.value.filter((x) => x.empno !== raw.empno)
   }
 </script>
 
@@ -255,9 +249,8 @@
           class="equal-6"
         >
           <template #head>
-            <th class="text-center">廠商編號</th>
-            <th class="text-center">廠商名稱</th>
-            <th class="text-center">聯絡人</th>
+            <th class="text-center">人員編號</th>
+            <th class="text-center">人員名稱</th>
             <th class="text-center">電話</th>
             <th class="text-center">行動電話</th>
             <th class="text-center">
@@ -271,11 +264,10 @@
             </th>
           </template>
           <template #body="{ scope }">
-            <td class="text-center">{{ scope.suppno }}</td>
-            <td class="text-center">{{ scope.suppname }}</td>
-            <td class="text-center">{{ scope.con1 }}</td>
+            <td class="text-center">{{ scope.empno }}</td>
+            <td class="text-center">{{ scope.empname }}</td>
             <td class="text-center">{{ scope.tel1 }}</td>
-            <td class="text-center">{{ scope.mobitel1 }}</td>
+            <td class="text-center">{{ scope.mobitel }}</td>
             <td class="text-center">
               <c-button kind="choose" icon="fa-solid fa-check" @click="handleChoose(scope)">
                 選擇
@@ -297,9 +289,8 @@
           class="equal-6"
         >
           <template #head>
-            <th class="text-center">廠商編號</th>
-            <th class="text-center">廠商名稱</th>
-            <th class="text-center">聯絡人</th>
+            <th class="text-center">人員編號</th>
+            <th class="text-center">人員名稱</th>
             <th class="text-center">電話</th>
             <th class="text-center">行動電話</th>
             <th class="text-center">
@@ -313,11 +304,10 @@
             </th>
           </template>
           <template #body="{ scope }">
-            <td class="text-center">{{ scope.suppno }}</td>
-            <td class="text-center">{{ scope.suppname }}</td>
-            <td class="text-center">{{ scope.con1 }}</td>
+            <td class="text-center">{{ scope.empno }}</td>
+            <td class="text-center">{{ scope.empname }}</td>
             <td class="text-center">{{ scope.tel1 }}</td>
-            <td class="text-center">{{ scope.mobitel1 }}</td>
+            <td class="text-center">{{ scope.mobitel }}</td>
             <td class="text-center">
               <c-button kind="cancel" icon="fa-solid fa-trash" @click="handleRemove(scope)">
                 刪除
