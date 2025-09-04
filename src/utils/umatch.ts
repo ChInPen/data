@@ -1,5 +1,6 @@
 const DIGITS = '0123456789'
 const LETTERS = 'abcdefghijklmnopqrstuvwxyz'
+const SYMBOLS = '!@#$%^&*()_+-=[]{}|;:\'",.<>?/`~'
 
 export const numeric = {
   base: (value: string | number) => {
@@ -106,6 +107,7 @@ export const noChinese = {
     const temps: string[] = []
     chars.forEach((c) => {
       if (LETTERS.includes(c?.toLowerCase())) temps.push(c)
+      if (SYMBOLS.includes(c)) temps.push(c)
       if (options?.number && DIGITS.includes(c)) temps.push(c)
     })
     return temps.join('')

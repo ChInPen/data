@@ -3,7 +3,7 @@
   import type { PropType } from 'vue'
   import { cButton, cInput, cSelect, cDialog, cTable } from '@/components/Common'
   import { message } from '@/components/Message/service' //訊息窗元件
-  import { GenerateRec } from '@/utils/ucommon'
+  import { GenerateRec, deepClone } from '@/utils/ucommon'
 
   const model = defineModel({ default: false })
   const props = defineProps({
@@ -68,7 +68,7 @@
     (newVal) => {
       if (newVal) {
         if (props.items && Array.isArray(props.items)) {
-          tbData.value = JSON.parse(JSON.stringify(props.items)) as (typeof empty)[]
+          tbData.value = deepClone(props.items as (typeof empty)[])
         }
         isOpen.value = true
       } else {

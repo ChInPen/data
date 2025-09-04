@@ -16,7 +16,7 @@
   import { useRouter } from 'vue-router'
   import { auditInfo } from '@/components/AuditInfo'
   import type { DataTableHeader } from 'vuetify'
-  import { GenerateRec, getHeadItemNo1, getDetItemNo1 } from '@/utils/ucommon'
+  import { GenerateRec, deepClone, getHeadItemNo1, getDetItemNo1 } from '@/utils/ucommon'
   import { projectType } from '@/components/ProjectType'
   import { pickIKind } from '@/components/PickIKind'
   import { usePickIKind } from '@/store/pickIKind'
@@ -73,7 +73,6 @@
   //工程資料
   const formData = ref<Record<string, any>>({})
   const tabpage = ref('normal') //頁籤
-  const tabpageHDS = ref('head') //頁籤(大中細項目)
   const hdsRef = ref()
 
   //取消&返回 按鈕
@@ -82,127 +81,138 @@
   }
   //檢查欄位規則
   const checkData = () => {
-    //必填:itemno，itemname，ikindno，mkindno
-    // const requiredFields = [
-    //   { key: 'itemno', label: '工料編號' },
-    //   { key: 'ikindno', label: '工料類別' },
-    //   { key: 'itemname', label: '工料名稱' },
-    //   { key: 'mkindno', label: '工料分類' }
-    // ]
-    // let missing = requiredFields
-    //   .filter((field) => !formData.value?.[field.key])
-    //   .map((field) => field.label)
-    //   .join('、')
-    // if (missing) missing = `${missing}不可為空白`
-    // //檢查工程分析
-    // let missingE3 = e3DataList.value
-    //   .map((s, i) => (!s.ibomno ? i + 1 : ''))
-    //   .filter(Boolean)
-    //   .join('、')
-    // if (missingE3) missingE3 = `工程分析: 第${missingE3}筆工料編號不可為空白`
-    // //檢查組裝組件建檔
-    // let missingES = esDataList.value
-    //   .map((s, i) => (!s.ibomno ? i + 1 : ''))
-    //   .filter(Boolean)
-    //   .join('、')
-    // if (missingES) missingES = `組裝組件建檔: 第${missingES}筆工料編號不可為空白`
-    // const missing2 = missingE3 && missingES ? `${missingE3}\n${missingES}` : missingE3 || missingES
-    // return missing && missing2 ? `${missing}\n${missing2}` : missing || missing2
+    //必填:protno，protname，protabbr, custno
+    const requiredFields = [
+      { key: 'protno', label: '工程編號' },
+      { key: 'custno', label: '業主編號' },
+      { key: 'protname', label: '工程名稱' },
+      { key: 'protabbr', label: '工程簡稱' }
+    ]
+    let missing = requiredFields
+      .filter((field) => !formData.value?.[field.key])
+      .map((field) => field.label)
+      .join('、')
+    if (missing) missing = `${missing}不可為空白`
+    //檢查合約明細
+    let missingDet = protdetList.value
+      .map((s, i) => (!s.itemno ? i + 1 : ''))
+      .filter(Boolean)
+      .join('、')
+    if (missingDet) missingDet = `合約明細: 第${missingDet}筆工料編號不可為空白`
+    //檢查工程類別預估
+    let missingIKind = protIKindList.value
+      .map((s, i) => (!s.ikindno ? i + 1 : ''))
+      .filter(Boolean)
+      .join('、')
+    if (missingIKind) missingIKind = `工程類別預估: 第${missingIKind}筆工料類別編號不可為空白`
+    const missing2 =
+      missingDet && missingIKind ? `${missingDet}\n${missingIKind}` : missingDet || missingIKind
+    return missing && missing2 ? `${missing}\n${missing2}` : missing || missing2
   }
   //送出存檔
   const saveData = () => {
     //存檔需要的欄位
-    // const item = { ...formData.value }
-    // delete item.a_USER
-    // delete item.a_DATE1
-    // delete item.m_USER
-    // delete item.m_DATE1
-    // //數字欄位
-    // item.costcal = '1'
-    // item.stkpurpc = formData.value?.stkpurpc ?? 0
-    // item.stksalpc = formData.value?.stksalpc ?? 0
-    // item.unitcost = formData.value?.unitcost ?? 0
-    // item.pkgqty = formData.value?.pkgqty ?? 0
-    // item.pkgpurpc = formData.value?.pkgpurpc ?? 0
-    // item.pkgsalpc = formData.value?.pkgsalpc ?? 0
-    // //工程分析
-    // const e3List = e3DataList.value.map((obj: any) => ({
-    //   ...obj,
-    //   itemno: formData.value.itemno ?? ''
-    // }))
-    // //組裝組件建檔
-    // const esList = esDataList.value.map((obj: any) => ({
-    //   ...obj,
-    //   itemno: formData.value.itemno ?? ''
-    // }))
-    // return {
-    //   ...item,
-    //   e3: e3List,
-    //   es: esList
-    // }
+    const project = { ...formData.value }
+    project.inde = '1'
+    //數字欄位
+    project.covesum = formData.value?.covesum ?? 0
+    project.estimsum = formData.value?.estimsum ?? 0
+    project.execflag = 0
+    project.chplusless = formData.value?.chplusless ?? 0
+    //合約明細
+    let projectdets = deepClone(protdetList.value)
+    projectdets = projectdets.map((obj: any) => ({
+      ...obj,
+      protno: formData.value.protno ?? ''
+    }))
+    //追加減金額
+    let plledets = deepClone(plledetList.value)
+    plledets = plledets.map((obj: any) => ({
+      ...obj,
+      protno: formData.value.protno ?? '',
+      protabbr: formData.value.protabbr ?? ''
+    }))
+    //工程類別預估
+    let protIkinds = deepClone(protIKindList.value)
+    protIkinds = protIkinds.map((obj: any) => ({
+      ...obj,
+      protno: formData.value.protno ?? '',
+      protabbr: formData.value.protabbr ?? ''
+    }))
+    //大中細項目
+    const headitems = headItemList.value.map(({ headitemno1, ...other }) => ({ ...other }))
+    const detitems = detItemList.value.map(({ headitemno1, detitemno1, ...other }) => ({
+      ...other
+    }))
+    const secitems = secItemList.value.map(({ headitemno1, detitemno1, secitemno1, ...other }) => ({
+      ...other
+    }))
+    const headDetSecItem = { headitems, detitems, secitems }
+
+    return { project, projectdets, plledets, protIkinds, headDetSecItem }
   }
   const callCreateApi = () => {
-    // callApi({
-    //   method: 'POST',
-    //   url: api.Item.Item_Create,
-    //   data: saveData()
-    // }).then((res: any) => {
-    //   if (res?.status === 200) {
-    //     const data = res?.data
-    //     if (data === '') {
-    //       message.alert({
-    //         type: 'success',
-    //         message: '存檔成功',
-    //         autoClose: 2,
-    //         onConfirm: () => {
-    //           handleCancel()
-    //         }
-    //       })
-    //     }
-    //   }
-    // })
+    callApi({
+      method: 'POST',
+      url: api.Project.Project_Create,
+      data: saveData()
+    }).then((res: any) => {
+      if (res?.status === 200) {
+        const data = res?.data
+        if (data.state === 'success') {
+          message.alert({
+            type: 'success',
+            message: '存檔成功',
+            autoClose: 2,
+            onConfirm: () => {
+              handleCancel()
+            }
+          })
+        }
+      }
+    })
   }
   const callEditApi = () => {
-    // callApi({
-    //   method: 'POST',
-    //   url: api.Item.Item_EDIT,
-    //   data: saveData()
-    // }).then((res: any) => {
-    //   if (res?.status === 200) {
-    //     const data = res?.data
-    //     if (data === '') {
-    //       message.alert({
-    //         type: 'success',
-    //         message: '存檔成功',
-    //         autoClose: 2,
-    //         onConfirm: () => {
-    //           handleCancel()
-    //         }
-    //       })
-    //     }
-    //   }
-    // })
+    callApi({
+      method: 'PUT',
+      url: api.Project.Project_EDIT,
+      data: saveData()
+    }).then((res: any) => {
+      if (res?.status === 200) {
+        const data = res?.data
+        if (data.state === 'success') {
+          message.alert({
+            type: 'success',
+            message: '存檔成功',
+            autoClose: 2,
+            onConfirm: () => {
+              handleCancel()
+            }
+          })
+        }
+      }
+    })
   }
   const handleSave = () => {
-    // const check = checkData()
-    // if (check) {
-    //   message.alert({
-    //     type: 'warning',
-    //     message: check
-    //   })
-    //   return
-    // }
-    // message.confirm({
-    //   type: 'question',
-    //   message: `確定要送出工料資料？`,
-    //   onConfirm: () => {
-    //     if (store.action === 'edit') {
-    //       callEditApi()
-    //     } else {
-    //       callCreateApi()
-    //     }
-    //   }
-    // })
+    const check = checkData()
+    if (check) {
+      message.alert({
+        type: 'warning',
+        message: check
+      })
+      return
+    }
+    message.confirm({
+      type: 'question',
+      message: `確定要送出工程資料？`,
+      onConfirm: () => {
+        if (store.action === 'edit') {
+          callEditApi()
+        } else {
+          callCreateApi()
+        }
+      }
+    })
   }
 
   //新增狀態呼叫 Renew api
@@ -439,7 +449,7 @@
     if (typeof selectIndex === 'number' && selectIndex >= 0) {
       const bom = protdetList.value[selectIndex].projectdetboms
       if (Array.isArray(bom)) {
-        selectBomsList.value = JSON.parse(JSON.stringify(bom))
+        selectBomsList.value = deepClone(bom)
       }
       bomsDS.value = true
     }
@@ -506,7 +516,16 @@
   }
 
   //追加減金額彈窗
-  const plledetList = ref<any[]>([])
+  const plledetList = ref<
+    {
+      protno: string
+      protabbr: string
+      rec1: string
+      pdate1: string
+      addorless: string
+      momey: number
+    }[]
+  >([])
   const plleDS = ref(false)
   const handlePlleSave = (data: any[], total: number) => {
     if (data && Array.isArray(data)) {

@@ -12,6 +12,15 @@ export const GenerateRec = (list: any[], key: string = 'rec1', len: number = 3) 
 }
 
 /**
+ * 用 JSON.parse(JSON.stringify()) 深拷貝
+ * @param obj 要拷貝的物件或陣列
+ * @returns T 型別的深拷貝
+ */
+export const deepClone = <T>(obj: T): T => {
+  return JSON.parse(JSON.stringify(obj)) as T
+}
+
+/**
  * 產生大項目中文編號: 需傳入數字，ex-> 1 => 壹。
  */
 export const getHeadItemNo1 = (no: number) => {

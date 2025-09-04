@@ -141,24 +141,50 @@
   <v-card color="#1b2b36" rounded="3">
     <v-card-text>
       <v-row dense>
-        <v-col :cols="3">
-          <c-input v-model="filter.custno" label="業主編號" icon="fa-solid fa-building" />
+        <v-col cols="auto">
+          <c-input
+            v-model="filter.custno"
+            label="業主編號"
+            icon="fa-solid fa-building"
+            :maxlength="10"
+          />
         </v-col>
-        <v-col :cols="3">
-          <c-input v-model="filter.custabbr" label="業主簡稱" icon="fa-solid fa-building" />
+        <v-col cols="auto">
+          <c-input
+            v-model="filter.custabbr"
+            label="業主簡稱"
+            icon="fa-solid fa-building"
+            :maxlength="16"
+          />
         </v-col>
-        <v-col :cols="3">
-          <c-input v-model="filter.uniform" label="統一編號" icon="fa-solid fa-barcode" />
+        <v-col cols="auto">
+          <c-input
+            v-model="filter.uniform"
+            label="統一編號"
+            icon="fa-solid fa-barcode"
+            :format="{ number: true }"
+            :maxlength="8"
+          />
         </v-col>
         <v-responsive width="100%"></v-responsive>
-        <v-col :cols="3">
-          <c-input v-model="filter.con" label="聯絡人" icon="fa-solid fa-user" />
+        <v-col cols="auto">
+          <c-input v-model="filter.con" label="聯絡人" icon="fa-solid fa-user" :maxlength="16" />
         </v-col>
-        <v-col :cols="3">
-          <c-input v-model="filter.tel" label="電話" icon="fa-solid fa-phone-volume" />
+        <v-col cols="auto">
+          <c-input
+            v-model="filter.tel"
+            label="電話"
+            icon="fa-solid fa-phone-volume"
+            :maxlength="20"
+          />
         </v-col>
-        <v-col :cols="3">
-          <c-input v-model="filter.mobitel" label="行動電話" icon="fa-solid fa-mobile-button" />
+        <v-col cols="auto">
+          <c-input
+            v-model="filter.mobitel"
+            label="行動電話"
+            icon="fa-solid fa-mobile-button"
+            :maxlength="20"
+          />
         </v-col>
       </v-row>
       <v-row justify="end" dense>

@@ -115,13 +115,17 @@
   const redicon = computed(() => props.isRequired && disabled.value === false)
   //自動計算輸入框寬度
   const lengthWidth = computed(() => {
-    const word = isNumber.value ? 11.2 : 20.3
+    const word = isNumber.value || props.format?.phone ? 11.2 : 20.3
     const padding = 24
     const icon = props.icon || props.isRequired ? 28.01 : 0
     const label = props.label ? props.label.length * 20.3 : 0
     const password = props.type === 'password' ? 28 : 0
     const btn = hasButtonEvent.value ? 40 : 0
     const clear = attr.clearable || attr.clearable == '' ? 34 : 8
+    if (props.type === 'date') {
+      //日期固定長度
+      return 101 + 12 + padding + icon + label + btn + clear
+    }
     if (props.lengthAutoWidth && props.maxlength) {
       const len = maxLength.value
       return len * word + 12 + padding + icon + label + password + btn + clear

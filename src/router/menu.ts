@@ -186,13 +186,23 @@ const menu: MenuEntry[] = [
         children: [
           { title: '估算作業', path: '' },
           { title: '估算轉EXCEL', path: '' },
-          { title: '報價作業', path: 'QuotationSearch' },
+          {
+            title: '報價作業',
+            path: 'Quotation',
+            name: 'B01報價作業系統',
+            component: () => import('@/views/Document/OpsOwner/Quotation.vue')
+          },
           { title: '報價請款作業', path: '' },
           { title: '工程請款明細', path: '' },
           { title: '工程請款作業', path: '' },
           { title: '應收工程款沖銷', path: '' },
           { title: '點工作業', path: '' },
-          { title: '雜支作業', path: 'MiscExpense' },
+          {
+            title: '雜支作業',
+            path: 'MiscExpense',
+            name: 'B07雜支作業系統',
+            component: () => import('@/views/Document/OpsOwner/MiscExpense.vue')
+          },
           { title: '分攤比例', path: '' },
           { title: '工地耗轉作業', path: '' }
         ]
@@ -204,7 +214,12 @@ const menu: MenuEntry[] = [
           { title: '折讓管理', path: '' },
           { title: '請購作業', path: '' },
           { title: '詢價作業', path: '' },
-          { title: '採購作業', path: 'Purchase' },
+          {
+            title: '採購作業',
+            path: 'Purchase',
+            name: 'B02採購作業系統',
+            component: () => import('@/views/Document/OpsManufacturer/Purchase.vue')
+          },
           { title: '發包作業', path: '' },
           { title: '進貨作業', path: '' },
           { title: '詢價比價單', path: '' },

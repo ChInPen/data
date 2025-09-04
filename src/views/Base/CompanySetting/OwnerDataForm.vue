@@ -367,15 +367,16 @@
         <v-col cols="auto" class="text-custom-2">業主基本資料</v-col>
       </v-row>
       <v-row dense class="mt-2" :align="'center'">
-        <v-col :cols="3" class="px-2">
+        <v-col cols="auto" class="px-2">
           <c-input
             v-model="formData.custno"
             label="業主編號"
             :is-required="true"
             :disabled="store.keyDisabled"
+            :maxlength="10"
           />
         </v-col>
-        <v-col :cols="3" class="px-2">
+        <v-col cols="auto" class="px-2">
           <c-select
             v-model="formData.ckindno"
             v-model:title="formData.ckindname"
@@ -390,9 +391,10 @@
             ]"
             also-show-value
             :disabled="store.isDetail"
+            width="340"
           />
         </v-col>
-        <v-col :cols="3" class="px-2">
+        <v-col cols="auto" class="px-2">
           <c-select
             v-model="formData.empno"
             v-model:title="formData.empname"
@@ -407,24 +409,27 @@
             ]"
             also-show-value
             :disabled="store.isDetail"
+            width="720"
           />
         </v-col>
         <v-responsive width="100%"></v-responsive>
-        <v-col :cols="6" class="px-2">
+        <v-col cols="auto" class="px-2">
           <c-input
             v-model="formData.custname"
             v-model:abbr="formData.custabbr"
             label="業主名稱"
             :is-required="true"
             :disabled="store.isDetail"
+            :maxlength="50"
           />
         </v-col>
-        <v-col :cols="3" class="px-2">
+        <v-col cols="auto" class="px-2">
           <c-input
             v-model="formData.custabbr"
             label="業主簡稱"
             :is-required="true"
             :disabled="store.isDetail"
+            :maxlength="16"
           />
         </v-col>
       </v-row>
@@ -443,52 +448,54 @@
         <v-tabs-window-item value="normal">
           <c-divider>一般資料</c-divider>
           <v-row dense class="mt-2" :align="'center'">
-            <v-col :cols="3" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.con"
                 label="聯絡人"
                 icon="fa-solid fa-user"
                 :disabled="store.isDetail"
+                :maxlength="16"
               />
             </v-col>
-            <v-col :cols="3" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.boss"
                 label="負責人"
                 icon="fa-solid fa-user-tie"
                 :disabled="store.isDetail"
+                :maxlength="16"
               />
             </v-col>
             <v-responsive width="100%"></v-responsive>
-            <v-col :cols="3" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.tel"
                 label="電話"
                 icon="fa-solid fa-phone-volume"
                 :disabled="store.isDetail"
-                :format="{ phone: true }"
+                :maxlength="20"
               />
             </v-col>
-            <v-col :cols="3" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.mobitel"
                 label="行動電話"
                 icon="fa-solid fa-mobile-button"
                 :disabled="store.isDetail"
-                :format="{ phone: true }"
+                :maxlength="20"
               />
             </v-col>
-            <v-col :cols="3" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.fax"
                 label="傳真"
                 icon="fa-solid fa-fax"
                 :disabled="store.isDetail"
-                :format="{ phone: true }"
+                :maxlength="20"
               />
             </v-col>
             <v-responsive width="100%"></v-responsive>
-            <v-col :cols="3" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.zip1"
                 label="郵遞區號"
@@ -496,17 +503,19 @@
                 :disabled="store.isDetail"
                 :readonly="!store.isDetail"
                 @button="pickAdderComp"
+                :maxlength="6"
               />
             </v-col>
-            <v-col :cols="8" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.compaddr"
                 label="公司地址"
                 icon="fa-solid fa-location-dot"
                 :disabled="store.isDetail"
+                :maxlength="60"
               />
             </v-col>
-            <v-col :cols="3" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.custzip"
                 label="郵遞區號"
@@ -514,22 +523,25 @@
                 :disabled="store.isDetail"
                 :readonly="!store.isDetail"
                 @button="pickAdderCust"
+                :maxlength="6"
               />
             </v-col>
-            <v-col :cols="8" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.custaddr"
                 label="發票地址"
                 icon="fa-solid fa-location-dot"
                 :disabled="store.isDetail"
+                :maxlength="60"
               />
             </v-col>
-            <v-col :cols="4" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.email"
                 label="E-MAIL"
                 icon="fa-solid fa-envelope"
                 :disabled="store.isDetail"
+                :maxlength="60"
               />
             </v-col>
           </v-row>
@@ -595,6 +607,7 @@
                 label="統一編號"
                 icon="fa-solid fa-barcode"
                 :disabled="store.isDetail"
+                :format="{ number: true }"
               />
             </v-col>
             <v-col class="px-2">

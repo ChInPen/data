@@ -1,6 +1,14 @@
 <script lang="ts" setup>
   import { ref, onMounted } from 'vue'
-  import { cButton, cInput, cSelect, cTextarea, cBread, cDivider } from '@/components/Common' //共用元件
+  import {
+    cButton,
+    cInput,
+    cSelect,
+    cTextarea,
+    cBread,
+    cDivider,
+    cTable
+  } from '@/components/Common' //共用元件
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
   import { useEmployeeStore } from '@/store/employee'
@@ -326,41 +334,25 @@
     <v-card-text>
       <c-divider>人員基本資料</c-divider>
       <v-row dense class="mt-2" :align="'center'">
-        <v-col :cols="3" class="px-2">
+        <v-col cols="auto" class="px-2">
           <c-input
             v-model="formData.empno"
             label="人員編號"
             :is-required="true"
             :disabled="store.keyDisabled"
+            :maxlength="10"
           />
         </v-col>
-        <v-col :cols="3" class="px-2">
+        <v-col cols="auto" class="px-2">
           <c-input
             v-model="formData.empname"
             label="人員姓名"
             :is-required="true"
             :disabled="store.isDetail"
+            :maxlength="16"
           />
         </v-col>
-        <v-col :cols="3" class="px-2">
-          <c-input
-            v-model="formData.empidno"
-            label="身分證號"
-            icon="fa-solid fa-user"
-            :disabled="store.isDetail"
-            :format="{ number: true, english: true }"
-            :maxlength="12"
-          />
-        </v-col>
-        <v-col :cols="2" class="px-2">
-          <c-input
-            v-model="formData.password1"
-            label="密碼"
-            icon="fa-solid fa-unlock-keyhole"
-            :disabled="store.isDetail"
-          />
-        </v-col>
-        <v-col :cols="3" class="px-2">
+        <v-col cols="auto" class="px-2">
           <c-select
             v-model="formData.empsex"
             label="性別"
@@ -370,9 +362,26 @@
             item-value="empsex"
             hide-search
             :disabled="store.isDetail"
+            width="180"
           />
         </v-col>
-        <v-col :cols="3" class="px-2">
+        <v-col cols="auto" class="px-2">
+          <c-button color="#388e3c" @click="webPerDs = true">web權限</c-button>
+        </v-col>
+        <v-responsive width="100%" />
+        <v-col cols="auto" class="px-2">
+          <c-input
+            v-model="formData.empidno"
+            label="身分證號"
+            icon="fa-solid fa-user"
+            :disabled="store.isDetail"
+            :format="{ number: true, english: true }"
+            :maxlength="10"
+            :length-auto-width="false"
+            width="281"
+          />
+        </v-col>
+        <v-col cols="auto" class="px-2">
           <c-input
             type="date"
             v-model="formData.empbirth1"
@@ -381,7 +390,7 @@
             :disabled="store.isDetail"
           />
         </v-col>
-        <v-col :cols="3" class="px-2">
+        <v-col cols="auto" class="px-2">
           <c-select
             v-model="formData.empmarr"
             label="婚姻狀況"
@@ -391,50 +400,61 @@
             item-value="empmarr"
             hide-search
             :disabled="store.isDetail"
+            width="230"
           />
         </v-col>
         <v-col cols="auto" class="px-2">
-          <c-button color="#388e3c" @click="webPerDs = true">web權限</c-button>
+          <c-input
+            v-model="formData.password1"
+            label="密碼"
+            icon="fa-solid fa-unlock-keyhole"
+            :disabled="store.isDetail"
+            :format="{ number: true, english: true }"
+            :maxlength="16"
+          />
         </v-col>
       </v-row>
       <c-divider class="mt-3">聯絡資訊</c-divider>
       <v-row dense class="mt-2">
-        <v-col :cols="3" class="px-2">
+        <v-col cols="auto" class="px-2">
           <c-input
             v-model="formData.tel1"
             label="聯絡電話"
             icon="fa-solid fa-phone-volume"
             :disabled="store.isDetail"
-            :format="{ phone: true }"
+            :maxlength="20"
           />
         </v-col>
-        <v-col :cols="3" class="px-2">
+        <v-col cols="auto" class="px-2">
           <c-input
             v-model="formData.mobitel"
             label="行動電話"
             icon="fa-solid fa-mobile-button"
             :disabled="store.isDetail"
-            :format="{ phone: true }"
+            :maxlength="20"
           />
         </v-col>
-        <v-col :cols="3" class="px-2">
+        <v-responsive width="100%" />
+        <v-col cols="auto" class="px-2">
           <c-input
             v-model="formData.empper"
             label="緊急聯絡人"
             icon="fa-solid fa-user"
             :disabled="store.isDetail"
+            :maxlength="16"
           />
         </v-col>
-        <v-col :cols="3" class="px-2">
+        <v-col cols="auto" class="px-2">
           <c-input
             v-model="formData.tel2"
             label="緊急聯絡電話"
             icon="fa-solid fa-phone-volume"
             :disabled="store.isDetail"
-            :format="{ phone: true }"
+            :maxlength="20"
           />
         </v-col>
-        <v-col :cols="3" class="px-2">
+        <v-responsive width="100%" />
+        <v-col cols="auto" class="px-2">
           <c-input
             v-model="formData.zip1"
             label="郵遞區號"
@@ -442,17 +462,20 @@
             :disabled="store.isDetail"
             :readonly="!store.isDetail"
             @button="pickAdder1"
+            :format="{ number: true }"
+            :maxlength="6"
           />
         </v-col>
-        <v-col :cols="8" class="px-2">
+        <v-col cols="auto" class="px-2">
           <c-input
             v-model="formData.empaddr1"
             label="戶籍地址"
             icon="fa-solid fa-location-dot"
             :disabled="store.isDetail"
+            :maxlength="60"
           />
         </v-col>
-        <v-col :cols="3" class="px-2">
+        <v-col cols="auto" class="px-2">
           <c-input
             v-model="formData.zip2"
             label="郵遞區號"
@@ -460,30 +483,35 @@
             :disabled="store.isDetail"
             :readonly="!store.isDetail"
             @button="pickAdder2"
+            :format="{ number: true }"
+            :maxlength="6"
           />
         </v-col>
-        <v-col :cols="8" class="px-2">
+        <v-col cols="auto" class="px-2">
           <c-input
             v-model="formData.empaddr2"
             label="通訊地址"
             icon="fa-solid fa-location-dot"
             :disabled="store.isDetail"
+            :maxlength="60"
           />
         </v-col>
-        <v-col :cols="4" class="px-2">
+        <v-col cols="auto" class="px-2">
           <c-input
             v-model="formData.email"
             label="E-MAIL"
             icon="fa-solid fa-envelope"
             :disabled="store.isDetail"
+            :maxlength="40"
           />
         </v-col>
       </v-row>
       <c-divider class="mt-3">公司資訊</c-divider>
       <v-row dense class="mt-2">
-        <v-col :cols="3" class="px-2">
+        <v-col cols="auto" class="px-2">
           <c-select
             v-model="formData.deparno"
+            v-model:title="formData.deparname"
             label="部門"
             icon="fa-solid fa-building-user"
             :items="departDDL"
@@ -494,9 +522,11 @@
               { column: 'deparname', label: '部門名稱' }
             ]"
             :disabled="store.isDetail"
+            also-show-value
+            width="550"
           />
         </v-col>
-        <v-col :cols="3" class="px-2">
+        <v-col cols="auto" class="px-2">
           <c-select
             v-model="formData.chiefno"
             label="主管"
@@ -509,9 +539,12 @@
               { column: 'empname', label: '人員名稱' }
             ]"
             :disabled="store.isDetail"
+            also-show-value
+            width="680"
           />
         </v-col>
-        <v-col :cols="3" class="px-2">
+        <v-responsive width="100%" />
+        <v-col cols="auto" class="px-2">
           <c-input
             type="date"
             v-model="formData.duedate1"
@@ -520,7 +553,7 @@
             :disabled="store.isDetail"
           />
         </v-col>
-        <v-col :cols="3" class="px-2">
+        <v-col cols="auto" class="px-2">
           <c-input
             type="date"
             v-model="formData.resdate1"
@@ -529,7 +562,7 @@
             :disabled="store.isDetail"
           />
         </v-col>
-        <v-col :cols="3" class="px-2">
+        <v-col cols="auto" class="px-2">
           <c-input
             type="number"
             v-model="formData.quotation"
@@ -537,17 +570,20 @@
             :format="{ thousands: true }"
             icon="fa-solid fa-money-bill"
             :disabled="store.isDetail"
+            :maxlength="9"
           />
         </v-col>
-        <v-col :cols="3" class="px-2">
+        <v-responsive width="100%" />
+        <v-col cols="auto" class="px-2">
           <c-input
             v-model="formData.memo1"
             label="說明"
             icon="fa-solid fa-pencil"
             :disabled="store.isDetail"
+            :maxlength="67"
           />
         </v-col>
-        <v-col :cols="12" class="px-2">
+        <v-col cols="10" class="px-2">
           <c-textarea
             v-model="formData.memo"
             label="備註"
@@ -576,7 +612,7 @@
         <v-col cols="auto" class="text-custom-1 fw-normal">
           {{ `${i + 1}`.padStart(2, '0') + '.' }}
         </v-col>
-        <v-col cols="3">
+        <v-col cols="auto">
           <c-select
             v-model="skill.skillno"
             v-model:title="skill.skillname"
@@ -590,9 +626,10 @@
               { column: 'skillname', label: '工種名稱' }
             ]"
             :disabled="store.isDetail"
+            width="540"
           />
         </v-col>
-        <v-col cols="3">
+        <v-col cols="auto">
           <c-input
             type="number"
             v-model="skill.daytpr"
@@ -600,9 +637,10 @@
             :format="{ thousands: true }"
             icon="fa-solid fa-sack-dollar"
             :disabled="store.isDetail"
+            :maxlength="8"
           />
         </v-col>
-        <v-col cols="3">
+        <v-col cols="auto">
           <c-input
             type="number"
             v-model="skill.overtime"
@@ -610,6 +648,7 @@
             :format="{ thousands: true }"
             icon="fa-solid fa-sack-dollar"
             :disabled="store.isDetail"
+            :maxlength="7"
           />
         </v-col>
         <v-col cols="auto" v-if="!store.isDetail">
@@ -632,4 +671,9 @@
   <web-permissions v-model="webPerDs" v-model:data="webPerData" />
 </template>
 
-<style scoped></style>
+<style scoped>
+  .div-skill-table {
+    width: 690px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+</style>

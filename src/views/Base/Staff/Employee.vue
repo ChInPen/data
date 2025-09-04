@@ -122,11 +122,21 @@
   <v-card color="#1b2b36" rounded="3">
     <v-card-text>
       <v-row dense>
-        <v-col :cols="3">
-          <c-input v-model="filter.empno" label="人員編號" icon="fa-solid fa-user" />
+        <v-col cols="auto">
+          <c-input
+            v-model="filter.empno"
+            label="人員編號"
+            icon="fa-solid fa-user"
+            :maxlength="10"
+          />
         </v-col>
-        <v-col :cols="3">
-          <c-input v-model="filter.empname" label="人員名稱" icon="fa-solid fa-user" />
+        <v-col cols="auto">
+          <c-input
+            v-model="filter.empname"
+            label="人員名稱"
+            icon="fa-solid fa-user"
+            :maxlength="16"
+          />
         </v-col>
       </v-row>
       <v-row justify="end" dense>

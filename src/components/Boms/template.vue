@@ -4,7 +4,7 @@
   import { cInput, cSelect, cDialog, cButton, cTable } from '@/components/Common'
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
-  import { GenerateRec } from '@/utils/ucommon'
+  import { GenerateRec, deepClone } from '@/utils/ucommon'
   import { pickItem } from '@/components/PickItem'
   import { usePickItem } from '@/store/pickItem'
   const pickItemStore = usePickItem()
@@ -110,7 +110,7 @@
     (newVal) => {
       if (newVal) {
         if (props.items && Array.isArray(props.items)) {
-          tbData.value = JSON.parse(JSON.stringify(props.items)) as tableData[]
+          tbData.value = deepClone(props.items as tableData[])
           tbData.value.sort((a, b) => Number(a.rec1) - Number(b.rec1))
         }
         isOpen.value = true

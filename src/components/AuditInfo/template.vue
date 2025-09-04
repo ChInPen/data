@@ -26,8 +26,8 @@
       <v-row dense justify="start">
         <v-col cols="auto" class="text-custom-2">操作人員</v-col>
       </v-row>
-      <v-row dense class="mt-2">
-        <v-col :cols="3" class="px-2">
+      <v-row dense class="mt-2" justify="center">
+        <v-col cols="auto" class="px-2">
           <c-input
             type="date"
             :modelValue="a_date"
@@ -36,10 +36,16 @@
             disabled
           />
         </v-col>
-        <v-col :cols="3" class="px-2">
-          <c-input :modelValue="a_user" label="建檔人員" icon="fa-solid fa-user-plus" disabled />
+        <v-col cols="auto" class="px-2">
+          <c-input
+            :modelValue="a_user"
+            label="建檔人員"
+            icon="fa-solid fa-user-plus"
+            disabled
+            :maxlength="16"
+          />
         </v-col>
-        <v-col :cols="3" class="px-2">
+        <v-col cols="auto" class="px-2">
           <c-input
             type="date"
             :modelValue="m_date"
@@ -48,8 +54,14 @@
             disabled
           />
         </v-col>
-        <v-col :cols="3" class="px-2">
-          <c-input :modelValue="m_user" label="修改人員" icon="fa-solid fa-user-pen" disabled />
+        <v-col cols="auto" class="px-2">
+          <c-input
+            :modelValue="m_user"
+            label="修改人員"
+            icon="fa-solid fa-user-pen"
+            disabled
+            :maxlength="16"
+          />
         </v-col>
       </v-row>
     </v-card-text>
