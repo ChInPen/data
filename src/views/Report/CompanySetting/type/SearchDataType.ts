@@ -1,0 +1,45 @@
+export type SearchData = {
+  // 業主
+  custno: string
+  custname: string
+  custabbr: string
+  con: string
+  tel: string
+  mobitel: string
+  uniform: string
+  ckindname: string
+  akindc: string
+  a_user: string
+  m_user: string
+  // 工料
+  itemno: string
+  itemname: string
+  ikindname: string
+  mkindname: string
+  stkpurpc: number
+  stksalpc: number
+  taxkindno: string
+  taxkindc: string
+  // 工程
+  protno: string
+  protabbr: string
+  protname: string
+  protaddr: string
+  // 廠商
+  suppno: string
+  suppabbr: string
+  suppname: string
+  con1: string
+  con2: string
+  boss: string
+  tel1: string
+  tel2: string
+  fax: string
+  mobitel1: string
+  mobitel2: string
+  mobitel3: string
+  compaddr: string
+  empno: string
+  empname: string
+  [key: string]: any
+}

@@ -230,8 +230,18 @@ const menu: MenuEntry[] = [
           { title: '採購合約', path: '' },
           { title: '合約餘額', path: '' },
           { title: '廠商資料', path: '' },
-          { title: '廠商保留款', path: '' },
-          { title: '預付款作業', path: '' }
+          {
+            title: '廠商保留款查詢',
+            path: 'SupplierRetentionQuery',
+            name: 'D01廠商保留款查詢',
+            component: () => import('@/views/Report/CompanySetting/SupplierRetentionQuery.vue')
+          },
+          {
+            title: '預付款作業查詢',
+            path: 'VendorPrepaymentQuery',
+            name: '預付款作業查詢',
+            component: () => import('@/views/Report/CompanySetting/VendorPrepaymentQuery.vue')
+          }
         ]
       },
       {
@@ -253,7 +263,12 @@ const menu: MenuEntry[] = [
           { title: '應收總表', path: '' },
           { title: '進貨資料', path: '' },
           { title: '銷貨資料', path: '' },
-          { title: '日期別-已付帳款', path: '' },
+          {
+            title: '日期別-已付帳款',
+            path: 'DateAccount',
+            name: '日期別-已付帳款查詢',
+            component: () => import('@/views/Report/CompanySetting/DateAccountQuery.vue')
+          },
           { title: '日期別-已收帳款', path: '' },
           { title: '詢價作業', path: '' },
           { title: '請購作業', path: '' },
@@ -263,15 +278,35 @@ const menu: MenuEntry[] = [
             name: '採購作業查詢',
             component: () => import('@/views/Report/CompanySetting/PordBrowQuery.vue')
           },
-          { title: '採購估驗', path: '' },
-          { title: '發包作業', path: '' },
-          { title: '發包估驗', path: '' },
+          {
+            title: '採購估驗查詢',
+            path: 'PurPordBrowQurey',
+            name: '採購估驗查詢',
+            component: () => import('@/views/Report/CompanySetting/PurPordBrowQurey.vue')
+          },
+          {
+            title: '發包作業查詢',
+            path: 'OutsourcingQuery',
+            name: '發包作業查詢',
+            component: () => import('@/views/Report/CompanySetting/outsourcingQuery.vue')
+          },
+          {
+            title: '發包估驗查詢',
+            path: 'OutsourcingValuation',
+            name: '發包估驗查詢',
+            component: () => import('@/views/Report/CompanySetting/OutsourcingValuationQurey.vue')
+          },
           { title: '應付總表', path: '' },
           { title: '工作日誌', path: '' },
           { title: '點工作業', path: '' },
           { title: '工種進度', path: '' },
           { title: '雜支作業', path: '' },
-          { title: '員工借支', path: '' },
+          {
+            title: '員工借支查詢',
+            path: 'EmployeeAdvanceQuery',
+            name: '員工借支查詢',
+            component: () => import('@/views/Report/CompanySetting/EmployeeAdvanceQuery.vue')
+          },
           { title: '零用金餘額', path: '' }
         ]
       }

@@ -205,5 +205,43 @@ export default {
     Search: '/api/PordBrow/PordBrow_Search',
     Print: '/api/PordBrow/PordBrow_Print',
     Excel: '/api/PordBrow/PordBrow_Excel'
+  },
+  // 採購估驗查詢
+  PurPordBrow: {
+    Search: '/api/PurPordBrow/PurPordBrow_Search',
+    Print: '/api/PurPordBrow/PurPordBrow_Print',
+    Excel: '/api/PurPordBrow/PurPordBrow_Excel',
+    List: '/api/Purpord/PurPordlist'
+  },
+  // 發包作業查詢
+  Outsourcing: {
+    Search: '/api/EmitBrow/EmitBrow_Search',
+    Print: '/api/EmitBrow/EmitBrow_Print',
+    Excel: '/api/EmitBrow/EmitBrow_Excel'
+  },
+  // 發包估驗查詢
+  OutsourcingValuation: {
+    Search: '/api/PuremitBrow/PuremitBrow_Search',
+    Print: '/api/PuremitBrow/PuremitBrow_Print',
+    Excel: '/api/PuremitBrow/PuremitBrow_Excel'
+  },
+  // 日期別-已付帳款查詢
+  DateAccountQuery: {
+    Search: '/api/HSAPDate/HSAPDate_Search',
+    Print: '/api/HSAPDate/HSAPDate_Print'
+  },
+  // 員工借支查詢
+  EmployeeAdvanceQuery: {
+    Search: '/api/EmborrBrow/EmborrBrow_List',
+    Print: '/api/EmborrBrow/EmborrBrow_Print',
+    Excel: '/api/EmborrBrow/EmborrBrow_Excel'
+  },
+  // 廠商保留款查詢
+  SupplierRetentionQuery: {
+    Print: '/api/Retainage_Balance/Retainage_Balance_Print'
+  },
+  // 預付款作業查詢
+  VendorPrepaymentQuery: {
+    Print: '/api/AP_Query/AP_Query_Print'
   }
 }
