@@ -303,7 +303,7 @@ const menu: MenuEntry[] = [
             title: '發包作業查詢',
             path: 'OutsourcingQuery',
             name: '發包作業查詢',
-            component: () => import('@/views/Report/CompanySetting/outsourcingQuery.vue')
+            component: () => import('@/views/Report/CompanySetting/OutsourcingQuery.vue')
           },
           {
             title: '發包估驗查詢',
