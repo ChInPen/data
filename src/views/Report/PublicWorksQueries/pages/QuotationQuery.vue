@@ -4,9 +4,9 @@
   import { searchCust } from '@/components/SearchCust' //業主彈窗元件查詢
   import { searchItem } from '@/components/SearchItem' //工料彈窗元件查詢
   import { searchProt } from '@/components/SearchProt' //工程彈窗元件查詢
-  import MultiCust from './Components/MultiCust.vue' //業主彈窗(多選)
-  import MultiItem from './Components/MultiItem.vue' //工料彈窗(多選)
-  import MultiProt from './Components/MultiProt.vue'
+  import MultiCust from '../../../../components/MultiCust/MultiCust.vue' //業主彈窗(多選)
+  import MultiItem from '../../../../components/MultiItem/MultiItem.vue' //工料彈窗(多選)
+  import MultiProt from '../../../../components/MultiProt/MultiProt.vue'
   import { callApi } from '@/utils/uapi' //呼叫api的方法
   import api from '@/api' //api清單
   import { useSearchCust } from '@/store/searchCust'

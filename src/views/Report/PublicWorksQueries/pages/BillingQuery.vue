@@ -1,146 +1,138 @@
 <script lang="ts" setup>
-  import { computed, ref } from 'vue'
-  import { cButton, cInput, cBread } from '@/components/Common' //匯入自定義的UI元件
+  import { computed, ref, watch } from 'vue'
+  import { cButton, cInput, cBread, cSelect } from '@/components/Common' //匯入自定義的UI元件
   import { searchCust } from '@/components/SearchCust' //業主彈窗元件查詢
   import { searchProt } from '@/components/SearchProt' //工程彈窗元件查詢
-  import MultiCust from './Components/MultiCust.vue' //業主彈窗(多選)
-  import MultiProt from './Components/MultiProt.vue'
+  import MultiCust from '@/components/MultiCust/MultiCust.vue' //業主彈窗(多選)
+  import MultiProt from '@/components/MultiProt/MultiProt.vue'
   import { message } from '@/components/Message/service' // 彈窗訊息
-  import BillingDataPrint from './Components/BillingDataPrint.vue' //列印彈窗
-  import BillingDataExcel from './Components/BillingDataExcel.vue' //EXCEL彈窗
   import { useSearchCust } from '@/store/searchCust'
   const storeCust = useSearchCust()
   import { useSearchProt } from '@/store/searchProt'
   const storeProt = useSearchProt()
+  import type { SearchData } from '@/components/SearchCust/type'
+  import api from '@/api'
+  import { callApi } from '@/utils/uapi'
+  import config from '@/config/config' //統一呼叫路徑
+
   // 查詢的資料(結果)
   const formData = ref({
-    quotationDateFrom: '',
-    quotationDateTo: '',
-    ownerNoFrom: '',
-    ownerNoTo: '',
-    itemNoFrom: '',
-    itemNoTo: '',
-    projectNoFrom: '',
-    projectNoTo: '',
-    remark: '',
-    custom1: '',
-    ownerNosLimiteds: [], //業主多選(只有業主編號)
-    projectNosLimiteds: [], //工程多選
-    owners: [],
-    prot: []
+    dates: { begin: '', end: '' },
+    custNOs: { begin: '', end: '', limiteds: [''] },
+    protNOs: { begin: '', end: '', limiteds: [''] },
+    feetNo: '05',
+    printType: '0',
+    customType: ''
   })
-
+  const feetNoDDL = ref({
+    list: [
+      { feetno: '01', feetname: '第一組' },
+      { feetno: '02', feetname: '第二組' },
+      { feetno: '03', feetname: '第三組' },
+      { feetno: '04', feetname: '第四組' },
+      { feetno: '05', feetname: '第五組' },
+      { feetno: '00', feetname: '不列印' }
+    ],
+    value: 'feetno',
+    title: 'feetname'
+  })
+  const printTypeDDL = ref({
+    list: [
+      { value: '0', title: '總額表' },
+      { value: '1', title: '工程明細' },
+      { value: '2', title: '報價明細' }
+    ],
+    value: 'value',
+    title: 'title'
+  })
   // 業主選單 / 多選控制
-  // 業主單選彈窗開關
-  const ownerPickOpen = ref()
-  // 業主多選彈窗開關
-  const MultiCustDs = ref(false)
-  // 判斷業主是否為多選的狀態
-  const isMultiOwner = ref(false)
+  const ownerPickOpen = ref() // 業主單選彈窗開關
+  const MultiCustDs = ref(false) // 業主多選彈窗開關
+  const isMultiOwner = ref(false) // 判斷業主是否為多選的狀態
+  const selectedOwner = ref<SearchData[]>([]) //控制已選擇的多選
+  const selectedOwnerOne = ref({ begin: '', end: '' }) //控制單選
   // 業主單選的資料
   const openOwnerPicker = (t) => {
-    const toKey = t === 'from' ? 'ownerNoFrom' : 'ownerNoTo'
-    storeCust.set(formData, [{ from: 'custno', to: toKey }], {
+    const toKey = t === 'from' ? 'begin' : 'end'
+    storeCust.set(selectedOwnerOne, [{ from: 'custno', to: toKey }], {
       open: ownerPickOpen.value?.open
     })
   }
+
   const onMultiOwnerPicks = (rows) => {
-    formData.value.owners = rows //全部資料
-    formData.value.ownerNosLimiteds = rows //只有業主編號
+    selectedOwner.value = rows //全部資料
       .map((r) => String(r.custno).trim())
       .filter(Boolean)
-    isMultiOwner.value = formData.value.ownerNosLimiteds.length > 0
-    formData.value.ownerNoFrom = ''
-    formData.value.ownerNoTo = ''
-    console.log(formData.value.owners)
-    console.log(formData.value.ownerNosLimiteds)
-    if (formData.value.ownerNosLimiteds.length <= 0) {
-      formData.value.ownerNoFrom = ''
-      formData.value.ownerNoTo = ''
-    }
+    isMultiOwner.value = selectedOwner.value.length > 0
+    formData.value.custNOs.begin = ''
+    formData.value.custNOs.end = ''
   }
 
   //工程單選/多選控制
   const projectPickOpen = ref()
   const isMultiProt = ref(false) // 是否為多選狀態
   const MulitProtDs = ref(false) //多選視窗控制
+  const selectedProt = ref<SearchData[]>([]) //控制已選擇的多選
+  const selectedProtOne = ref({ begin: '', end: '' }) //控制單選
   const openProjectPicked = (t) => {
-    const toKey = t === 'from' ? 'projectNoFrom' : 'projectNoTo'
-    storeProt.set(formData, [{ from: 'protno', to: toKey }], {
+    const toKey = t === 'from' ? 'begin' : 'end'
+    storeProt.set(selectedProtOne, [{ from: 'protno', to: toKey }], {
       open: projectPickOpen.value?.open
     })
   }
   // 如果是多選狀態的處理
   const onMulitProtPicks = (rows) => {
-    formData.value.prot = rows // 全部資料
-    formData.value.projectNosLimiteds = rows // 只有工程編號
+    selectedProt.value = rows // 全部資料
+    formData.value.custNOs.limiteds = rows // 只有工程編號
       .map((r) => String(r.protno).trim())
       .filter(Boolean)
 
-    isMultiProt.value = formData.value.projectNosLimiteds.length > 0
+    isMultiProt.value = formData.value.custNOs.limiteds.length > 0
 
     // 多選時清空單選輸入
-    formData.value.projectNoFrom = ''
-    formData.value.projectNoTo = ''
-
-    // 若清到 0 筆，仍保持單選清空
-    if (formData.value.projectNosLimiteds.length <= 0) {
-      formData.value.projectNoFrom = ''
-      formData.value.projectNoTo = ''
-    }
+    formData.value.custNOs.begin = ''
+    formData.value.custNOs.end = ''
   }
-
+  watch(
+    [
+      () => selectedOwnerOne.value.begin,
+      () => selectedOwnerOne.value.end,
+      () => selectedProtOne.value.begin,
+      () => selectedProtOne.value.end
+    ],
+    ([val1, val2, val3, val4], [old1, old2, old3, old4]) => {
+      if (val1 !== old1) formData.value.custNOs.begin = val1
+      if (val2 !== old2) formData.value.custNOs.end = val2
+      if (val3 !== old3) formData.value.protNOs.begin = val3
+      if (val4 !== old4) formData.value.protNOs.end = val4
+    }
+  )
   // 列印+EXCEL表單
-
-  const printForm = ref({
-    dates: { begin: '', end: '' },
-    custNOs: { begin: '', end: '', limiteds: [''] },
-    protNOs: { begin: '', end: '', limiteds: [''] },
-    feetNo: '05',
-    printType: 0,
-    customType: ''
-  })
-
-  // 列印作業
-  const isPrintOpen = ref(false) //控制列印彈窗
-  const handlePrint = async () => {
-    if (!formData.value.quotationDateFrom || !formData.value.quotationDateTo) {
-      message.alert({
-        type: 'error',
-        message: '查詢日期不可為空！'
+  const onSubmitPrint = async (t: string) => {
+    const API = t === 'Print' ? api.Billing.Print : api.Billing.Excel
+    try {
+      const res = await callApi({
+        method: 'POST',
+        url: API,
+        data: formData.value
       })
-      return
+      console.log(res)
+      if (t === 'Print') {
+        if (typeof res === 'string' && res.startsWith('PDF')) {
+          window.open(config.apiUri + '/' + res)
+        } else {
+          console.warn('沒有取得檔名', res)
+        }
+      } else {
+        if (typeof res === 'string' && res.startsWith('Excel')) {
+          window.open(config.apiUri + '/' + res)
+        } else {
+          console.warn('沒有取得檔名', res)
+        }
+      }
+    } catch (error) {
+      console.error('發生錯誤' + error)
     }
-    printForm.value.dates.begin = formData.value.quotationDateFrom
-    printForm.value.dates.end = formData.value.quotationDateTo
-    printForm.value.custNOs.begin = formData.value.ownerNoFrom
-    printForm.value.custNOs.end = formData.value.ownerNoTo
-    printForm.value.custNOs.limiteds = formData.value.ownerNosLimiteds
-    printForm.value.protNOs.begin = formData.value.projectNoFrom
-    printForm.value.protNOs.end = formData.value.projectNoTo
-    printForm.value.protNOs.limiteds = formData.value.projectNosLimiteds
-    isPrintOpen.value = true
-  }
-
-  // EXCEL下載
-  const isExcelOpen = ref(false) //控制EXCEL彈窗
-  const handleExportExcel = async () => {
-    if (!formData.value.quotationDateFrom || !formData.value.quotationDateTo) {
-      message.alert({
-        type: 'error',
-        message: '查詢日期不可為空！'
-      })
-      return
-    }
-    printForm.value.dates.begin = formData.value.quotationDateFrom
-    printForm.value.dates.end = formData.value.quotationDateTo
-    printForm.value.custNOs.begin = formData.value.ownerNoFrom
-    printForm.value.custNOs.end = formData.value.ownerNoTo
-    printForm.value.custNOs.limiteds = formData.value.ownerNosLimiteds
-    printForm.value.protNOs.begin = formData.value.projectNoFrom
-    printForm.value.protNOs.end = formData.value.projectNoTo
-    printForm.value.protNOs.limiteds = formData.value.projectNosLimiteds
-    isExcelOpen.value = true
   }
 
   // 共用過濾：只留英數，截到指定長度
@@ -153,29 +145,29 @@
 
   // 業主 10 碼
   const ownerNoFromModel = computed({
-    get: () => formData.value.ownerNoFrom,
+    get: () => formData.value.custNOs.begin,
     set: (val) => {
-      formData.value.ownerNoFrom = alnumN(val, 10)
+      formData.value.custNOs.begin = alnumN(val, 10)
     }
   })
   const ownerNoToModel = computed({
-    get: () => formData.value.ownerNoTo,
+    get: () => formData.value.custNOs.end,
     set: (val) => {
-      formData.value.ownerNoTo = alnumN(val, 10)
+      formData.value.custNOs.end = alnumN(val, 10)
     }
   })
 
   // 工程 16 碼
   const projectNoFromModel = computed({
-    get: () => formData.value.projectNoFrom,
+    get: () => formData.value.protNOs.begin,
     set: (val) => {
-      formData.value.projectNoFrom = alnumN(val, 16)
+      formData.value.protNOs.begin = alnumN(val, 16)
     }
   })
   const projectNoToModel = computed({
-    get: () => formData.value.projectNoTo,
+    get: () => formData.value.protNOs.end,
     set: (val) => {
-      formData.value.projectNoTo = alnumN(val, 16)
+      formData.value.protNOs.end = alnumN(val, 16)
     }
   })
 </script>
@@ -185,10 +177,12 @@
   <c-bread>
     <v-row justify="end" class="ma-0">
       <v-col cols="auto">
-        <c-button kind="print" icon="fa-solid fa-print" @click="handlePrint">列印</c-button>
+        <c-button kind="print" icon="fa-solid fa-print" @click="onSubmitPrint('Print')">
+          列印
+        </c-button>
       </v-col>
       <v-col cols="auto">
-        <c-button kind="create" icon="fa-solid fa-file-excel" @click="handleExportExcel">
+        <c-button kind="create" icon="fa-solid fa-file-excel" @click="onSubmitPrint('Excel')">
           匯出Excel
         </c-button>
       </v-col>
@@ -198,11 +192,28 @@
   <!-- 查詢表單 -->
   <v-card color="#1b2b36" rounded="lg" class="mt-4 sqte-form" elevation="2">
     <v-card-text class="pa-6">
+      <!-- 報表類別 -->
+      <v-row align="center" class="mb-3" dense>
+        <v-col cols="11">
+          <v-row>
+            <v-col cols="6" class="u-wch w-20ch">
+              <c-select
+                v-model="formData.printType"
+                label="報表內容"
+                :items="printTypeDDL.list"
+                :item-title="printTypeDDL.title"
+                :item-value="printTypeDDL.value"
+                hide-search
+              />
+            </v-col>
+          </v-row>
+        </v-col>
+      </v-row>
       <!-- 報價日期區間 -->
       <v-row align="center" class="mb-3" dense>
-        <v-col cols="auto" class="d-flex align-center">
+        <!-- <v-col cols="auto" class="d-flex align-center">
           <h5 class="text-white mb-0 font-weight-medium title-text">報價日期</h5>
-        </v-col>
+        </v-col> -->
         <v-col cols="11">
           <v-row align="center">
             <v-col cols="2" class="col4-min">
@@ -210,7 +221,7 @@
                 <v-col cols="auto" class="u-wch w-7ch">
                   <c-input
                     type="date"
-                    v-model="formData.quotationDateFrom"
+                    v-model="formData.dates.begin"
                     label="開始日期"
                     density="compact"
                   />
@@ -225,7 +236,7 @@
                 <v-col cols="auto" class="u-wch w-7ch">
                   <c-input
                     type="date"
-                    v-model="formData.quotationDateTo"
+                    v-model="formData.dates.end"
                     label="結束日期"
                     density="compact"
                   />
@@ -238,9 +249,9 @@
 
       <!-- 業主編號區間 -->
       <v-row align="center" class="mb-3" dense>
-        <v-col cols="auto" class="d-flex align-center">
+        <!-- <v-col cols="auto" class="d-flex align-center">
           <h5 class="text-white mb-0 font-weight-medium title-text">業主編號</h5>
-        </v-col>
+        </v-col> -->
         <v-col cols="11">
           <v-row align="center">
             <v-col cols="2" class="col4-min">
@@ -248,7 +259,7 @@
                 <v-col cols="auto" class="u-wch w-10ch">
                   <c-input
                     v-model="ownerNoFromModel"
-                    label="起始編號"
+                    label="業主編號"
                     :disabled="isMultiOwner"
                     :maxlength="10"
                     density="compact"
@@ -276,7 +287,7 @@
                 <v-col cols="auto" class="u-wch w-10ch">
                   <c-input
                     v-model="ownerNoToModel"
-                    label="結束編號"
+                    label="業主編號"
                     :disabled="isMultiOwner"
                     :maxlength="10"
                     density="compact"
@@ -313,9 +324,9 @@
 
       <!-- 工程編號區間 -->
       <v-row align="center" class="mb-3" dense>
-        <v-col cols="auto" class="d-flex align-center">
+        <!-- <v-col cols="auto" class="d-flex align-center">
           <h5 class="text-white mb-0 font-weight-medium title-text">工程編號</h5>
-        </v-col>
+        </v-col> -->
         <v-col cols="11">
           <v-row align="center">
             <v-col cols="2" class="col4-min">
@@ -323,7 +334,7 @@
                 <v-col cols="auto" class="u-wch w-16ch">
                   <c-input
                     v-model="projectNoFromModel"
-                    label="起始編號"
+                    label="工程編號"
                     :maxlength="16"
                     density="compact"
                     :disabled="isMultiProt"
@@ -351,7 +362,7 @@
                 <v-col cols="auto" class="u-wch w-16ch">
                   <c-input
                     v-model="projectNoToModel"
-                    label="結束編號"
+                    label="工程編號"
                     :maxlength="16"
                     density="compact"
                     :disabled="isMultiProt"
@@ -385,6 +396,23 @@
           </v-row>
         </v-col>
       </v-row>
+      <!-- 其他欄位 -->
+      <v-row align="center" class="mb-3" dense>
+        <v-col cols="11">
+          <v-row>
+            <v-col cols="6" class="u-wch w-7ch">
+              <c-select
+                v-model="formData.feetNo"
+                label="單行註腳"
+                :items="feetNoDDL.list"
+                :item-title="feetNoDDL.title"
+                :item-value="feetNoDDL.value"
+                hide-search
+              />
+            </v-col>
+          </v-row>
+        </v-col>
+      </v-row>
     </v-card-text>
   </v-card>
 
@@ -395,13 +423,9 @@
   <!-- 工程單選視窗 -->
   <search-prot ref="projectPickOpen" @pick="storeProt.pick" />
   <!-- 業主多選彈窗 -->
-  <Multi-cust v-model="MultiCustDs" @pick="onMultiOwnerPicks" :preselected="formData.owners" />
+  <multi-cust v-model="MultiCustDs" @pick="onMultiOwnerPicks" :preselected="selectedOwner" />
   <!-- 工程多選彈窗 -->
-  <Multi-prot v-model="MulitProtDs" @pick="onMulitProtPicks" :preselected="formData.prot" />
-  <!-- 列印彈窗 -->
-  <billing-data-print v-model="isPrintOpen" :print-form="printForm" />
-  <!-- EXCEL彈窗 -->
-  <billing-data-excel v-model="isExcelOpen" :print-form="printForm" />
+  <multi-prot v-model="MulitProtDs" @pick="onMulitProtPicks" :preselected="selectedProt" />
 </template>
 <style scoped>
   .u-wch {

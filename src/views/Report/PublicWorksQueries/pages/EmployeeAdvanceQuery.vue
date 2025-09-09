@@ -1,6 +1,11 @@
 <script lang="ts" setup>
-  import { ref } from 'vue'
+  import { ref, computed, watch } from 'vue'
   import { cButton, cInput, cBread, cSelect } from '@/components/Common' // 共用元件
+  import type { SearchData } from '../../shared/types/SearchDataType'
+  import { searchEmp } from '@/components/SearchEmp'
+  import { useSearchEmp } from '@/store/searchEmp'
+  import MultiEmp from '../../../../components/MultiEmp/MultiEmp.vue'
+  const storeEmp = useSearchEmp()
   import { callApi } from '@/utils/uapi' // 呼叫api的方法
   import api from '@/api' // api清單
   import config from '@/config/config'
@@ -10,8 +15,15 @@
       begin: '', // 開始時間
       end: '' // 結束時間
     },
+    empNOs: {
+      //員工編號
+      begin: '',
+      end: '',
+      limiteds: ['']
+    },
+    pagination: { start: 0, length: 100, draw: 1 }, //排列筆數
     feetNo: '20', // 表尾註腳編號
-    printType: '1' //內定報表
+    printType: '內定報表' //內定報表
   })
   // 表尾註腳
   const feetNoDDL = ref({
@@ -29,11 +41,7 @@
 
   // 報表內容
   const printTypeDDL = ref({
-    list: [
-      { valueOn: '1', title: '明細表' },
-      { valueOn: '2', title: '簡要表' },
-      { valueOn: '3', title: '總額表' }
-    ],
+    list: [{ valueOn: '內定報表', title: '內定報表' }],
     value: 'valueOn',
     title: 'title'
   })
@@ -47,27 +55,74 @@
     return toUpper ? s.toUpperCase() : s
   }
 
-  // 廠商 8 碼
-  // const suppNoFromModel = computed({
-  //   get: () => formData.value.suppNOs.begin,
-  //   set: (val) => {
-  //     formData.value.suppNOs.begin = alnumN(val, 8)
-  //   }
-  // })
-
+  // 員工 8 碼
+  const suppNoFromModel = computed({
+    get: () => formData.value.empNOs.begin,
+    set: (val) => {
+      formData.value.empNOs.begin = alnumN(val, 10)
+    }
+  })
+  const suppNoToModel = computed({
+    get: () => formData.value.empNOs.end,
+    set: (val) => {
+      formData.value.empNOs.end = alnumN(val, 10)
+    }
+  })
+  // 員工單選/多選控制
+  const EmpPickOpen = ref() //控制單選視窗開關
+  const MultiEmpDs = ref(false) //控制多選視窗開關
+  const isMultiEmp = ref(false) //控制是否為多選狀態
+  const selectedEmp = ref<SearchData[]>([]) //控制多選
+  const selectedEmpOne = ref({ begin: '', end: '' }) //控制單選
+  const openSuppPicker = (t: 'from' | 'to') => {
+    const toKey = t === 'from' ? 'begin' : 'end'
+    storeEmp.set(selectedEmpOne, [{ from: 'empno', to: toKey }], {
+      open: EmpPickOpen.value?.open
+    })
+  }
+  watch(
+    [() => selectedEmpOne.value.begin, () => selectedEmpOne.value.end],
+    ([val1, val2], [old1, old2]) => {
+      if (val1 !== old1) formData.value.empNOs.begin = val1
+      if (val2 !== old2) formData.value.empNOs.end = val2
+    }
+  )
+  const onMultiEmpPicks = (rows: any[]) => {
+    selectedEmp.value = rows
+    formData.value.empNOs.limiteds = rows.map((r) => String(r.empno).trim()).filter(Boolean)
+    isMultiEmp.value = formData.value.empNOs.limiteds.length > 0
+    selectedEmpOne.value.begin = ''
+    selectedEmpOne.value.end = ''
+  }
   // 呼叫API送出列印資料
-  const onSubmitPrint = async () => {
+  const onSubmitPrint = async (t) => {
     console.log(JSON.stringify(formData.value, null, 2))
-    const API = api.DateAccountQuery.Print
+
+    const API = t === 'Print' ? api.EmployeeAdvanceQuery.Print : api.EmployeeAdvanceQuery.Excel
     const res = await callApi({
       method: 'POST',
       url: API,
       data: formData.value
     })
-    if (typeof res.data === 'string' && res.data.startsWith('PDF')) {
-      window.open(config.apiUri + '/' + res.data)
+    console.log(res)
+
+    if (t === 'Print') {
+      if (typeof res.data === 'string' && res.data.startsWith('PDF')) {
+        window.open(config.apiUri + '/' + res.data)
+      } else {
+        console.warn('沒有取得檔名', res.data)
+      }
     } else {
-      console.warn('沒有取得檔名', res.data)
+      if (typeof res === 'string' && res.startsWith('Excel')) {
+        const a = document.createElement('a')
+        a.href = config.apiUri + '/' + res
+        a.download = decodeURIComponent(res.split('/').pop())
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+      } else {
+        console.warn('沒有取得檔名', res)
+      }
     }
   }
 </script>
@@ -76,14 +131,19 @@
   <!-- 操作按鈕區 -->
   <c-bread>
     <v-row justify="end" class="ma-0" dense>
-      <v-col cols="auto">
-        <c-button kind="print" icon="fa-solid fa-print" @click="onSubmitPrint">列印</c-button>
-      </v-col>
       <!-- <v-col cols="auto">
+        <c-button kind="print" icon="fa-solid fa-file-lines" @click="">明細資料</c-button>
+      </v-col> -->
+      <v-col cols="auto">
+        <c-button kind="print" icon="fa-solid fa-print" @click="onSubmitPrint('Print')">
+          列印
+        </c-button>
+      </v-col>
+      <v-col cols="auto">
         <c-button kind="create" icon="fa-solid fa-file-excel" @click="onSubmitPrint('Excel')">
           匯出Excel
         </c-button>
-      </v-col> -->
+      </v-col>
     </v-row>
   </c-bread>
 
@@ -112,7 +172,7 @@
       <v-row align="center" class="mb-3" dense>
         <v-col cols="11">
           <v-row align="center">
-            <v-col cols="auto">
+            <v-col cols="2" class="col4-min">
               <v-row>
                 <v-col cols="auto" class="u-wch w-7ch">
                   <c-input
@@ -142,6 +202,57 @@
           </v-row>
         </v-col>
       </v-row>
+      <!-- 員工編號區間 -->
+      <v-row align="center" class="mb-3" dense>
+        <v-col cols="11">
+          <v-row align="center">
+            <v-col cols="2" class="col4-min">
+              <v-row>
+                <v-col cols="auto" class="u-wch w-10ch">
+                  <c-input
+                    v-model="suppNoFromModel"
+                    label="員工編號"
+                    :disabled="isMultiEmp"
+                    :maxlength="10"
+                    density="compact"
+                    @button="openSuppPicker('from')"
+                    :length-auto-width="false"
+                  />
+                </v-col>
+              </v-row>
+            </v-col>
+            <v-col cols="1" class="text-center d-none d-md-block">
+              <span class="text-h5 text-grey-lighten-1 sep-1470">～</span>
+            </v-col>
+            <v-col cols="auto">
+              <v-row>
+                <v-col cols="auto" class="u-wch w-10ch">
+                  <c-input
+                    v-model="suppNoToModel"
+                    label="員工編號"
+                    :disabled="isMultiEmp"
+                    :maxlength="10"
+                    density="compact"
+                    @button="openSuppPicker('to')"
+                    :length-auto-width="false"
+                  />
+                </v-col>
+              </v-row>
+            </v-col>
+            <v-col cols="auto" class="stack-1470">
+              <div class="btn">
+                <c-button
+                  kind="search"
+                  icon="fa-solid fa-magnifying-glass"
+                  @click="MultiEmpDs = true"
+                >
+                  多選式
+                </c-button>
+              </div>
+            </v-col>
+          </v-row>
+        </v-col>
+      </v-row>
       <!-- 其他欄位 -->
       <v-row align="center" class="mb-3" dense>
         <v-col cols="11">
@@ -163,6 +274,10 @@
   </v-card>
 
   <!-- 彈窗元件 -->
+  <!-- 員工單選 -->
+  <search-emp ref="EmpPickOpen" @pick="storeEmp.pick" />
+  <!-- 員工多選 -->
+  <multi-emp v-model="MultiEmpDs" @pick="onMultiEmpPicks" :preselected="selectedEmp" />
 </template>
 <style scoped>
   .u-wch {
@@ -215,8 +330,8 @@
   }
   /* < md：最小 432px，空間夠可拉寬；不夠就換行 */
   .col4-min {
-    min-width: 432px;
-    flex: 1 1 432px;
+    min-width: 300px;
+    flex: 1 1 300px;
   }
   .title-text {
     width: 120px;

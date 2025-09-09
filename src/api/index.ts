@@ -226,9 +226,14 @@ export default {
     Excel: '/api/PuremitBrow/PuremitBrow_Excel'
   },
   // 日期別-已付帳款查詢
-  DateAccountQuery: {
+  ApPaidByDateQuery: {
     Search: '/api/HSAPDate/HSAPDate_Search',
     Print: '/api/HSAPDate/HSAPDate_Print'
+  },
+  // 日期別-已收帳款查詢
+  ArReceivedByDateQuery: {
+    Search: '/api/HSARDate/HSARDate_Print',
+    Print: '/api/HSARDate/HSARDate_Print'
   },
   // 員工借支查詢
   EmployeeAdvanceQuery: {
@@ -243,5 +248,36 @@ export default {
   // 預付款作業查詢
   VendorPrepaymentQuery: {
     Print: '/api/AP_Query/AP_Query_Print'
+  },
+  //雜支作業查詢
+  MiscPaymentQuery: {
+    Search: '/api/Exes_Query/Exes_Querylist',
+    Print: '/api/Exes_Query/Exes_Query_Print'
+  },
+  //零用金查詢
+  PettyCashQuery: {
+    Search: '/api/Pecash_Balance/Pecash_Balancelist',
+    Print: '/api/Pecash_Balance/Pecash_Balance_Print',
+    Excel: '/api/Pecash_Balance/Pecash_Balance_Excel'
+  },
+  //進項發票明細表
+  InputVatDetails: {
+    Print: '/api/Input_Invoice_Detail/Input_Invoice_Detail_Print',
+    Excel: '/api/Input_Invoice_Detail/Input_Invoice_Detail_Excel'
+  },
+  //銷項發票明細表
+  OutputVatDetails: {
+    Print: '/api/Sales_Invoice_Detail/Sales_Invoice_Detail_Print',
+    Excel: '/api/Sales_Invoice_Detail/Sales_Invoice_Detail_Excel'
+  },
+  //工程工資彙總表
+  ProjectWageSummary: {
+    SummaryPrint: '/api/EngineerWage/EngineerWageSummary_Print',
+    DetailPrint: '/api/EngineerWage/EngineerWageDetail_Print'
+  },
+  //請購作業查詢
+  ApplyBuyBrowQuery: {
+    Print: '/api/ApplyBuyBrow/ApplyBuyBrow_Print',
+    Excel: '/api/ApplyBuyBrow/ApplyBuyBrow_Excel'
   }
 }

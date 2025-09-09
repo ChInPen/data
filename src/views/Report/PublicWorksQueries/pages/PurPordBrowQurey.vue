@@ -1,14 +1,14 @@
 <script lang="ts" setup>
   import { computed, ref, watch } from 'vue'
   import { cButton, cInput, cBread, cSelect } from '@/components/Common' // 共用元件
-  import type { SearchData } from './type/SearchDataType'
+  import type { SearchData } from '../../shared/types/SearchDataType'
   import { searchSupp } from '@/components/SearchSupp' // 廠商彈窗元件查詢
   import { searchItem } from '@/components/SearchItem' // 工料彈窗元件查詢
   import { searchProt } from '@/components/SearchProt' // 工程彈窗元件查詢
   import { searchPurPords } from '@/components/SearchPurPord' // 工程彈窗元件查詢
-  import MultiItem from './Components/MultiItem.vue' // 工料彈窗(多選)
-  import MultiProt from './Components/MultiProt.vue' // 工程彈窗(多選)
-  import MultiSupp from './Components/MultiSupp.vue' // 廠商編號彈窗(多選)
+  import MultiItem from '../../../../components/MultiItem/MultiItem.vue' // 工料彈窗(多選)
+  import MultiProt from '../../../../components/MultiProt/MultiProt.vue' // 工程彈窗(多選)
+  import MultiSupp from '../../../../components/MultiSupp/MultiSupp.vue' // 廠商編號彈窗(多選)
   import { callApi } from '@/utils/uapi' // 呼叫api的方法
   import api from '@/api' // api清單
   import config from '@/config/config'

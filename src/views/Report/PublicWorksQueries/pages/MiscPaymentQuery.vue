@@ -1,27 +1,24 @@
 <script lang="ts" setup>
   import { computed, ref, watch } from 'vue'
   import { cButton, cInput, cBread, cSelect } from '@/components/Common' // 共用元件
-  import type { SearchData } from './type/SearchDataType'
-  import { searchSupp } from '@/components/SearchSupp' // 廠商彈窗元件查詢
+  import type { SearchData } from '../../shared/types/SearchDataType'
   import { searchProt } from '@/components/SearchProt' // 工程彈窗元件查詢
-  import MultiProt from './Components/MultiProt.vue' // 工程彈窗(多選)
-  import MultiSupp from './Components/MultiSupp.vue' // 廠商編號彈窗(多選)
+  import MultiProt from '../../../../components/MultiProt/MultiProt.vue' // 工程彈窗(多選)
   import { callApi } from '@/utils/uapi' // 呼叫api的方法
   import api from '@/api' // api清單
   import config from '@/config/config'
-  import { useSearchSupp } from '@/store/searchSupp'
-  const storeSupp = useSearchSupp()
   import { useSearchProt } from '@/store/searchProt'
   const storeProt = useSearchProt()
+  import { message } from '@/components/Message/service' // 彈窗訊息
   // 表單/列印/EXCEL
   const formData = ref({
-    suppno_s: '',
-    suppno_e: '',
-    suppno_list: [],
+    date1_s: '',
+    date1_e: '',
     protno_s: '',
     protno_e: '',
     protno_list: [],
-    footNote_Data: '主管：　　　　　　　　　製表： ' //表尾註腳
+    start: 0,
+    length: 10
   })
   // 表尾註腳
   const feetNoDDL = ref({
@@ -36,32 +33,6 @@
     value: 'feetno',
     title: 'feetname'
   })
-  // 廠商單選/多選控制
-  const suppPickOpen = ref() //控制單選視窗開關
-  const MultiSuppDs = ref(false) //控制多選視窗開關
-  const isMultiSupp = ref(false) //控制是否為多選狀態
-  const selectedSupp = ref<SearchData[]>([]) //控制多選
-  const selectedSuppOne = ref({ begin: '', end: '' }) //控制單選
-  const openSuppPicker = (t: 'from' | 'to') => {
-    const toKey = t === 'from' ? 'begin' : 'end'
-    storeSupp.set(selectedSuppOne, [{ from: 'suppno', to: toKey }], {
-      open: suppPickOpen.value?.open
-    })
-  }
-  watch(
-    [() => selectedSuppOne.value.begin, () => selectedSuppOne.value.end],
-    ([val1, val2], [old1, old2]) => {
-      if (val1 !== old1) formData.value.suppno_s = val1
-      if (val2 !== old2) formData.value.suppno_e = val2
-    }
-  )
-  const onMultiSuppPicks = (rows: any[]) => {
-    selectedSupp.value = rows
-    formData.value.suppno_list = rows.map((r) => String(r.suppno).trim()).filter(Boolean)
-    isMultiSupp.value = formData.value.suppno_list.length > 0
-    selectedSuppOne.value.begin = ''
-    selectedSuppOne.value.end = ''
-  }
 
   // 工程單選/多選控制
   const projectPickOpen = ref() //控制單選視窗開關
@@ -99,20 +70,6 @@
     return toUpper ? s.toUpperCase() : s
   }
 
-  // 廠商 8 碼
-  const suppNoFromModel = computed({
-    get: () => formData.value.suppno_s,
-    set: (val) => {
-      formData.value.suppno_s = alnumN(val, 8)
-    }
-  })
-  const suppNoToModel = computed({
-    get: () => formData.value.suppno_e,
-    set: (val) => {
-      formData.value.suppno_e = alnumN(val, 8)
-    }
-  })
-
   // 工程 16 碼
   const projectNoFromModel = computed({
     get: () => formData.value.protno_s,
@@ -128,19 +85,46 @@
   })
 
   // 呼叫API送出列印資料
+  const loading = ref(false)
   const onSubmitPrint = async (t) => {
-    console.log(JSON.stringify(formData.value, null, 2))
-    const API = api.VendorPrepaymentQuery.Print
-    const res = await callApi({
-      method: 'POST',
-      url: API,
-      data: formData.value
-    })
-    console.log(res)
-    if (typeof res === 'string' && res.startsWith('PDF')) {
-      window.open(config.apiUri + '/' + res)
-    } else {
-      console.warn('沒有取得檔名', res)
+    if (loading.value) return
+    loading.value = true
+    try {
+      console.log(JSON.stringify(formData.value, null, 2))
+      if (!formData.value.date1_e || !formData.value.date1_s) {
+        message.alert({
+          type: 'error',
+          message: '查詢日期不可為空！'
+        })
+        return
+      }
+      const API = api.MiscPaymentQuery.Print
+      const res = await callApi({
+        method: 'POST',
+        url: API,
+        data: formData.value,
+        params: {
+          FootNote_Data: '本報表僅供內部參考'
+        },
+        timeout: 120000 // 2分鐘
+      })
+
+      console.log('print res:', res)
+
+      const path = typeof res === 'string' ? res : res?.data
+      if (typeof path === 'string' && path.startsWith('PDF')) {
+        window.open(config.apiUri + '/' + path)
+      } else {
+        console.warn('沒有取得檔名', res)
+      }
+    } catch (err) {
+      if (err.response) {
+        console.error('列印失敗:', err.response.status, err.response.data)
+      } else {
+        console.error('列印失敗:', err.message || err)
+      }
+    } finally {
+      loading.value = false
     }
   }
 </script>
@@ -150,8 +134,17 @@
   <c-bread>
     <v-row justify="end" class="ma-0" dense>
       <v-col cols="auto">
-        <c-button kind="print" icon="fa-solid fa-print" @click="onSubmitPrint('Print')">
-          列印
+        <c-button
+          kind="print"
+          :icon="loading ? '' : 'fa-solid fa-print'"
+          @click="onSubmitPrint('Print')"
+          :disabled="loading"
+        >
+          <template v-if="loading">
+            <i class="fa-solid fa-spinner fa-spin me-2"></i>
+            列印中...
+          </template>
+          <template v-else>列印</template>
         </c-button>
       </v-col>
     </v-row>
@@ -161,21 +154,18 @@
 
   <v-card color="#1b2b36" rounded="lg" class="mt-4 sqte-form" elevation="2">
     <v-card-text class="pa-6">
-      <!-- 廠商編號區間 -->
+      <!-- 報價日期區間 -->
       <v-row align="center" class="mb-3" dense>
         <v-col cols="11">
           <v-row align="center">
             <v-col md="3" class="col4-min">
               <v-row>
-                <v-col cols="auto" class="u-wch w-8ch">
+                <v-col cols="auto" class="u-wch w-7ch">
                   <c-input
-                    v-model="suppNoFromModel"
-                    label="廠商編號"
-                    :disabled="isMultiSupp"
-                    :maxlength="8"
+                    type="date"
+                    v-model="formData.date1_s"
+                    label="開始日期"
                     density="compact"
-                    @button="openSuppPicker('from')"
-                    :length-auto-width="false"
                   />
                 </v-col>
               </v-row>
@@ -185,29 +175,15 @@
             </v-col>
             <v-col cols="auto">
               <v-row>
-                <v-col cols="auto" class="u-wch w-8ch">
+                <v-col cols="auto" class="u-wch w-7ch">
                   <c-input
-                    v-model="suppNoToModel"
-                    label="廠商編號"
-                    :disabled="isMultiSupp"
-                    :maxlength="8"
+                    type="date"
+                    v-model="formData.date1_e"
+                    label="結束日期"
                     density="compact"
-                    @button="openSuppPicker('to')"
-                    :length-auto-width="false"
                   />
                 </v-col>
               </v-row>
-            </v-col>
-            <v-col cols="auto" class="stack-1470">
-              <div class="btn">
-                <c-button
-                  kind="search"
-                  icon="fa-solid fa-magnifying-glass"
-                  @click="MultiSuppDs = true"
-                >
-                  多選式
-                </c-button>
-              </div>
             </v-col>
           </v-row>
         </v-col>
@@ -264,30 +240,11 @@
           </v-row>
         </v-col>
       </v-row>
-      <!-- 表尾註腳 -->
-      <v-row align="center" class="mb-3" dense>
-        <v-col cols="11">
-          <v-row>
-            <v-col cols="6" class="u-wch w-7ch">
-              <c-select
-                v-model="formData.footNote_Data"
-                label="單行註腳"
-                :items="feetNoDDL.list"
-                :item-title="feetNoDDL.title"
-                :item-value="feetNoDDL.value"
-                hide-search
-              />
-            </v-col>
-          </v-row>
-        </v-col>
-      </v-row>
     </v-card-text>
   </v-card>
 
   <!-- 彈窗元件 -->
-  <search-supp ref="suppPickOpen" @pick="storeSupp.pick" />
   <search-prot ref="projectPickOpen" @pick="storeProt.pick" />
-  <multi-supp v-model="MultiSuppDs" @pick="onMultiSuppPicks" :preselected="selectedSupp" />
   <multi-prot v-model="MulitProtDs" @pick="onMulitProtPicks" :preselected="selectedProt" />
 </template>
 <style scoped>

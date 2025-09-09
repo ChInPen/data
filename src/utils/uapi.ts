@@ -8,10 +8,11 @@ interface CallApiOptions {
   params?: any // （可選）
   headers?: Record<string, string> // 額外 headers（可選）
   responseType?: AxiosRequestConfig['responseType']
+  timeout?: number
 }
 
 const baseCallApi = <T = any>(options: CallApiOptions): Promise<T> => {
-  const { method, url, data, params, headers, responseType } = options
+  const { method, url, data, params, headers, responseType, timeout } = options
   const isFormData = typeof FormData !== 'undefined' && data instanceof FormData
 
   const finalHeaders: Record<string, string> = {
@@ -33,7 +34,8 @@ const baseCallApi = <T = any>(options: CallApiOptions): Promise<T> => {
       data,
       params,
       headers,
-      responseType
+      responseType,
+      timeout
     })
     .then((res) => res.data) // 只回傳資料本體
 }

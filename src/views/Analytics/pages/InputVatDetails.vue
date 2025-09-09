@@ -1,49 +1,39 @@
 <script lang="ts" setup>
   import { computed, ref, watch } from 'vue'
   import { cButton, cInput, cBread, cSelect } from '@/components/Common' // 共用元件
-  import type { SearchData } from './type/SearchDataType'
+  import type { SearchData } from '@/views/Report/shared/types/SearchDataType'
   import { searchSupp } from '@/components/SearchSupp' // 廠商彈窗元件查詢
   import { searchProt } from '@/components/SearchProt' // 工程彈窗元件查詢
-  import MultiProt from './Components/MultiProt.vue' // 工程彈窗(多選)
-  import MultiSupp from './Components/MultiSupp.vue' // 廠商編號彈窗(多選)
+  import MultiSupp from '@/components/MultiSupp/MultiSupp.vue' // 廠商編號彈窗(多選)
   import { callApi } from '@/utils/uapi' // 呼叫api的方法
   import api from '@/api' // api清單
   import config from '@/config/config'
   import { useSearchSupp } from '@/store/searchSupp'
   const storeSupp = useSearchSupp()
   import { useSearchProt } from '@/store/searchProt'
+  import { message } from '@/components/Message/service'
+
   const storeProt = useSearchProt()
   // 表單/列印/EXCEL
   const formData = ref({
-    intono: '1', //單別
-    retaimonc: '1', //保留款餘額
-    adate_s: '', //開始日期
-    adate_e: '', //結束日期
-    protno_s: '', //
-    protno_e: '',
-    protno_list: [],
+    date1_s: '',
+    date1_e: '',
     suppno_s: '',
     suppno_e: '',
-    suppno_list: []
+    suppno_list: [''],
+    protno_s: '',
+    protno_e: '',
+    order: '1'
   })
-  // 單別內容
-  const intoNoDDL = ref({
+  // 排序
+  const orderNoDDL = ref({
     list: [
-      { value: '1', title: '全部' },
-      { value: '2', title: '採購' },
-      { value: '3', title: '發包' }
+      { value: '1', title: '發票號碼' },
+      { value: '2', title: '發票日期' },
+      { value: '3', title: '工程編號' }
     ],
-    value: 'value',
-    title: 'title'
-  })
-  // 保留款內容
-  const retaimoncDDL = ref({
-    list: [
-      { value: '1', title: '全部' },
-      { value: '2', title: '非零' }
-    ],
-    value: 'value',
-    title: 'title'
+    title: 'title',
+    value: 'value'
   })
   // 廠商單選/多選控制
   const suppPickOpen = ref() //控制單選視窗開關
@@ -74,9 +64,6 @@
 
   // 工程單選/多選控制
   const projectPickOpen = ref() //控制單選視窗開關
-  const MulitProtDs = ref(false) //控制多選視窗開關
-  const isMultiProt = ref(false) //控制是否為多選狀態
-  const selectedProt = ref<SearchData[]>([]) //控制多選
   const selectedProtOne = ref({ begin: '', end: '' }) //控制單選
   const openProjectPicked = (t: 'from' | 'to') => {
     const toKey = t === 'from' ? 'begin' : 'end'
@@ -91,14 +78,6 @@
       if (val2 !== old2) formData.value.protno_e = val2
     }
   )
-  const onMulitProtPicks = (rows: any[]) => {
-    selectedProt.value = rows
-    formData.value.protno_list = rows.map((r) => String(r.protno).trim()).filter(Boolean)
-    isMultiProt.value = formData.value.protno_list.length > 0
-    selectedProtOne.value.begin = ''
-    selectedProtOne.value.end = ''
-  }
-
   // 共用過濾：只留英數，截到指定長度
   const alnumN = (v: string, n: number, toUpper = true) => {
     const s = String(v ?? '')
@@ -135,21 +114,56 @@
       formData.value.protno_e = alnumN(val, 16)
     }
   })
-
   // 呼叫API送出列印資料
-  const onSubmitPrint = async (t) => {
-    console.log(JSON.stringify(formData.value, null, 2))
-    const API = api.SupplierRetentionQuery.Print
-    const res = await callApi({
-      method: 'POST',
-      url: API,
-      data: formData.value
-    })
-    console.log(res)
-    if (typeof res === 'string' && res.startsWith('PDF')) {
-      window.open(config.apiUri + '/' + res)
+  const loadingPrint = ref(false)
+  const loadingExcel = ref(false)
+  const onSubmitPrint = async (t: any) => {
+    if (!formData.value.date1_e || !formData.value.date1_s) {
+      message.alert({
+        type: 'error',
+        message: '查詢日期不可為空！'
+      })
+      return
+    }
+    if (loadingPrint.value || loadingExcel.value) return
+    if (t === 'Print') {
+      loadingPrint.value = true
     } else {
-      console.warn('沒有取得檔名', res)
+      loadingExcel.value = true
+    }
+    const API = t === 'Print' ? api.InputVatDetails.Print : api.InputVatDetails.Excel
+    try {
+      console.log(JSON.stringify(formData.value, null, 2))
+      const res = await callApi({
+        method: 'POST',
+        url: API,
+        data: formData.value,
+        timeout: 120000 // 2分鐘
+      })
+      console.log('print res:', res)
+      const path = typeof res === 'string' ? res : res?.data
+      if (t === 'Print') {
+        if (typeof path === 'string' && path.startsWith('PDF')) {
+          window.open(config.apiUri + '/' + path)
+        } else {
+          console.warn('沒有取得檔名', res)
+        }
+      } else {
+        if (typeof path === 'string' && path.startsWith('Excel')) {
+          window.open(config.apiUri + '/' + path)
+        } else {
+          console.warn('沒有取得檔名', res)
+        }
+      }
+    } catch (err) {
+      if (err.response) {
+        console.error('列印失敗:', err.response.status, err.response.data)
+      } else {
+        console.error('列印失敗:', err.message || err)
+      }
+    } finally {
+      loadingPrint.value = false
+      loadingExcel.value = false
     }
   }
 </script>
@@ -159,8 +173,31 @@
   <c-bread>
     <v-row justify="end" class="ma-0" dense>
       <v-col cols="auto">
-        <c-button kind="print" icon="fa-solid fa-print" @click="onSubmitPrint('Print')">
-          列印
+        <c-button
+          kind="print"
+          :icon="loadingPrint ? '' : 'fa-solid fa-print'"
+          @click="onSubmitPrint('Print')"
+          :disabled="loadingPrint"
+        >
+          <template v-if="loadingPrint">
+            <i class="fa-solid fa-spinner fa-spin me-2"></i>
+            列印中...
+          </template>
+          <template v-else>列印</template>
+        </c-button>
+      </v-col>
+      <v-col cols="auto">
+        <c-button
+          kind="create"
+          :icon="loadingExcel ? '' : 'fa-solid fa-file-excel'"
+          @click="onSubmitPrint('Excel')"
+          :disabled="loadingExcel"
+        >
+          <template v-if="loadingExcel">
+            <i class="fa-solid fa-spinner fa-spin me-2"></i>
+            匯出中...
+          </template>
+          <template v-else>匯出Excel</template>
         </c-button>
       </v-col>
     </v-row>
@@ -170,39 +207,6 @@
 
   <v-card color="#1b2b36" rounded="lg" class="mt-4 sqte-form" elevation="2">
     <v-card-text class="pa-6">
-      <!-- 報表類別 -->
-      <v-row align="center" class="mb-3" dense>
-        <v-col cols="11">
-          <v-row>
-            <v-col cols="6" class="u-wch w-16ch">
-              <c-select
-                v-model="formData.intono"
-                label="單別"
-                :items="intoNoDDL.list"
-                :item-title="intoNoDDL.title"
-                :item-value="intoNoDDL.value"
-                hide-search
-              />
-            </v-col>
-          </v-row>
-        </v-col>
-      </v-row>
-      <v-row align="center" class="mb-3" dense>
-        <v-col cols="11">
-          <v-row>
-            <v-col cols="6" class="u-wch w-16ch">
-              <c-select
-                v-model="formData.retaimonc"
-                label="保留款餘額"
-                :items="retaimoncDDL.list"
-                :item-title="retaimoncDDL.title"
-                :item-value="retaimoncDDL.value"
-                hide-search
-              />
-            </v-col>
-          </v-row>
-        </v-col>
-      </v-row>
       <!-- 報價日期區間 -->
       <v-row align="center" class="mb-3" dense>
         <v-col cols="11">
@@ -212,7 +216,7 @@
                 <v-col cols="auto" class="u-wch w-7ch">
                   <c-input
                     type="date"
-                    v-model="formData.adate_s"
+                    v-model="formData.date1_s"
                     label="開始日期"
                     density="compact"
                   />
@@ -227,7 +231,7 @@
                 <v-col cols="auto" class="u-wch w-7ch">
                   <c-input
                     type="date"
-                    v-model="formData.adate_e"
+                    v-model="formData.date1_e"
                     label="結束日期"
                     density="compact"
                   />
@@ -301,7 +305,6 @@
                     label="工程編號"
                     :maxlength="16"
                     density="compact"
-                    :disabled="isMultiProt"
                     @button="openProjectPicked('from')"
                     :length-auto-width="false"
                   />
@@ -319,23 +322,27 @@
                     label="工程編號"
                     :maxlength="16"
                     density="compact"
-                    :disabled="isMultiProt"
                     @button="openProjectPicked('to')"
                     :length-auto-width="false"
                   />
                 </v-col>
               </v-row>
             </v-col>
-            <v-col cols="auto" class="stack-1470">
-              <div class="btn">
-                <c-button
-                  kind="search"
-                  icon="fa-solid fa-magnifying-glass"
-                  @click="MulitProtDs = true"
-                >
-                  多選式
-                </c-button>
-              </div>
+          </v-row>
+        </v-col>
+      </v-row>
+      <v-row align="center" class="mb-3" dense>
+        <v-col cols="11">
+          <v-row>
+            <v-col cols="6" class="u-wch w-7ch">
+              <c-select
+                v-model="formData.order"
+                label="排序"
+                :items="orderNoDDL.list"
+                :item-title="orderNoDDL.title"
+                :item-value="orderNoDDL.value"
+                hide-search
+              />
             </v-col>
           </v-row>
         </v-col>
@@ -346,8 +353,7 @@
   <!-- 彈窗元件 -->
   <search-supp ref="suppPickOpen" @pick="storeSupp.pick" />
   <search-prot ref="projectPickOpen" @pick="storeProt.pick" />
-  <Multi-supp v-model="MultiSuppDs" @pick="onMultiSuppPicks" :preselected="selectedSupp" />
-  <Multi-prot v-model="MulitProtDs" @pick="onMulitProtPicks" :preselected="selectedProt" />
+  <multi-supp v-model="MultiSuppDs" @pick="onMultiSuppPicks" :preselected="selectedSupp" />
 </template>
 <style scoped>
   .u-wch {

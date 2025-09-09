@@ -9,6 +9,11 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     Dialog: typeof import('./src/components/Message/dialog.vue')['default']
+    MultiCust: typeof import('./src/components/MultiCust/MultiCust.vue')['default']
+    MultiEmp: typeof import('./src/components/MultiEmp/MultiEmp.vue')['default']
+    MultiItem: typeof import('./src/components/MultiItem/MultiItem.vue')['default']
+    MultiProt: typeof import('./src/components/MultiProt/MultiProt.vue')['default']
+    MultiSupp: typeof import('./src/components/MultiSupp/MultiSupp.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     Template: typeof import('./src/components/AuditInfo/template.vue')['default']
