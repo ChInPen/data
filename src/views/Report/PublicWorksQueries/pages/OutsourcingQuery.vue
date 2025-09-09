@@ -5,9 +5,9 @@
   import { searchSupp } from '@/components/SearchSupp' // 廠商彈窗元件查詢
   import { searchItem } from '@/components/SearchItem' // 工料彈窗元件查詢
   import { searchProt } from '@/components/SearchProt' // 工程彈窗元件查詢
-  import MultiItem from '../../../../components/MultiItem/MultiItem.vue' // 工料彈窗(多選)
-  import MultiProt from '../../../../components/MultiProt/MultiProt.vue' // 工程彈窗(多選)
-  import MultiSupp from '../../../../components/MultiSupp/MultiSupp.vue' // 工程彈窗(多選)
+  import MultiItem from '@/components/MultiItem/MultiItem.vue' // 工料彈窗(多選)
+  import MultiProt from '@/components/MultiProt/MultiProt.vue' // 工程彈窗(多選)
+  import MultiSupp from '@/components/MultiSupp/MultiSupp.vue' // 工程彈窗(多選)
 
   import { callApi } from '@/utils/uapi' // 呼叫api的方法
   import api from '@/api' // api清單

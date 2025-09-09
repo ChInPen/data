@@ -174,7 +174,7 @@
       <v-row align="center" class="mb-3" dense>
         <v-col cols="11">
           <v-row align="center">
-            <v-col md="3" class="col4-min">
+            <v-col md="1" class="col4-min">
               <v-row>
                 <v-col cols="auto" class="u-wch w-7ch">
                   <c-input
@@ -313,8 +313,8 @@
   }
   /* < md：最小 432px，空間夠可拉寬；不夠就換行 */
   .col4-min {
-    min-width: 400px;
-    flex: 1 1 400px;
+    min-width: 250px;
+    flex: 1 1 250px;
   }
   .title-text {
     width: 120px;

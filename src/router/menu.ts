@@ -371,10 +371,33 @@ const menu: MenuEntry[] = [
             title: '工程工資彙總表',
             path: 'ProjectWageSummary',
             name: '工程工資彙總表',
+            // component: () => import('@/views/Report/composable/test.vue')
             component: () => import('@/views/Analytics/pages/ProjectWageSummary.vue')
+          },
+          {
+            title: '工程日誌報表',
+            path: 'EngLog',
+            name: '工程日誌報表',
+            component: () => import('@/views/Analytics/pages/EngLog.vue')
+          },
+          {
+            title: '工程費用明細/彙總表',
+            path: 'EngCostSum',
+            name: '工程費用明細/彙總表',
+            component: () => import('@/views/Analytics/pages/EngCostSum.vue')
+          },
+          {
+            title: '工程材料明細/彙總表',
+            path: 'EngMatSum',
+            name: '工程材料明細/彙總表',
+            component: () => import('@/views/Analytics/pages/EngMatSum.vue')
+          },
+          {
+            title: '測試用',
+            path: 'test',
+            name: '測試用',
+            component: () => import('@/views/Analytics/pages/test.vue')
           }
-          // { title: '合約餘額', path: '' },
-          // { title: '廠商資料', path: '' },
         ]
       }
     ]

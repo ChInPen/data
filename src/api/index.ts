@@ -279,5 +279,20 @@ export default {
   ApplyBuyBrowQuery: {
     Print: '/api/ApplyBuyBrow/ApplyBuyBrow_Print',
     Excel: '/api/ApplyBuyBrow/ApplyBuyBrow_Excel'
+  }, //工程日誌報表
+  EngLog: {
+    Excel: '/api/JournalExcel/JournalExcel_Print'
+  },
+  //工程費用彙總/明細表
+  EngCostSum: {
+    SummaryPrint: '/api/ProjectCost/ProjectCostSummary_Print',
+    DetailPrint: '/api/ProjectCost/ProjectCostDetails_Print'
+  },
+  //工程材料彙總/明細表
+  EngMatSum: {
+    SummaryPrint: '/api/ProjectItem/ProjectItemSummary_Print',
+    SummaryExcel: '/api/ProjectItem/ProjectItemSummary_Excel',
+    DetailPrint: '/api/ProjectItem/ProjectItemDetail_Print',
+    DetailExcel: '/api/ProjectItem/ProjectItemDetail_Print'
   }
 }
