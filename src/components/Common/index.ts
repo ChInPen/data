@@ -2,6 +2,7 @@ import cButton from './Button/template.vue'
 import cIcon from './Icon/template.vue'
 import cInput from './Input/template.vue'
 import cSelect from './Select/template.vue'
+import cSelectInput from './SelectInput/template.vue'
 import cTextarea from './Textarea/template.vue'
 import cTable from './Table/template.vue'
 import cDialog from './Dialog/template.vue'
@@ -23,5 +24,6 @@ export {
   cDivider,
   cCheckbox,
   cDataTable,
-  cRadioGroup
+  cRadioGroup,
+  cSelectInput
 }

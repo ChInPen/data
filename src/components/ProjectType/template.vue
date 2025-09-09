@@ -70,7 +70,7 @@
 </script>
 
 <template>
-  <c-dialog v-model="isOpen" width="900" @afterLeave="handleDialogClose" title-divider>
+  <c-dialog v-model="isOpen" width="940" @afterLeave="handleDialogClose" title-divider>
     <template v-slot:title>
       <v-row dense :align="'center'">
         <v-col>規格說明</v-col>
@@ -87,37 +87,77 @@
         </v-col>
       </v-row>
     </template>
-    <v-row dense>
-      <v-col cols="12">
-        <c-input label="1" v-model="data.pjt1" :disabled="disabled" />
-      </v-col>
-      <v-col cols="12">
-        <c-input label="2" v-model="data.pjt2" :disabled="disabled" />
-      </v-col>
-      <v-col cols="12">
-        <c-input label="3" v-model="data.pjt3" :disabled="disabled" />
-      </v-col>
-      <v-col cols="12">
-        <c-input label="4" v-model="data.pjt4" :disabled="disabled" />
-      </v-col>
-      <v-col cols="12">
-        <c-input label="5" v-model="data.pjt5" :disabled="disabled" />
-      </v-col>
-      <v-col cols="12">
-        <c-input label="6" v-model="data.pjt6" :disabled="disabled" />
-      </v-col>
-      <v-col cols="12">
-        <c-input label="7" v-model="data.pjt7" :disabled="disabled" />
-      </v-col>
-      <v-col cols="12">
-        <c-input label="8" v-model="data.pjt8" :disabled="disabled" />
-      </v-col>
-      <v-col cols="12">
-        <c-input label="9" v-model="data.pjt9" :disabled="disabled" />
-      </v-col>
-      <v-col cols="12">
-        <c-input label="10" v-model="data.pjt10" :disabled="disabled" />
-      </v-col>
-    </v-row>
+    <div class="d-grid gap-2">
+      <c-input
+        label="1"
+        v-model="data.pjt1"
+        :disabled="disabled"
+        :maxlength="40"
+        :length-auto-width="false"
+      />
+      <c-input
+        label="2"
+        v-model="data.pjt2"
+        :disabled="disabled"
+        :maxlength="40"
+        :length-auto-width="false"
+      />
+      <c-input
+        label="3"
+        v-model="data.pjt3"
+        :disabled="disabled"
+        :maxlength="40"
+        :length-auto-width="false"
+      />
+      <c-input
+        label="4"
+        v-model="data.pjt4"
+        :disabled="disabled"
+        :maxlength="40"
+        :length-auto-width="false"
+      />
+      <c-input
+        label="5"
+        v-model="data.pjt5"
+        :disabled="disabled"
+        :maxlength="40"
+        :length-auto-width="false"
+      />
+      <c-input
+        label="6"
+        v-model="data.pjt6"
+        :disabled="disabled"
+        :maxlength="40"
+        :length-auto-width="false"
+      />
+      <c-input
+        label="7"
+        v-model="data.pjt7"
+        :disabled="disabled"
+        :maxlength="40"
+        :length-auto-width="false"
+      />
+      <c-input
+        label="8"
+        v-model="data.pjt8"
+        :disabled="disabled"
+        :maxlength="40"
+        :length-auto-width="false"
+      />
+      <c-input
+        label="9"
+        v-model="data.pjt9"
+        :disabled="disabled"
+        :maxlength="40"
+        :length-auto-width="false"
+      />
+      <c-input
+        label="10"
+        v-model="data.pjt10"
+        :disabled="disabled"
+        :maxlength="40"
+        :length-auto-width="false"
+      />
+    </div>
   </c-dialog>
 </template>

@@ -43,7 +43,8 @@
     lengthAutoWidth: {
       type: Boolean,
       default: true
-    }
+    },
+    condensed: Boolean
   })
   const emit = defineEmits(['change', 'button'])
 
@@ -115,7 +116,7 @@
   const redicon = computed(() => props.isRequired && disabled.value === false)
   //自動計算輸入框寬度
   const lengthWidth = computed(() => {
-    const word = isNumber.value || props.format?.phone ? 11.2 : 20.3
+    const word = isNumber.value || props.format?.phone ? 11.8 : props.condensed ? 19.1 : 20.3
     const padding = 24
     const icon = props.icon || props.isRequired ? 28.01 : 0
     const label = props.label ? props.label.length * 20.3 : 0
@@ -189,7 +190,7 @@
 
   //數字欄位時自動反白內容
   const handleFocusin = (event: FocusEvent) => {
-    if (isNumber.value) {
+    if (props.type === 'number') {
       //自動選取文字
       const target = event.target
       if (target instanceof HTMLInputElement && target.type === 'text') {
@@ -228,7 +229,8 @@
     @compositionend="onCompositionEnd"
     @change="nameChange"
     :class="{
-      'input-text-end': isNumber
+      'input-text-end': type === 'number',
+      condensed: condensed
     }"
     @focusin="handleFocusin"
     :width="lengthWidth"
@@ -348,5 +350,9 @@
   /* 數字欄位的文字要置右 */
   .v-input.input-text-end :deep(input) {
     text-align: end;
+  }
+  /* 比較緊湊的文字間距 */
+  .v-input.condensed :deep(input) {
+    letter-spacing: -0.05em;
   }
 </style>

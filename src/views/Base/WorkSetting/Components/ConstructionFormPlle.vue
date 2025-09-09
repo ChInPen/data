@@ -87,7 +87,7 @@
 </script>
 
 <template>
-  <c-dialog v-model="isOpen" width="640" @afterLeave="handleDialogClose" title-divider>
+  <c-dialog v-model="isOpen" width="auto" @afterLeave="handleDialogClose" title-divider>
     <template v-slot:title>
       <v-row dense :align="'center'">
         <v-col>追加(減)金額</v-col>
@@ -154,6 +154,7 @@
             v-model="scope.momey"
             :format="{ thousands: true, minus: true }"
             :disabled="disabled"
+            :maxlength="8"
           />
         </td>
       </template>

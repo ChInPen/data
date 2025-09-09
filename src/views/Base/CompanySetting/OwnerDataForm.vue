@@ -114,13 +114,13 @@
   const tabpage = ref('normal') //頁籤
   //聯絡人表格設定
   const headers: DataTableHeader[] = [
-    { title: '編號', key: 'rec1', width: '80', align: 'center', sortable: false },
-    { title: '聯絡人', key: 'conname', width: '220' },
-    { title: '部門', key: 'condepar', width: '220' },
-    { title: '電話', key: 'contel', width: '280' },
-    { title: '行動電話', key: 'conmob', width: '280' },
-    { title: '說明', key: 'condescrip' },
-    { title: '自訂一', key: 'conud1' }
+    { title: '編號', key: 'rec1', align: 'center', sortable: false },
+    { title: '聯絡人', key: 'conname', sortable: false },
+    { title: '部門', key: 'condepar', sortable: false },
+    { title: '電話', key: 'contel', sortable: false },
+    { title: '行動電話', key: 'conmob', sortable: false },
+    { title: '說明', key: 'condescrip', sortable: false },
+    { title: '自訂一', key: 'conud1', sortable: false }
   ]
   //聯絡人表格資料
   const emptyObj = {
@@ -421,6 +421,7 @@
             :is-required="true"
             :disabled="store.isDetail"
             :maxlength="50"
+            condensed
           />
         </v-col>
         <v-col cols="auto" class="px-2">
@@ -464,6 +465,25 @@
                 icon="fa-solid fa-user-tie"
                 :disabled="store.isDetail"
                 :maxlength="16"
+              />
+            </v-col>
+            <v-col cols="auto" class="px-2">
+              <c-select
+                v-model="formData.akindno"
+                v-model:title="formData.akindc"
+                label="結帳類別"
+                icon="fa-solid fa-hand-holding-dollar"
+                :items="akindDDL"
+                item-title="akindname"
+                item-value="akindno"
+                :item-columns="[
+                  { column: 'akindno', label: '編號' },
+                  { column: 'akindname', label: '名稱' }
+                ]"
+                also-show-value
+                hide-search
+                :disabled="store.isDetail"
+                width="500"
               />
             </v-col>
             <v-responsive width="100%"></v-responsive>
@@ -513,6 +533,7 @@
                 icon="fa-solid fa-location-dot"
                 :disabled="store.isDetail"
                 :maxlength="60"
+                condensed
               />
             </v-col>
             <v-col cols="auto" class="px-2">
@@ -533,6 +554,7 @@
                 icon="fa-solid fa-location-dot"
                 :disabled="store.isDetail"
                 :maxlength="60"
+                condensed
               />
             </v-col>
             <v-col cols="auto" class="px-2">
@@ -545,9 +567,9 @@
               />
             </v-col>
           </v-row>
-          <c-divider class="mt-3">付款資訊</c-divider>
+          <!-- <c-divider class="mt-3">付款資訊</c-divider> -->
           <v-row dense class="mt-2">
-            <v-col :cols="3" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-select
                 v-model="formData.taxkindno"
                 v-model:title="formData.taxkindc"
@@ -563,10 +585,11 @@
                 also-show-value
                 hide-search
                 :disabled="store.isDetail"
+                width="258"
               />
-
+            </v-col>
+            <v-col cols="auto" class="px-2">
               <c-select
-                class="mt-2"
                 v-model="formData.invokindno"
                 v-model:title="formData.invokindna"
                 label="發票種類"
@@ -581,94 +604,78 @@
                 also-show-value
                 hide-search
                 :disabled="store.isDetail"
+                width="278"
               />
             </v-col>
-            <v-col :cols="4" class="px-2">
-              <c-select
-                v-model="formData.akindno"
-                v-model:title="formData.akindc"
-                label="結帳類別"
-                icon="fa-solid fa-hand-holding-dollar"
-                :items="akindDDL"
-                item-title="akindname"
-                item-value="akindno"
-                :item-columns="[
-                  { column: 'akindno', label: '編號' },
-                  { column: 'akindname', label: '名稱' }
-                ]"
-                also-show-value
-                hide-search
-                :disabled="store.isDetail"
-              />
-
+            <v-col cols="auto" class="px-2">
               <c-input
-                class="mt-2"
                 v-model="formData.uniform"
                 label="統一編號"
                 icon="fa-solid fa-barcode"
                 :disabled="store.isDetail"
                 :format="{ number: true }"
+                :maxlength="8"
               />
             </v-col>
-            <v-col class="px-2">
-              <v-row dense :align="'center'">
-                <v-col cols="4" class="text-end text-custom-1">每月結帳</v-col>
-                <v-col cols="2">
-                  <c-input
-                    v-model="formData.emckday"
-                    :format="{ number: true }"
-                    :disabled="store.isDetail"
-                  />
-                </v-col>
-                <v-col class="text-start text-custom-1">日</v-col>
-              </v-row>
-              <v-row dense :align="'center'">
-                <v-col cols="4" class="text-end text-custom-1">付款日：結帳後</v-col>
-                <v-col cols="2">
-                  <c-input
-                    v-model="formData.afterck"
-                    :format="{ number: true }"
-                    :disabled="store.isDetail"
-                  />
-                </v-col>
-                <v-col class="text-start text-custom-1">天</v-col>
-              </v-row>
+            <v-col cols="auto" class="px-5 d-flex align-items-center">
+              <span class="text-custom-1 pe-2">每月結帳</span>
+              <c-input
+                type="number"
+                v-model="formData.emckday"
+                :disabled="store.isDetail"
+                :maxlength="2"
+              />
+              <span class="text-custom-1 ps-2">日</span>
+            </v-col>
+            <v-col cols="auto" class="px-5 d-flex align-items-center">
+              <span class="text-custom-1 pe-2">付款日：結帳後</span>
+              <c-input
+                type="number"
+                v-model="formData.afterck"
+                :disabled="store.isDetail"
+                :maxlength="2"
+              />
+              <span class="text-custom-1 ps-2">天</span>
             </v-col>
           </v-row>
           <c-divider class="mt-3">其它資訊</c-divider>
           <v-row dense class="mt-2" :align="'center'">
-            <v-col :cols="6" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.memo1"
                 label="備註"
                 icon="fa-solid fa-pencil"
                 :disabled="store.isDetail"
+                :maxlength="68"
               />
             </v-col>
             <v-responsive width="100%"></v-responsive>
-            <v-col :cols="4" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.custud1"
                 label="客戶自訂1"
                 icon="fa-solid fa-pencil"
                 :disabled="store.isDetail"
+                :maxlength="20"
               />
             </v-col>
-            <v-col :cols="4" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.custud2"
                 label="客戶自訂2"
                 icon="fa-solid fa-pencil"
                 :disabled="store.isDetail"
+                :maxlength="20"
               />
             </v-col>
-            <v-col :cols="4" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.custud3"
                 label="客戶自訂3"
                 icon="fa-solid fa-pencil"
                 :format="{ number: true }"
                 :disabled="store.isDetail"
+                :maxlength="10"
               />
             </v-col>
           </v-row>
@@ -700,31 +707,56 @@
             :header-props="{ align: 'center' }"
             selectable
           >
+            <template v-slot:item.rec1="{ scope }">
+              <div class="w-rec1">{{ scope.rec1 }}</div>
+            </template>
             <template v-slot:item.conname="{ scope }">
-              <c-input v-model="scope.conname" :disabled="store.isDetail" />
+              <c-input
+                v-model="scope.conname"
+                :disabled="store.isDetail"
+                :maxlength="16"
+                condensed
+              />
             </template>
             <template v-slot:item.condepar="{ scope }">
-              <c-input v-model="scope.condepar" :disabled="store.isDetail" />
+              <c-input
+                v-model="scope.condepar"
+                :disabled="store.isDetail"
+                :maxlength="16"
+                condensed
+              />
             </template>
             <template v-slot:item.contel="{ scope }">
               <c-input
                 v-model="scope.contel"
                 :disabled="store.isDetail"
-                :format="{ phone: true }"
+                :maxlength="20"
+                condensed
               />
             </template>
             <template v-slot:item.conmob="{ scope }">
               <c-input
                 v-model="scope.conmob"
                 :disabled="store.isDetail"
-                :format="{ phone: true }"
+                :maxlength="20"
+                condensed
               />
             </template>
             <template v-slot:item.condescrip="{ scope }">
-              <c-input v-model="scope.condescrip" :disabled="store.isDetail" />
+              <c-input
+                v-model="scope.condescrip"
+                :disabled="store.isDetail"
+                :maxlength="30"
+                condensed
+              />
             </template>
             <template v-slot:item.conud1="{ scope }">
-              <c-input v-model="scope.conud1" :disabled="store.isDetail" />
+              <c-input
+                v-model="scope.conud1"
+                :disabled="store.isDetail"
+                :maxlength="30"
+                condensed
+              />
             </template>
           </c-data-table>
         </v-tabs-window-item>
@@ -735,6 +767,7 @@
             label="備註"
             icon="fa-solid fa-pencil"
             :disabled="store.isDetail"
+            maxlength="1000"
             auto-grow
           />
         </v-tabs-window-item>
@@ -754,4 +787,8 @@
   <pick-addr v-model="pcikAddrDS" @pick="handlePickAddr" />
 </template>
 
-<style scoped></style>
+<style scoped>
+  .w-rec1 {
+    width: 60px;
+  }
+</style>

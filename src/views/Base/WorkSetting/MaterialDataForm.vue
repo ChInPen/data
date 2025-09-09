@@ -533,15 +533,17 @@
         <v-col cols="auto" class="text-custom-2">業主基本資料</v-col>
       </v-row>
       <v-row dense class="mt-2" :align="'center'">
-        <v-col :cols="3" class="px-2">
+        <v-col cols="auto" class="px-2">
           <c-input
             v-model="formData.itemno"
             label="工料編號"
             :is-required="true"
             :disabled="store.keyDisabled"
+            :maxlength="20"
+            condensed
           />
         </v-col>
-        <v-col :cols="3" class="px-2">
+        <v-col class="px-2">
           <c-select
             v-model="formData.ikindno"
             v-model:title="formData.ikindname"
@@ -556,6 +558,7 @@
             ]"
             also-show-value
             :disabled="store.isDetail"
+            condensed
           />
         </v-col>
         <v-col cols="auto" class="px-2">
@@ -573,13 +576,15 @@
             :disabled="store.isDetail"
           />
         </v-col>
-        <v-responsive width="100%"></v-responsive>
-        <v-col :cols="6" class="px-2">
+        <v-col :cols="12" class="px-2">
           <c-input
             v-model="formData.itemname"
             label="工料名稱"
             :is-required="true"
             :disabled="store.isDetail"
+            :maxlength="100"
+            :length-auto-width="false"
+            condensed
           />
         </v-col>
       </v-row>
@@ -611,6 +616,7 @@
                     hide-search
                     :disabled="store.isDetail"
                     clearable
+                    width="210"
                   />
                 </v-col>
                 <v-col :cols="5" :offset="3" class="px-2">
@@ -633,14 +639,16 @@
                     icon="fa-solid fa-dollar-sign"
                     :disabled="store.isDetail"
                     :format="{ thousands: true }"
+                    :maxlength="12"
                   />
                 </v-col>
-                <v-col :cols="5" :offset="1" class="px-2">
+                <v-col :offset="1" class="px-2">
                   <c-input
                     v-model="formData.itemuD1"
                     label="產品自訂1"
                     icon="fa-solid fa-pencil"
                     :disabled="store.isDetail"
+                    :maxlength="12"
                   />
                 </v-col>
                 <v-col :cols="5" class="px-2">
@@ -651,14 +659,16 @@
                     icon="fa-solid fa-dollar-sign"
                     :disabled="store.isDetail"
                     :format="{ thousands: true }"
+                    :maxlength="12"
                   />
                 </v-col>
-                <v-col :cols="5" :offset="1" class="px-2">
+                <v-col :offset="1" class="px-2">
                   <c-input
                     v-model="formData.itemuD2"
                     label="產品自訂2"
                     icon="fa-solid fa-pencil"
                     :disabled="store.isDetail"
+                    :maxlength="12"
                   />
                 </v-col>
                 <v-col :cols="5" class="px-2">
@@ -669,14 +679,16 @@
                     icon="fa-solid fa-dollar-sign"
                     :disabled="store.isDetail"
                     :format="{ thousands: true }"
+                    :maxlength="12"
                   />
                 </v-col>
-                <v-col :cols="5" :offset="1" class="px-2">
+                <v-col :offset="1" class="px-2">
                   <c-input
                     v-model="formData.itemuD3"
                     label="產品自訂3"
                     icon="fa-solid fa-pencil"
                     :disabled="store.isDetail"
+                    :maxlength="12"
                   />
                 </v-col>
                 <v-col :cols="8" class="px-2">
@@ -719,7 +731,7 @@
             <v-col :offset="1">
               <c-divider>ERP進銷存專用</c-divider>
               <v-row dense class="mt-2" :align="'center'">
-                <v-col :cols="5" class="px-2">
+                <v-col cols="auto" class="px-2">
                   <c-select
                     v-model="formData.pkgunit"
                     label="包裝單位"
@@ -730,6 +742,7 @@
                     hide-search
                     :disabled="true"
                     clearable
+                    width="210"
                   />
                 </v-col>
                 <v-col :cols="10" class="px-2">
@@ -740,6 +753,7 @@
                     icon="fa-solid fa-inbox"
                     :disabled="true"
                     :format="{ thousands: true }"
+                    :maxlength="9"
                   />
                 </v-col>
                 <v-col :cols="10" class="px-2">
@@ -750,6 +764,7 @@
                     icon="fa-solid fa-dollar-sign"
                     :disabled="true"
                     :format="{ thousands: true }"
+                    :maxlength="9"
                   />
                 </v-col>
                 <v-col :cols="10" class="px-2">
@@ -760,6 +775,7 @@
                     icon="fa-solid fa-dollar-sign"
                     :disabled="true"
                     :format="{ thousands: true }"
+                    :maxlength="9"
                   />
                 </v-col>
               </v-row>
@@ -791,26 +807,30 @@
             header-align="center"
           >
             <template v-slot:head>
-              <th width="80">序號</th>
-              <th width="250">工料編號</th>
+              <th>序號</th>
+              <th>工料編號</th>
               <th>工料名稱</th>
-              <th width="160">單位</th>
-              <th width="150">數量</th>
-              <th width="200">售價</th>
-              <th width="200">售價小計</th>
-              <th width="200">說明</th>
+              <th>單位</th>
+              <th>數量</th>
+              <th>售價</th>
+              <th>售價小計</th>
+              <th>說明</th>
             </template>
             <template v-slot:body="{ scope, index }">
-              <td class="text-center">{{ scope.ibomrec }}</td>
+              <td>
+                <div class="text-center w-rec">{{ scope.ibomrec }}</div>
+              </td>
               <td>
                 <c-input
                   v-model="scope.ibomno"
                   :disabled="store.isDetail"
                   @button="handlePickItemOpenE3(index)"
                   @keydown="(e: KeyboardEvent) => keydownSearchItemE3(e, scope.ibomno, index)"
+                  :maxlength="20"
+                  condensed
                 />
               </td>
-              <td><c-input v-model="scope.ibomname" :disabled="true" /></td>
+              <td><c-input v-model="scope.ibomname" :disabled="true" width="380" condensed /></td>
               <td>
                 <c-select
                   v-model="scope.ibomunit"
@@ -820,6 +840,7 @@
                   hide-search
                   :disabled="store.isDetail"
                   clearable
+                  width="140"
                 />
               </td>
               <td>
@@ -829,6 +850,7 @@
                   :disabled="store.isDetail"
                   :format="{ thousands: true }"
                   @change="handleE3totalCount(scope)"
+                  :maxlength="9"
                 />
               </td>
               <td>
@@ -838,6 +860,7 @@
                   :disabled="store.isDetail"
                   :format="{ thousands: true }"
                   @change="handleE3totalCount(scope)"
+                  :maxlength="10"
                 />
               </td>
               <td>
@@ -846,9 +869,17 @@
                   v-model="scope.ibomsalto"
                   :disabled="true"
                   :format="{ thousands: true }"
+                  :maxlength="10"
                 />
               </td>
-              <td><c-input v-model="scope.ibommemo" :disabled="store.isDetail" /></td>
+              <td>
+                <c-input
+                  v-model="scope.ibommemo"
+                  :disabled="store.isDetail"
+                  :maxlength="16"
+                  condensed
+                />
+              </td>
             </template>
           </c-table>
         </v-tabs-window-item>
@@ -874,32 +905,37 @@
             striped="even"
             hover
             selectable
-            layout="fixed"
             header-align="center"
           >
             <template v-slot:head>
-              <th width="80">序號</th>
-              <th width="250">工料編號</th>
-              <th width="400">工料名稱</th>
-              <th width="160">單位</th>
-              <th width="150">數量</th>
-              <th width="200">售價</th>
-              <th width="200">售價小計</th>
-              <th width="200">成本</th>
-              <th width="200">成本小計</th>
-              <th width="200">說明</th>
+              <th>序號</th>
+              <th>工料編號</th>
+              <th>工料名稱</th>
+              <th>單位</th>
+              <th>數量</th>
+              <th>售價</th>
+              <th>售價小計</th>
+              <th>成本</th>
+              <th>成本小計</th>
+              <th>說明</th>
             </template>
             <template v-slot:body="{ scope, index }">
-              <td class="text-center">{{ scope.ibomrec }}</td>
+              <td>
+                <div class="text-center w-rec">{{ scope.ibomrec }}</div>
+              </td>
               <td>
                 <c-input
                   v-model="scope.ibomno"
                   :disabled="store.isDetail"
                   @button="handlePickItemOpenES(index)"
                   @keydown="(e: KeyboardEvent) => keydownSearchItemES(e, scope.ibomno, index)"
+                  :maxlength="20"
+                  condensed
                 />
               </td>
-              <td><c-input v-model="scope.ibomname" :disabled="true" /></td>
+              <td>
+                <c-input v-model="scope.ibomname" :disabled="true" width="380" condensed />
+              </td>
               <td>
                 <c-select
                   v-model="scope.ibomunit"
@@ -909,6 +945,7 @@
                   hide-search
                   :disabled="store.isDetail"
                   clearable
+                  width="140"
                 />
               </td>
               <td>
@@ -918,6 +955,7 @@
                   :disabled="store.isDetail"
                   :format="{ thousands: true }"
                   @change="handleEStotalCount(scope)"
+                  :maxlength="9"
                 />
               </td>
               <td>
@@ -927,6 +965,7 @@
                   :disabled="store.isDetail"
                   :format="{ thousands: true }"
                   @change="handleEStotalCount(scope)"
+                  :maxlength="10"
                 />
               </td>
               <td>
@@ -935,6 +974,7 @@
                   v-model="scope.ibomsalto"
                   :disabled="true"
                   :format="{ thousands: true }"
+                  :maxlength="10"
                 />
               </td>
               <td>
@@ -944,6 +984,7 @@
                   :disabled="store.isDetail"
                   :format="{ thousands: true }"
                   @change="handleEStotalCount(scope)"
+                  :maxlength="10"
                 />
               </td>
               <td>
@@ -952,9 +993,17 @@
                   v-model="scope.ibomcto"
                   :disabled="true"
                   :format="{ thousands: true }"
+                  :maxlength="10"
                 />
               </td>
-              <td><c-input v-model="scope.ibommemo" :disabled="store.isDetail" /></td>
+              <td>
+                <c-input
+                  v-model="scope.ibommemo"
+                  :disabled="store.isDetail"
+                  :maxlength="16"
+                  condensed
+                />
+              </td>
             </template>
           </c-table>
         </v-tabs-window-item>
@@ -985,5 +1034,8 @@
   .tb-div {
     width: 1000px;
     overflow-y: auto;
+  }
+  .w-rec {
+    width: 60px;
   }
 </style>

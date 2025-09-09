@@ -157,13 +157,15 @@
   <v-card color="#1b2b36" rounded="3">
     <v-card-text>
       <v-row dense :align="'center'">
-        <v-col :cols="3">
-          <c-input v-model="filter.itemno" label="工料編號" icon="fa-solid fa-wrench" />
+        <v-col cols="auto">
+          <c-input
+            v-model="filter.itemno"
+            label="工料編號"
+            icon="fa-solid fa-wrench"
+            :maxlength="20"
+          />
         </v-col>
-        <v-col :cols="3">
-          <c-input v-model="filter.itemname" label="工料名稱" icon="fa-solid fa-wrench" />
-        </v-col>
-        <v-col :cols="3">
+        <v-col cols="auto">
           <c-select
             v-model="filter.ikindno"
             v-model:title="filter.ikindname"
@@ -177,6 +179,17 @@
               { column: 'ikindname', label: '工料類別' }
             ]"
             also-show-value
+            width="670"
+          />
+        </v-col>
+        <v-col cols="12">
+          <c-input
+            v-model="filter.itemname"
+            label="工料名稱"
+            icon="fa-solid fa-wrench"
+            :maxlength="100"
+            :length-auto-width="false"
+            condensed
           />
         </v-col>
         <v-responsive width="100%"></v-responsive>
@@ -210,7 +223,7 @@
     :show-index="true"
     class="mt-3"
     striped="even"
-    height="540"
+    height="480"
     fixed-header
     hover
   >

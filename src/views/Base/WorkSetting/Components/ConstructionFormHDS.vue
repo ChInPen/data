@@ -374,7 +374,6 @@
   >
     <div class="d-flex flex-column gap-3">
       <c-select
-        class="w-50"
         v-model="detForm.headitemno"
         v-model:title="detForm.headitemno1"
         label="大項目"
@@ -382,6 +381,7 @@
         item-title="headitemno1"
         item-value="headitemno"
         hide-search
+        width="250"
       />
       <c-input v-model="detForm.detitem" label="中項目" :maxlength="40" />
     </div>
@@ -406,9 +406,8 @@
     title-divider
     width="auto"
   >
-    <div class="d-flex flex-column gap-3">
+    <div class="d-flex gap-3 flex-wrap">
       <c-select
-        class="w-50"
         v-model="secForm.headitemno"
         v-model:title="secForm.headitemno1"
         label="大項目"
@@ -416,9 +415,9 @@
         item-title="headitemno1"
         item-value="headitemno"
         hide-search
+        width="250"
       />
       <c-select
-        class="w-50"
         v-model="secForm.detitemno"
         v-model:title="secForm.detitemno1"
         label="中項目"
@@ -426,8 +425,9 @@
         item-title="detitemno1"
         item-value="detitemno"
         hide-search
+        width="300"
       />
-      <c-input v-model="secForm.secitem" label="細項目" :maxlength="40" />
+      <c-input class="sec-input" v-model="secForm.secitem" label="細項目" :maxlength="40" />
     </div>
     <template v-slot:buttons>
       <div class="col-auto">
@@ -443,3 +443,9 @@
     </template>
   </c-dialog>
 </template>
+
+<style scoped>
+  .sec-input {
+    flex: 0 0 100%; /* 佔滿一整行 */
+  }
+</style>

@@ -139,21 +139,46 @@
   <v-card color="#1b2b36" rounded="3">
     <v-card-text>
       <v-row dense>
-        <v-col :cols="3">
-          <c-input v-model="filter.protno" label="工程編號" icon="fa-solid fa-helmet-safety" />
+        <v-col cols="auto">
+          <c-input
+            v-model="filter.protno"
+            label="工程編號"
+            icon="fa-solid fa-helmet-safety"
+            :maxlength="16"
+          />
         </v-col>
-        <v-col :cols="3">
-          <c-input v-model="filter.custno" label="業主編號" icon="fa-solid fa-building" />
+        <v-col cols="auto">
+          <c-input
+            v-model="filter.custno"
+            label="業主編號"
+            icon="fa-solid fa-building"
+            :maxlength="10"
+          />
         </v-col>
-        <v-col :cols="3">
-          <c-input v-model="filter.coveno" label="合約編號" icon="fa-solid fa-file-contract" />
+        <v-col cols="auto">
+          <c-input
+            v-model="filter.coveno"
+            label="合約編號"
+            icon="fa-solid fa-file-contract"
+            :maxlength="16"
+          />
         </v-col>
         <v-responsive width="100%" />
-        <v-col :cols="3">
-          <c-input v-model="filter.protabbr" label="工程簡稱" icon="fa-solid fa-helmet-safety" />
+        <v-col cols="auto">
+          <c-input
+            v-model="filter.protabbr"
+            label="工程簡稱"
+            icon="fa-solid fa-helmet-safety"
+            :maxlength="16"
+          />
         </v-col>
-        <v-col :cols="3">
-          <c-input v-model="filter.custabbr" label="業主簡稱" icon="fa-solid fa-building" />
+        <v-col cols="auto">
+          <c-input
+            v-model="filter.custabbr"
+            label="業主簡稱"
+            icon="fa-solid fa-building"
+            :maxlength="16"
+          />
         </v-col>
       </v-row>
       <v-row justify="end" dense>

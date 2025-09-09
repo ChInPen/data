@@ -3,8 +3,8 @@
   import { cInput, cDialog, cButton, cTable } from '@/components/Common'
   import { callApi } from '@/utils/uapi'
   import api from '@/api'
-  import { usePickIKind } from '@/store/pickIKind'
-  const store = usePickIKind()
+  import { usePickSKind } from '@/store/pickSKind'
+  const store = usePickSKind()
   import type { SearchData } from './type'
 
   const model = defineModel({ default: false })
@@ -15,8 +15,8 @@
 
   //查詢條件
   const filter = ref({
-    ikindno: '',
-    ikindname: ''
+    skindno: '',
+    skindname: ''
   })
   //表格資料
   const tbData = ref<SearchData[]>([])
@@ -25,7 +25,7 @@
   const handleSearch = async () => {
     await callApi({
       method: 'POST',
-      url: api.Ikind.Ikind_List,
+      url: api.Skind.Skind_List,
       data: { ...filter.value }
     }).then((res: any) => {
       if (res?.status === 200) {
@@ -37,8 +37,8 @@
   // 清空查詢條件
   const handleClear = () => {
     filter.value = {
-      ikindno: '',
-      ikindname: ''
+      skindno: '',
+      skindname: ''
     }
   }
   // 選擇
@@ -53,7 +53,7 @@
     async (newVal) => {
       if (newVal) {
         if (store.isSearch) {
-          filter.value.ikindno = store.searchText
+          filter.value.skindno = store.searchText
           await handleSearch()
           if (tbData.value.length == 1) {
             emits('pick', tbData.value[0])
@@ -90,7 +90,7 @@
   <c-dialog v-model="isOpen" width="700" @afterLeave="handleDialogClose" title-divider>
     <template v-slot:title>
       <v-row dense :align="'center'">
-        <v-col>選擇工料類別</v-col>
+        <v-col>選擇廠商類別</v-col>
         <v-col cols="auto">
           <c-button kind="cancel" icon="mdi-close-circle" @click="isOpen = false">關閉</c-button>
         </v-col>
@@ -103,7 +103,7 @@
             <v-row dense>
               <v-col>
                 <c-input
-                  v-model="filter.ikindno"
+                  v-model="filter.skindno"
                   label="類別編號"
                   icon="fa-solid fa-magnifying-glass"
                 />
@@ -112,7 +112,7 @@
             <v-row dense class="mt-2">
               <v-col>
                 <c-input
-                  v-model="filter.ikindname"
+                  v-model="filter.skindname"
                   label="類別名稱"
                   icon="fa-solid fa-magnifying-glass"
                 />
@@ -134,13 +134,13 @@
     </v-card>
     <c-table v-model="tbData" class="mt-3" striped="even" height="520" fixed-header hover>
       <template v-slot:head>
-        <th class="text-center">工料類別編號</th>
-        <th class="text-center">工料類別名稱</th>
+        <th class="text-center">廠商類別編號</th>
+        <th class="text-center">廠商類別名稱</th>
         <th></th>
       </template>
       <template v-slot:body="{ scope }">
-        <td class="text-center">{{ scope.ikindno }}</td>
-        <td class="text-center">{{ scope.ikindname }}</td>
+        <td class="text-center">{{ scope.skindno }}</td>
+        <td class="text-center">{{ scope.skindname }}</td>
         <td>
           <v-row dense justify="center">
             <v-col cols="auto">

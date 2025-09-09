@@ -7,7 +7,8 @@
     cTable,
     cBread,
     cRadioGroup,
-    cDataTable
+    cDataTable,
+    cSelectInput
   } from '@/components/Common' //共用元件
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
@@ -662,15 +663,16 @@
         <v-col cols="auto" class="text-custom-2">工程基本資料</v-col>
       </v-row>
       <v-row dense class="mt-2" :align="'center'">
-        <v-col :cols="3" class="px-2">
+        <v-col cols="auto" class="px-2">
           <c-input
             v-model="formData.protno"
             label="工程編號"
             :is-required="true"
             :disabled="store.keyDisabled"
+            :maxlength="16"
           />
         </v-col>
-        <v-col :cols="3" class="px-2">
+        <v-col cols="auto" class="px-2">
           <c-input
             v-model="formData.custno"
             label="業主編號"
@@ -678,32 +680,37 @@
             :disabled="store.isDetail"
             @button="searchCustOpen"
             @keydown="searchCustKeydown"
+            :maxlength="10"
           />
         </v-col>
-        <v-col :cols="3" class="px-2">
+        <v-col cols="auto" class="px-2">
           <c-input
             v-model="formData.custabbr"
             label="業主簡稱"
             icon="fa-solid fa-building"
             :disabled="true"
+            :maxlength="16"
           />
         </v-col>
-        <v-responsive width="100%"></v-responsive>
-        <v-col :cols="6" class="px-2">
+        <v-col cols="auto" class="px-2">
           <c-input
             v-model="formData.protname"
             v-model:abbr="formData.protabbr"
             label="工程名稱"
             :is-required="true"
             :disabled="store.isDetail"
+            :maxlength="50"
+            condensed
           />
         </v-col>
-        <v-col :cols="3" class="px-2">
+        <v-col cols="auto" class="px-2">
           <c-input
             v-model="formData.protabbr"
             label="工程簡稱"
             :is-required="true"
             :disabled="store.isDetail"
+            :maxlength="16"
+            condensed
           />
         </v-col>
       </v-row>
@@ -722,33 +729,36 @@
       <v-tabs-window v-model="tabpage">
         <v-tabs-window-item value="normal">
           <v-row dense :align="'center'">
-            <v-col :cols="6" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.protaddr"
                 label="工程地址"
                 icon="fa-solid fa-location-dot"
                 :disabled="store.isDetail"
+                :maxlength="50"
+                condensed
               />
             </v-col>
-            <v-col :cols="3" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.tel"
                 label="電話"
                 icon="fa-solid fa-phone-volume"
                 :disabled="store.isDetail"
-                :format="{ phone: true }"
+                :maxlength="16"
               />
             </v-col>
             <v-responsive width="100%"></v-responsive>
-            <v-col :cols="3" class="px-2">
+            <v-col cols="4" class="px-2">
               <c-input
                 v-model="formData.coveno"
                 label="合約編號"
                 icon="fa-solid fa-file-contract"
                 :disabled="store.isDetail"
+                :maxlength="16"
               />
             </v-col>
-            <v-col :cols="3" class="px-2">
+            <v-col cols="3" class="px-2">
               <c-input
                 type="number"
                 v-model="formData.covesum"
@@ -756,9 +766,10 @@
                 icon="fa-solid fa-dollar-sign"
                 :disabled="store.isDetail"
                 :format="{ thousands: true }"
+                :maxlength="9"
               />
             </v-col>
-            <v-col :cols="3" class="px-2">
+            <v-col cols="3" class="px-2">
               <c-input
                 type="number"
                 v-model="formData.estimsum"
@@ -766,9 +777,10 @@
                 icon="fa-solid fa-dollar-sign"
                 :disabled="store.isDetail"
                 :format="{ thousands: true }"
+                :maxlength="9"
               />
             </v-col>
-            <v-col :cols="3" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 type="date"
                 v-model="formData.sdate1"
@@ -777,7 +789,7 @@
                 :disabled="store.isDetail"
               />
             </v-col>
-            <v-col :cols="3" class="px-2">
+            <v-col :cols="4" class="px-2">
               <c-input
                 type="date"
                 v-model="formData.bdate1"
@@ -804,7 +816,7 @@
                 :disabled="store.isDetail"
               />
             </v-col>
-            <v-col :cols="3" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 type="date"
                 v-model="formData.tfate1"
@@ -826,7 +838,7 @@
                 :disabled="store.isDetail"
               />
             </v-col>
-            <v-col :cols="3" class="px-2">
+            <v-col :cols="3" offset="1" class="px-2">
               <c-input
                 type="date"
                 v-model="formData.wdate1"
@@ -835,16 +847,37 @@
                 :disabled="store.isDetail"
               />
             </v-col>
-            <v-col :cols="4" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.wtime"
                 label="保固期間"
                 icon="fa-solid fa-shield-alt"
                 :disabled="store.isDetail"
+                :maxlength="20"
               />
             </v-col>
             <v-responsive width="100%"></v-responsive>
-            <v-col :cols="3" class="px-2">
+            <v-col cols="auto" class="px-2">
+              <c-select-input
+                front="select"
+                v-model="formData.con1empno"
+                v-model:title="formData.con1"
+                label="工地主任1"
+                icon="fa-solid fa-user-tie"
+                :items="empDDL"
+                item-title="empname"
+                item-value="empno"
+                :item-columns="[
+                  { column: 'empno', label: '人員編號' },
+                  { column: 'empname', label: '人員名稱' }
+                ]"
+                :disabled="store.isDetail"
+                width="326"
+                :input-maxlength="16"
+                condensed
+              />
+            </v-col>
+            <!-- <v-col :cols="3" class="px-2">
               <c-select
                 v-model="formData.con1empno"
                 v-model:title="formData.con1"
@@ -860,8 +893,37 @@
                 also-show-value
                 :disabled="store.isDetail"
               />
+            </v-col> -->
+            <v-col cols="auto" class="px-2">
+              <c-input
+                v-model="formData.period"
+                label="工期"
+                icon="fa-solid fa-calendar-days"
+                :disabled="store.isDetail"
+                :maxlength="30"
+              />
             </v-col>
-            <v-col :cols="3" class="px-2">
+            <v-col cols="auto" class="px-2">
+              <c-select-input
+                front="select"
+                v-model="formData.con2empno"
+                v-model:title="formData.con2"
+                label="工地主任2"
+                icon="fa-solid fa-user-tie"
+                :items="empDDL"
+                item-title="empname"
+                item-value="empno"
+                :item-columns="[
+                  { column: 'empno', label: '人員編號' },
+                  { column: 'empname', label: '人員名稱' }
+                ]"
+                :disabled="store.isDetail"
+                width="326"
+                :input-maxlength="16"
+                condensed
+              />
+            </v-col>
+            <!-- <v-col :cols="3" class="px-2">
               <c-select
                 v-model="formData.con2empno"
                 v-model:title="formData.con2"
@@ -877,29 +939,33 @@
                 also-show-value
                 :disabled="store.isDetail"
               />
-            </v-col>
-            <v-col :cols="4" class="px-2">
-              <c-input
-                v-model="formData.period"
-                label="工期"
-                icon="fa-solid fa-calendar-days"
-                :disabled="store.isDetail"
-              />
-            </v-col>
-            <v-col :cols="6" class="px-2">
+            </v-col> -->
+            <v-responsive width="100%"></v-responsive>
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.protud1"
                 label="工程自訂一"
                 icon="fa-solid fa-pencil"
                 :disabled="store.isDetail"
+                :maxlength="20"
               />
             </v-col>
-            <v-col :cols="6" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.protud2"
                 label="工程自訂二"
                 icon="fa-solid fa-pencil"
                 :disabled="store.isDetail"
+                :maxlength="20"
+              />
+            </v-col>
+            <v-col cols="auto" class="px-2">
+              <c-input
+                v-model="formData.memo1"
+                label="備註"
+                icon="fa-solid fa-pencil"
+                :disabled="store.isDetail"
+                :maxlength="68"
               />
             </v-col>
             <v-col :cols="3" class="px-2">
@@ -917,27 +983,21 @@
                 </v-col>
               </v-row>
             </v-col>
-            <v-col :cols="3" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
+                type="number"
                 v-model="formData.chplusless"
                 label="追加減金額"
                 icon="fa-solid fa-dollar-sign"
                 :disabled="true"
                 :format="{ thousands: true, minus: true }"
+                :maxlength="10"
               />
             </v-col>
             <v-col cols="auto" class="px-2">
               <c-button color="#d48833" icon="fa-solid fa-calculator" @click="plleDS = true">
                 追加(減)
               </c-button>
-            </v-col>
-            <v-col :cols="6" class="px-2">
-              <c-input
-                v-model="formData.memo1"
-                label="備註"
-                icon="fa-solid fa-pencil"
-                :disabled="store.isDetail"
-              />
             </v-col>
           </v-row>
         </v-tabs-window-item>
@@ -1102,123 +1162,137 @@
         </v-tabs-window-item>
         <v-tabs-window-item value="sign">
           <v-row dense :align="'center'">
-            <v-col :cols="6" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.consT_NO"
                 label="建造執照"
                 icon="fa-solid fa-id-card"
                 :disabled="store.isDetail"
+                :maxlength="30"
               />
             </v-col>
             <v-responsive width="100%"></v-responsive>
-            <v-col :cols="4" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.consT_BY"
                 label="起造人"
                 icon="fa-solid fa-person-digging"
                 :disabled="store.isDetail"
+                :maxlength="30"
               />
             </v-col>
-            <v-col :cols="4" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.consT_MGR"
                 label="承造人"
                 icon="fa-solid fa-helmet-safety"
                 :disabled="store.isDetail"
+                :maxlength="30"
               />
             </v-col>
             <v-responsive width="100%"></v-responsive>
-            <v-col :cols="4" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.dsgN_BY"
                 label="設計人"
                 icon="fa-solid fa-brush"
                 :disabled="store.isDetail"
+                :maxlength="30"
               />
             </v-col>
-            <v-col :cols="4" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.dsgN_CNO"
                 label="設計人開業證書字號"
                 icon="fa-solid fa-certificate"
                 :disabled="store.isDetail"
+                :maxlength="30"
               />
             </v-col>
             <v-responsive width="100%"></v-responsive>
-            <v-col :cols="4" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.insP_MGR"
                 label="監造人"
                 icon="fa-solid fa-helmet-safety"
                 :disabled="store.isDetail"
+                :maxlength="30"
               />
             </v-col>
-            <v-col :cols="4" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.insP_NO"
                 label="監造人開業證書字號"
                 icon="fa-solid fa-certificate"
                 :disabled="store.isDetail"
+                :maxlength="30"
               />
             </v-col>
             <v-responsive width="100%"></v-responsive>
-            <v-col :cols="4" class="px-2">
+            <v-col :cols="5" class="px-2">
               <c-input
                 v-model="formData.enG_EMP"
                 label="專任工程人員"
                 icon="fa-solid fa-user-tie"
                 :disabled="store.isDetail"
+                :maxlength="20"
               />
             </v-col>
-            <v-col :cols="4" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.insP_TEL"
                 label="監造人電話"
                 icon="fa-solid fa-mobile-button"
                 :disabled="store.isDetail"
+                :maxlength="20"
               />
             </v-col>
             <v-responsive width="100%"></v-responsive>
-            <v-col :cols="4" class="px-2">
+            <v-col :cols="5" class="px-2">
               <c-input
                 v-model="formData.usE_PART"
                 label="使用分區"
                 icon="fa-solid fa-helmet-safety"
                 :disabled="store.isDetail"
+                :maxlength="20"
               />
             </v-col>
-            <v-col :cols="4" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.consT_TEL"
                 label="服務電話"
                 icon="fa-solid fa-phone-volume"
                 :disabled="store.isDetail"
+                :maxlength="20"
               />
             </v-col>
             <v-responsive width="100%"></v-responsive>
-            <v-col :cols="4" class="px-2">
+            <v-col :cols="5" class="px-2">
               <c-input
                 v-model="formData.ctrL_NO"
                 label="管制編號"
                 icon="fa-solid fa-hashtag"
                 :disabled="store.isDetail"
+                :maxlength="20"
               />
             </v-col>
-            <v-col :cols="4" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.pnP_TEL"
                 label="公害陳情專線"
                 icon="fa-solid fa-phone-volume"
                 :disabled="store.isDetail"
+                :maxlength="20"
               />
             </v-col>
             <v-responsive width="100%"></v-responsive>
-            <v-col :cols="6" class="px-2">
+            <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.enG_DESC"
                 label="工程概要"
                 icon="fa-solid fa-file-lines"
                 :disabled="store.isDetail"
+                :maxlength="50"
               />
             </v-col>
           </v-row>
@@ -1247,10 +1321,17 @@
                     :disabled="store.isDetail"
                     @button="protIKindPick(index)"
                     @keydown="(e: any) => protIKindKeydown(e, index)"
+                    :maxlength="4"
+                    :length-auto-width="false"
                   />
                 </template>
                 <template v-slot:item.ikindname="{ scope }">
-                  <c-input v-model="scope.ikindname" :disabled="store.isDetail" />
+                  <c-input
+                    v-model="scope.ikindname"
+                    :disabled="store.isDetail"
+                    :maxlength="20"
+                    :length-auto-width="false"
+                  />
                 </template>
                 <template v-slot:item.pimoney="{ scope }">
                   <c-input
@@ -1258,6 +1339,8 @@
                     v-model="scope.pimoney"
                     :disabled="store.isDetail"
                     :format="{ thousands: true }"
+                    :maxlength="12"
+                    :length-auto-width="false"
                   />
                 </template>
               </c-data-table>

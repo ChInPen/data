@@ -134,26 +134,59 @@
   <v-card color="#1b2b36" rounded="3">
     <v-card-text>
       <v-row dense>
-        <v-col :cols="3">
-          <c-input v-model="filter.suppno" label="廠商編號" icon="fa-solid fa-warehouse" />
+        <v-col cols="auto">
+          <c-input
+            v-model="filter.suppno"
+            label="廠商編號"
+            icon="fa-solid fa-warehouse"
+            :maxlength="8"
+          />
+        </v-col>
+        <v-col cols="auto">
+          <c-input
+            v-model="filter.suppabbr"
+            label="廠商簡稱"
+            icon="fa-solid fa-warehouse"
+            :maxlength="10"
+          />
+        </v-col>
+        <v-col cols="auto">
+          <c-input
+            v-model="filter.uniform"
+            label="統一編號"
+            icon="fa-solid fa-barcode"
+            :format="{ number: true }"
+            :maxlength="8"
+          />
         </v-col>
         <v-col :cols="3">
-          <c-input v-model="filter.suppabbr" label="廠商簡稱" icon="fa-solid fa-warehouse" />
+          <c-input
+            v-model="filter.business"
+            label="營業項目"
+            icon="fa-solid fa-shop"
+            :maxlength="60"
+            :length-auto-width="false"
+          />
         </v-col>
-        <v-col :cols="3">
-          <c-input v-model="filter.uniform" label="統一編號" icon="fa-solid fa-barcode" />
+        <v-responsive width="100%" />
+        <v-col cols="auto">
+          <c-input v-model="filter.coN1" label="聯絡人1" icon="fa-solid fa-user" :maxlength="10" />
         </v-col>
-        <v-col :cols="3">
-          <c-input v-model="filter.business" label="營業項目" icon="fa-solid fa-shop" />
+        <v-col cols="auto">
+          <c-input
+            v-model="filter.teL1"
+            label="電話1"
+            icon="fa-solid fa-phone-volume"
+            :maxlength="16"
+          />
         </v-col>
-        <v-col :cols="3">
-          <c-input v-model="filter.coN1" label="聯絡人1" icon="fa-solid fa-user" />
-        </v-col>
-        <v-col :cols="3">
-          <c-input v-model="filter.teL1" label="電話1" icon="fa-solid fa-phone-volume" />
-        </v-col>
-        <v-col :cols="3">
-          <c-input v-model="filter.mobiteL1" label="行動電話" icon="fa-solid fa-mobile-button" />
+        <v-col cols="auto">
+          <c-input
+            v-model="filter.mobiteL1"
+            label="行動電話"
+            icon="fa-solid fa-mobile-button"
+            :maxlength="16"
+          />
         </v-col>
       </v-row>
       <v-row justify="end" dense>

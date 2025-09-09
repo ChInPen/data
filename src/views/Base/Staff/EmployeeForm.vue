@@ -7,7 +7,7 @@
     cTextarea,
     cBread,
     cDivider,
-    cTable
+    cSelectInput
   } from '@/components/Common' //共用元件
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
@@ -434,6 +434,15 @@
             :maxlength="20"
           />
         </v-col>
+        <v-col cols="auto" class="px-2">
+          <c-input
+            type="date"
+            v-model="formData.duedate1"
+            label="到職日期"
+            icon="fa-solid fa-calendar-day"
+            :disabled="store.isDetail"
+          />
+        </v-col>
         <v-responsive width="100%" />
         <v-col cols="auto" class="px-2">
           <c-input
@@ -451,6 +460,15 @@
             icon="fa-solid fa-phone-volume"
             :disabled="store.isDetail"
             :maxlength="20"
+          />
+        </v-col>
+        <v-col cols="auto" class="px-2">
+          <c-input
+            type="date"
+            v-model="formData.resdate1"
+            label="離職日期"
+            icon="fa-solid fa-calendar-day"
+            :disabled="store.isDetail"
           />
         </v-col>
         <v-responsive width="100%" />
@@ -509,7 +527,8 @@
       <c-divider class="mt-3">公司資訊</c-divider>
       <v-row dense class="mt-2">
         <v-col cols="auto" class="px-2">
-          <c-select
+          <c-select-input
+            front="select"
             v-model="formData.deparno"
             v-model:title="formData.deparname"
             label="部門"
@@ -522,13 +541,16 @@
               { column: 'deparname', label: '部門名稱' }
             ]"
             :disabled="store.isDetail"
-            also-show-value
-            width="550"
+            width="215"
+            :input-maxlength="16"
+            condensed
           />
         </v-col>
         <v-col cols="auto" class="px-2">
-          <c-select
+          <c-select-input
+            front="select"
             v-model="formData.chiefno"
+            v-model:title="formData.chiefname"
             label="主管"
             icon="fa-solid fa-user-tie"
             :items="employeeDDL"
@@ -539,27 +561,9 @@
               { column: 'empname', label: '人員名稱' }
             ]"
             :disabled="store.isDetail"
-            also-show-value
-            width="680"
-          />
-        </v-col>
-        <v-responsive width="100%" />
-        <v-col cols="auto" class="px-2">
-          <c-input
-            type="date"
-            v-model="formData.duedate1"
-            label="到職日期"
-            icon="fa-solid fa-calendar-day"
-            :disabled="store.isDetail"
-          />
-        </v-col>
-        <v-col cols="auto" class="px-2">
-          <c-input
-            type="date"
-            v-model="formData.resdate1"
-            label="離職日期"
-            icon="fa-solid fa-calendar-day"
-            :disabled="store.isDetail"
+            width="326"
+            :input-maxlength="16"
+            condensed
           />
         </v-col>
         <v-col cols="auto" class="px-2">

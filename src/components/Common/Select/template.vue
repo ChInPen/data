@@ -41,7 +41,8 @@
     alsoShowValue: {
       type: Boolean,
       default: false
-    }
+    },
+    condensed: Boolean
   })
 
   const search = ref('')
@@ -127,6 +128,9 @@
     :list-props="{ bgColor: 'white' }"
     no-data-text="無資料"
     @update:menu="handleOpenMenu"
+    :class="{
+      condensed: condensed
+    }"
   >
     <template v-slot:prepend-inner>
       <div class="prepend-inner-content">
@@ -296,5 +300,9 @@
   /* 下拉選項禁用時底色  */
   .v-list-item--disabled {
     background-color: #b0bccf;
+  }
+  /* 比較緊湊的文字間距 */
+  .v-select.condensed :deep(.v-select__selection-text) {
+    letter-spacing: -0.05em;
   }
 </style>
