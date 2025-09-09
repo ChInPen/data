@@ -14,4 +14,9 @@ export type SearchData = {
   taxkindc: string
   a_user: string
   m_user: string
+
+  protno: string
+  protabbr: string
+  protname: string
+  protaddr: string
 }

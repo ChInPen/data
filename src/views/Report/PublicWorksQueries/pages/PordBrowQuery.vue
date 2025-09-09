@@ -1,13 +1,13 @@
 <script lang="ts" setup>
   import { computed, ref, watch } from 'vue'
   import { cButton, cInput, cBread, cSelect } from '@/components/Common' // 共用元件
-  import type { SearchData } from './type/SearchDataType'
+  import type { SearchData } from '../../shared/types/SearchDataType'
   import { searchSupp } from '@/components/SearchSupp' // 廠商彈窗元件查詢
   import { searchItem } from '@/components/SearchItem' // 工料彈窗元件查詢
   import { searchProt } from '@/components/SearchProt' // 工程彈窗元件查詢
-  import MultiItem from './Components/MultiItem.vue' // 工料彈窗(多選)
-  import MultiProt from './Components/MultiProt.vue' // 工程彈窗(多選)
-  import MultiSupp from './Components/MultiSupp.vue' // 工程彈窗(多選)
+  import MultiItem from '../../../../components/MultiItem/MultiItem.vue' // 工料彈窗(多選)
+  import MultiProt from '../../../../components/MultiProt/MultiProt.vue' // 工程彈窗(多選)
+  import MultiSupp from '../../../../components/MultiSupp/MultiSupp.vue' // 工程彈窗(多選)
 
   import { callApi } from '@/utils/uapi' // 呼叫api的方法
   import api from '@/api' // api清單
@@ -25,7 +25,7 @@
       begin: '', // 開始時間
       end: '' // 結束時間
     },
-    suppNOs: {
+    suppnoNOs: {
       begin: '', // 廠商編號開始
       end: '', // 廠商編號結束
       limiteds: [] as string[] // 廠商編號多選
@@ -46,9 +46,10 @@
       draw: 1
     },
     descrip: '',
-    emitdetmo1: '',
-    feetNo: '05', // 表尾註腳編號
-    printType: '內定報表'
+    porddetmo1: '',
+    payment1: '',
+    feetNo: '20', // 表尾註腳編號
+    printType: ''
   })
   // 表尾註腳
   const feetNoDDL = ref({
@@ -62,15 +63,6 @@
     ],
     value: 'feetno',
     title: 'feetname'
-  })
-  // 報表內容
-  const printType = ref({
-    list: [
-      { value: '內定報表', title: '內定報表' },
-      { value: '內定明細', title: '內定明細' }
-    ],
-    value: 'value',
-    title: 'title'
   })
   // 廠商單選/多選控制
   const suppPickOpen = ref() //控制單選視窗開關
@@ -87,14 +79,14 @@
   watch(
     [() => selectedSuppOne.value.begin, () => selectedSuppOne.value.end],
     ([val1, val2], [old1, old2]) => {
-      if (val1 !== old1) formData.value.suppNOs.begin = val1
-      if (val2 !== old2) formData.value.suppNOs.end = val2
+      if (val1 !== old1) formData.value.suppnoNOs.begin = val1
+      if (val2 !== old2) formData.value.suppnoNOs.end = val2
     }
   )
   const onMultiSuppPicks = (rows: any[]) => {
     selectedSupp.value = rows
-    formData.value.suppNOs.limiteds = rows.map((r) => String(r.suppno).trim()).filter(Boolean)
-    isMultiSupp.value = formData.value.suppNOs.limiteds.length > 0
+    formData.value.suppnoNOs.limiteds = rows.map((r) => String(r.suppno).trim()).filter(Boolean)
+    isMultiSupp.value = formData.value.suppnoNOs.limiteds.length > 0
     selectedSuppOne.value.begin = ''
     selectedSuppOne.value.end = ''
   }
@@ -163,15 +155,15 @@
 
   // 廠商 8 碼
   const suppNoFromModel = computed({
-    get: () => formData.value.suppNOs.begin,
+    get: () => formData.value.suppnoNOs.begin,
     set: (val) => {
-      formData.value.suppNOs.begin = alnumN(val, 8)
+      formData.value.suppnoNOs.begin = alnumN(val, 8)
     }
   })
   const suppNoToModel = computed({
-    get: () => formData.value.suppNOs.end,
+    get: () => formData.value.suppnoNOs.end,
     set: (val) => {
-      formData.value.suppNOs.end = alnumN(val, 8)
+      formData.value.suppnoNOs.end = alnumN(val, 8)
     }
   })
 
@@ -205,8 +197,9 @@
 
   // 呼叫API送出列印資料
   const onSubmitPrint = async (t) => {
-    const API = t === 'Print' ? api.Outsourcing.Print : api.Outsourcing.Excel
     console.log(JSON.stringify(formData.value, null, 2))
+
+    const API = t === 'Print' ? api.PordBrow.Print : api.PordBrow.Excel
     const res = await callApi({
       method: 'POST',
       url: API,
@@ -253,23 +246,6 @@
   <!-- 查詢表單 -->
   <v-card color="#1b2b36" rounded="lg" class="mt-4 sqte-form" elevation="2">
     <v-card-text class="pa-6">
-      <!-- 報表類別 -->
-      <v-row align="center" class="mb-3" dense>
-        <v-col cols="11">
-          <v-row>
-            <v-col cols="6" class="u-wch w-20ch">
-              <c-select
-                v-model="formData.printType"
-                label="報表內容"
-                :items="printType.list"
-                :item-title="printType.title"
-                :item-value="printType.value"
-                hide-search
-              />
-            </v-col>
-          </v-row>
-        </v-col>
-      </v-row>
       <!-- 報價日期區間 -->
       <v-row align="center" class="mb-3" dense>
         <v-col cols="11">
@@ -480,8 +456,21 @@
         </v-col> -->
         <v-col cols="11" class="u-wch w-60ch stack-1787">
           <c-input
-            v-model="formData.emitdetmo1"
-            label="發包自定一"
+            v-model="formData.porddetmo1"
+            label="採購自定一"
+            density="compact"
+            :length-auto-width="false"
+          />
+        </v-col>
+      </v-row>
+      <v-row align="center" class="mb-3" dense>
+        <!-- <v-col cols="auto" class="d-flex align-center">
+          <h5 class="text-white mb-0 font-weight-medium title-text">說 明</h5>
+        </v-col> -->
+        <v-col cols="11" class="u-wch w-60ch stack-1787">
+          <c-input
+            v-model="formData.payment1"
+            label="付款條件"
             density="compact"
             :length-auto-width="false"
           />

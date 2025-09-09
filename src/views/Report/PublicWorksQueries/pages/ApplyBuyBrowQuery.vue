@@ -1,13 +1,13 @@
 <script lang="ts" setup>
   import { computed, ref, watch } from 'vue'
   import { cButton, cInput, cBread, cSelect } from '@/components/Common' // 共用元件
-  import type { SearchData } from './type/SearchDataType'
+  import type { SearchData } from '../../shared/types/SearchDataType'
   import { searchSupp } from '@/components/SearchSupp' // 廠商彈窗元件查詢
   import { searchItem } from '@/components/SearchItem' // 工料彈窗元件查詢
   import { searchProt } from '@/components/SearchProt' // 工程彈窗元件查詢
-  import MultiItem from './Components/MultiItem.vue' // 工料彈窗(多選)
-  import MultiProt from './Components/MultiProt.vue' // 工程彈窗(多選)
-  import MultiSupp from './Components/MultiSupp.vue' // 工程彈窗(多選)
+  import MultiItem from '@/components/MultiItem/MultiItem.vue' // 工料彈窗(多選)
+  import MultiProt from '@/components/MultiProt/MultiProt.vue' // 工程彈窗(多選)
+  import MultiSupp from '@/components/MultiSupp/MultiSupp.vue' // 工程彈窗(多選)
 
   import { callApi } from '@/utils/uapi' // 呼叫api的方法
   import api from '@/api' // api清單
@@ -25,7 +25,7 @@
       begin: '', // 開始時間
       end: '' // 結束時間
     },
-    suppnoNOs: {
+    suppNOs: {
       begin: '', // 廠商編號開始
       end: '', // 廠商編號結束
       limiteds: [] as string[] // 廠商編號多選
@@ -46,8 +46,7 @@
       draw: 1
     },
     descrip: '',
-    porddetmo1: '',
-    payment1: '',
+    abdetmo1: '',
     feetNo: '20', // 表尾註腳編號
     printType: ''
   })
@@ -79,14 +78,14 @@
   watch(
     [() => selectedSuppOne.value.begin, () => selectedSuppOne.value.end],
     ([val1, val2], [old1, old2]) => {
-      if (val1 !== old1) formData.value.suppnoNOs.begin = val1
-      if (val2 !== old2) formData.value.suppnoNOs.end = val2
+      if (val1 !== old1) formData.value.suppNOs.begin = val1
+      if (val2 !== old2) formData.value.suppNOs.end = val2
     }
   )
   const onMultiSuppPicks = (rows: any[]) => {
     selectedSupp.value = rows
-    formData.value.suppnoNOs.limiteds = rows.map((r) => String(r.suppno).trim()).filter(Boolean)
-    isMultiSupp.value = formData.value.suppnoNOs.limiteds.length > 0
+    formData.value.suppNOs.limiteds = rows.map((r) => String(r.suppno).trim()).filter(Boolean)
+    isMultiSupp.value = formData.value.suppNOs.limiteds.length > 0
     selectedSuppOne.value.begin = ''
     selectedSuppOne.value.end = ''
   }
@@ -155,15 +154,15 @@
 
   // 廠商 8 碼
   const suppNoFromModel = computed({
-    get: () => formData.value.suppnoNOs.begin,
+    get: () => formData.value.suppNOs.begin,
     set: (val) => {
-      formData.value.suppnoNOs.begin = alnumN(val, 8)
+      formData.value.suppNOs.begin = alnumN(val, 8)
     }
   })
   const suppNoToModel = computed({
-    get: () => formData.value.suppnoNOs.end,
+    get: () => formData.value.suppNOs.end,
     set: (val) => {
-      formData.value.suppnoNOs.end = alnumN(val, 8)
+      formData.value.suppNOs.end = alnumN(val, 8)
     }
   })
 
@@ -198,30 +197,28 @@
   // 呼叫API送出列印資料
   const onSubmitPrint = async (t) => {
     console.log(JSON.stringify(formData.value, null, 2))
-
-    const API = t === 'Print' ? api.PordBrow.Print : api.PordBrow.Excel
-    const res = await callApi({
-      method: 'POST',
-      url: API,
-      data: formData.value
-    })
-    if (t === 'Print') {
-      if (typeof res.data === 'string' && res.data.startsWith('PDF')) {
-        window.open(config.apiUri + '/' + res.data)
+    try {
+      const API = t === 'Print' ? api.ApplyBuyBrowQuery.Print : api.ApplyBuyBrowQuery.Excel
+      const res = await callApi({
+        method: 'POST',
+        url: API,
+        data: formData.value
+      })
+      if (t === 'Print') {
+        if (typeof res.data === 'string' && res.data.startsWith('PDF')) {
+          window.open(config.apiUri + '/' + res.data)
+        } else {
+          console.warn('沒有取得檔名', res.data)
+        }
       } else {
-        console.warn('沒有取得檔名', res.data)
+        if (typeof res === 'string' && res.startsWith('Excel')) {
+          window.open(config.apiUri + '/' + res)
+        } else {
+          console.warn('沒有取得檔名', res)
+        }
       }
-    } else {
-      if (typeof res === 'string' && res.startsWith('Excel')) {
-        const a = document.createElement('a')
-        a.href = config.apiUri + '/' + res
-        a.download = decodeURIComponent(res.split('/').pop())
-        document.body.appendChild(a)
-        a.click()
-        a.remove()
-      } else {
-        console.warn('沒有取得檔名', res)
-      }
+    } catch (error) {
+      console.error('發生錯誤' + error)
     }
   }
 </script>
@@ -456,21 +453,8 @@
         </v-col> -->
         <v-col cols="11" class="u-wch w-60ch stack-1787">
           <c-input
-            v-model="formData.porddetmo1"
-            label="採購自定一"
-            density="compact"
-            :length-auto-width="false"
-          />
-        </v-col>
-      </v-row>
-      <v-row align="center" class="mb-3" dense>
-        <!-- <v-col cols="auto" class="d-flex align-center">
-          <h5 class="text-white mb-0 font-weight-medium title-text">說 明</h5>
-        </v-col> -->
-        <v-col cols="11" class="u-wch w-60ch stack-1787">
-          <c-input
-            v-model="formData.payment1"
-            label="付款條件"
+            v-model="formData.abdetmo1"
+            label="請購自定一"
             density="compact"
             :length-auto-width="false"
           />
