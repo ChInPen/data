@@ -12,60 +12,77 @@
   } from '@/components/Common' //共用元件
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
+  import { useMiscExpenseStore } from '@/store/miscexpense'
+  import { useRouter } from 'vue-router'
+  import Filter from './Components/MiscExpenseFilter.vue'
 
-  const store = ref({ isDetail: false })
+  const store = useMiscExpenseStore()
+  const router = useRouter()
   const formData = ref<Record<string, any>>({})
   const tabpage = ref('normal') //頁籤
 
   const protdetList = ref<any[]>([])
+
+  //查詢條件
+  const filterDS = ref(false)
+  const initSearch = (data) => {
+    if (Array.isArray(data)) {
+      store.init(data)
+    }
+  }
+  const handleSearch = (data) => {
+    store.search(router, data)
+  }
 </script>
 
 <template>
   <!--頂部 title & 按鈕區-->
   <c-bread>
-    <div class="col-auto">
-      <c-button kind="record" icon="fa-solid fa-angles-left">首筆</c-button>
-    </div>
-    <div class="col-auto">
-      <c-button kind="record" icon="fa-solid fa-angle-left">上一筆</c-button>
-    </div>
-    <div class="col-auto">
-      <c-button kind="record" icon="fa-solid fa-angle-right">下一筆</c-button>
-    </div>
-    <div class="col-auto">
-      <c-button kind="record" icon="fa-solid fa-angles-right">尾筆</c-button>
-    </div>
-    <div class="col-auto">
-      <c-button kind="print" icon="fa-solid fa-print">列印</c-button>
-    </div>
-    <div class="col-auto">
-      <c-button kind="browse" icon="fa-solid fa-eye">瀏覽</c-button>
-    </div>
-    <div class="col-auto">
-      <c-button kind="search" icon="fa-solid fa-magnifying-glass">查詢</c-button>
-    </div>
-    <div class="col-auto">
-      <c-button kind="copy" icon="fa-solid fa-copy">複製</c-button>
-    </div>
-    <div class="col-auto">
-      <c-button kind="delete" icon="fa-solid fa-trash">刪除</c-button>
-    </div>
-    <div class="col-auto">
-      <c-button kind="edit" icon="fa-solid fa-pen-to-square">編輯</c-button>
-    </div>
-    <div class="col-auto">
-      <c-button kind="create" icon="mdi-plus-circle">新增</c-button>
-    </div>
-
-    <!-- <div class="col-auto" v-if="!store.isDetail">
-      <c-button kind="cancel" icon="mdi-close-circle" @click="handleCancel">取消</c-button>
-    </div>
-    <div class="col-auto" v-if="!store.isDetail">
-      <c-button kind="submit" icon="fa-solid fa-paper-plane" @click="handleSave">確認送出</c-button>
-    </div>
-    <div class="col-auto" v-else>
-      <c-button kind="goback" icon="fa-solid fa-circle-left" @click="handleCancel">返回</c-button>
-    </div> -->
+    <template v-if="!store.isDetail">
+      <div class="col-auto">
+        <c-button kind="submit" icon="fa-solid fa-floppy-disk">儲存</c-button>
+      </div>
+      <div class="col-auto">
+        <c-button kind="cancel" icon="mdi-close-circle">放棄</c-button>
+      </div>
+    </template>
+    <template v-else>
+      <div class="col-auto">
+        <c-button kind="record" icon="fa-solid fa-angles-left">首筆</c-button>
+      </div>
+      <div class="col-auto">
+        <c-button kind="record" icon="fa-solid fa-angle-left">上一筆</c-button>
+      </div>
+      <div class="col-auto">
+        <c-button kind="record" icon="fa-solid fa-angle-right">下一筆</c-button>
+      </div>
+      <div class="col-auto">
+        <c-button kind="record" icon="fa-solid fa-angles-right">尾筆</c-button>
+      </div>
+      <div class="col-auto">
+        <c-button kind="print" icon="fa-solid fa-print">列印</c-button>
+      </div>
+      <div class="col-auto">
+        <c-button kind="browse" icon="fa-solid fa-eye" @click="store.search(router)">瀏覽</c-button>
+      </div>
+      <div class="col-auto">
+        <c-button kind="search" icon="fa-solid fa-magnifying-glass" @click="filterDS = true">
+          查詢
+        </c-button>
+      </div>
+      <div class="col-auto">
+        <c-button kind="copy" icon="fa-solid fa-copy">複製</c-button>
+      </div>
+      <div class="col-auto">
+        <c-button kind="delete" icon="fa-solid fa-trash">刪除</c-button>
+      </div>
+      <div class="col-auto">
+        <c-button kind="edit" icon="fa-solid fa-pen-to-square">編輯</c-button>
+      </div>
+      <div class="col-auto">
+        <c-button kind="create" icon="mdi-plus-circle">新增</c-button>
+      </div>
+    </template>
   </c-bread>
 
   <v-card class="mt-2">
@@ -436,4 +453,6 @@
       </c-table>
     </v-card-text>
   </v-card>
+
+  <Filter v-model="filterDS" @init="initSearch" @search="handleSearch" />
 </template>

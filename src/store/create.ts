@@ -152,3 +152,105 @@ export const createSearchStore = <T extends Record<string, any> | undefined = un
     }
   })
 }
+
+/* 建立查詢頁和明細頁之間的狀態控制 store 方法 (用 persist 可將狀態存至 storage) */
+export const createDocStore = <K extends string>(options: {
+  id: string // store id
+  keyName: K // 主鍵名稱 (empno/custno...)
+  path1: string // 表單頁 path
+  path2: string // 清單頁 path
+  persist?: {
+    // 可選 persist 參數
+    key: string
+    storage: Storage
+  }
+}) => {
+  return defineStore(options.id, {
+    state: () => ({
+      [options.keyName]: '' as string,
+      action: 'detail' as 'edit' | 'create' | 'copy' | 'detail',
+      list: [] as { K: string; [key: string]: any }[]
+    }),
+    getters: {
+      path1: () => options.path1,
+      path2: () => options.path2,
+      keyDisabled: (state) => !['create', 'copy'].includes(state.action),
+      isDetail: (state) => !['edit', 'create', 'copy'].includes(state.action),
+      actionName: (state) => {
+        switch (state.action) {
+          case 'edit':
+            return '編輯'
+          case 'copy':
+            return '複製'
+          case 'create':
+            return '新增'
+          default:
+            return '瀏覽'
+        }
+      },
+      isFirst: (state) => {
+        const idx = state.list.findIndex((x) => x[options.keyName] === state[options.keyName])
+        return idx === 0
+      },
+      isLast: (state) => {
+        const idx = state.list.findIndex((x) => x[options.keyName] === state[options.keyName])
+        return idx === state.list.length - 1
+      }
+    },
+    actions: {
+      init(list: any[]) {
+        this.list = list
+        if (this.list.length > 0) {
+          const lastItem = this.list[this.list.length - 1]
+          if (options.keyName in lastItem) this[options.keyName] = lastItem[options.keyName]
+        }
+      },
+      create() {
+        this.action = 'create'
+      },
+      edit() {
+        this.action = 'edit'
+      },
+      copy() {
+        this.action = 'copy'
+      },
+      browse() {
+        this.action = 'detail'
+      },
+      search(router: Router, list: any[] = []) {
+        this[options.keyName] = '' as any
+        this.list = list
+        this.action = 'detail'
+        router.push(this.path2)
+      },
+      goback(router: Router, list: any[], value?: string) {
+        if (value) this[options.keyName] = value as any
+        this.list = list
+        this.action = 'detail'
+        router?.push(this.path1)
+      },
+      first() {
+        this[options.keyName] = this.list[0][options.keyName]
+      },
+      previous() {
+        const idx = this.list.findIndex((x) => x[options.keyName] === this[options.keyName])
+        if (idx > 0) {
+          this[options.keyName] = this.list[idx - 1][options.keyName]
+        }
+      },
+      next() {
+        const idx = this.list.findIndex((x) => x[options.keyName] === this[options.keyName])
+        if (idx < this.list.length - 1) {
+          this[options.keyName] = this.list[idx + 1][options.keyName]
+        }
+      },
+      last() {
+        const idx = this.list.length - 1
+        if (idx >= 0) {
+          this[options.keyName] = this.list[idx][options.keyName]
+        }
+      }
+    },
+    ...(options.persist ? { persist: options.persist } : {})
+  })
+}

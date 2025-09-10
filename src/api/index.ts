@@ -178,11 +178,11 @@ export default {
   },
   //雜支作業
   Exes: {
-    Exes_Add: `${apiuridoc}/api/Exes/Exes_Add`,
-    Exes_Upd: `${apiuridoc}/api/Exes/Exes_Upd`,
-    Exes_Del: `${apiuridoc}/api/Exes/Exes_Del`,
-    Exeslist: `${apiuridoc}/api/Exes/Exeslist`,
-    Exes_Data: `${apiuridoc}/api/Exes/Exes_Data`
+    Exes_Add: `/api/Exes/Exes_Add`,
+    Exes_Upd: `/api/Exes/Exes_Upd`,
+    Exes_Del: `/api/Exes/Exes_Del`,
+    Exeslist: `/api/Exes/Exeslist`,
+    Exes_Data: `/api/Exes/Exes_Data`
   },
   //圖檔
   Photo: {

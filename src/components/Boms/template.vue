@@ -170,7 +170,7 @@
   <c-dialog
     v-model="isOpen"
     v-bind="$attrs"
-    width="1693"
+    width="1723"
     @afterLeave="handleDialogClose"
     title-divider
   >
@@ -226,25 +226,36 @@
     >
       <template v-slot:head>
         <th>項次</th>
-        <th width="260">工料編號</th>
-        <th width="600">工料名稱</th>
-        <th width="150">數量</th>
-        <th width="155">單位</th>
-        <th width="200">單價</th>
-        <th width="200">金額</th>
+        <th>工料編號</th>
+        <th>工料名稱</th>
+        <th>數量</th>
+        <th>單位</th>
+        <th>單價</th>
+        <th>金額</th>
       </template>
       <template v-slot:body="{ scope, index }">
-        <td class="text-center">{{ scope.rec1 }}</td>
+        <td>
+          <div class="text-center w-rec">{{ scope.rec1 }}</div>
+        </td>
         <td>
           <c-input
             v-model="scope.itemno"
             :disabled="disabled"
             @button="bomsItemSet(index)"
             @keydown="(e) => bomsItemKeyEnter(e, scope.itemno, index)"
+            :maxlength="20"
+            condensed
           />
         </td>
         <td>
-          <c-input v-model="scope.itemname" :disabled="true" />
+          <c-input
+            v-model="scope.itemname"
+            :disabled="true"
+            :maxlength="100"
+            :length-auto-width="false"
+            condensed
+            width="380"
+          />
         </td>
         <td>
           <c-input
@@ -253,6 +264,7 @@
             :format="{ thousands: true }"
             :disabled="disabled"
             @change="countTotal(index)"
+            :maxlength="8"
           />
         </td>
         <td>
@@ -264,6 +276,7 @@
             hide-search
             :disabled="disabled"
             clearable
+            width="140"
           />
         </td>
         <td>
@@ -273,6 +286,7 @@
             :format="{ thousands: true }"
             :disabled="disabled"
             @change="countTotal(index)"
+            :maxlength="8"
           />
         </td>
         <td>
@@ -281,6 +295,7 @@
             v-model="scope.amount"
             :format="{ thousands: true }"
             :disabled="true"
+            :maxlength="12"
           />
         </td>
       </template>
@@ -290,3 +305,9 @@
   <pick-item ref="pickitemRef" :show-ikind="true" @pick="pickitemPick" />
   <search-item ref="searchitemRef" @pick="searchItemStore.pick" />
 </template>
+
+<style>
+  .w-rec {
+    width: 60px;
+  }
+</style>

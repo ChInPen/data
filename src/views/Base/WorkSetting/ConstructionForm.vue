@@ -872,7 +872,7 @@
                   { column: 'empname', label: '人員名稱' }
                 ]"
                 :disabled="store.isDetail"
-                width="326"
+                width="376"
                 :input-maxlength="16"
                 condensed
               />
@@ -918,7 +918,7 @@
                   { column: 'empname', label: '人員名稱' }
                 ]"
                 :disabled="store.isDetail"
-                width="326"
+                width="376"
                 :input-maxlength="16"
                 condensed
               />
@@ -1046,43 +1046,61 @@
               height="340"
               fixed-header
               selectable
-              layout="fixed"
               header-align="center"
             >
               <template v-slot:head>
-                <th width="80">序號</th>
-                <th width="50">大</th>
-                <th width="50">中</th>
-                <th width="50">細</th>
-                <th width="260">工料編號</th>
-                <th width="600">工料名稱</th>
-                <th width="150">數量A</th>
-                <th width="155">單位</th>
-                <th width="200">單價B</th>
-                <th width="200">複價C</th>
-                <th width="125">請款已轉D</th>
-                <th width="125">請款未轉</th>
-                <th width="125">採購已轉</th>
-                <th width="125">採購未轉</th>
-                <th width="200">比例設定(分子)</th>
-                <th width="200">比例設定(分母)</th>
-                <th width="200">說明</th>
-                <th width="60">類別</th>
+                <th>序號</th>
+                <th>大</th>
+                <th>中</th>
+                <th>細</th>
+                <th>工料編號</th>
+                <th>工料名稱</th>
+                <th>數量A</th>
+                <th>單位</th>
+                <th>單價B</th>
+                <th>複價C</th>
+                <th>請款已轉D</th>
+                <th>請款未轉</th>
+                <th>採購已轉</th>
+                <th>採購未轉</th>
+                <th>比例設定(分子)</th>
+                <th>比例設定(分母)</th>
+                <th>說明</th>
+                <th>類別</th>
               </template>
               <template v-slot:body="{ scope, index }">
-                <td class="text-center">{{ scope.rec1 }}</td>
-                <td class="text-center">{{ scope.headitemn1 }}</td>
-                <td class="text-center">{{ scope.detitemno1 }}</td>
-                <td class="text-center">{{ scope.secitemno1 }}</td>
+                <td>
+                  <div class="text-center w-rec">{{ scope.rec1 }}</div>
+                </td>
+                <td>
+                  <div class="text-center nowrap">{{ scope.headitemn1 }}</div>
+                </td>
+                <td>
+                  <div class="text-center nowrap">{{ scope.detitemno1 }}</div>
+                </td>
+                <td>
+                  <div class="text-center nowrap">{{ scope.secitemno1 }}</div>
+                </td>
                 <td>
                   <c-input
                     v-model="scope.itemno"
                     :disabled="store.isDetail"
                     @button="protdetItemnoSet(index)"
                     @keydown="(e) => protdetItemnoKeyEnter(e, scope.itemno, index)"
+                    :maxlength="20"
+                    condensed
                   />
                 </td>
-                <td><c-input v-model="scope.itemname" :disabled="true" /></td>
+                <td>
+                  <c-input
+                    v-model="scope.itemname"
+                    :disabled="true"
+                    :maxlength="100"
+                    :length-auto-width="false"
+                    condensed
+                    width="380"
+                  />
+                </td>
                 <td>
                   <c-input
                     type="number"
@@ -1090,6 +1108,7 @@
                     :disabled="store.isDetail"
                     :format="{ thousands: true }"
                     @change="countsQtyAndTotal('all', index)"
+                    :maxlength="9"
                   />
                 </td>
                 <td>
@@ -1101,6 +1120,7 @@
                     hide-search
                     :disabled="store.isDetail"
                     clearable
+                    width="140"
                   />
                 </td>
                 <td>
@@ -1110,6 +1130,7 @@
                     :disabled="store.isDetail"
                     :format="{ thousands: true }"
                     @change="countsQtyAndTotal('total', index)"
+                    :maxlength="10"
                   />
                 </td>
                 <td>
@@ -1118,6 +1139,7 @@
                     v-model="scope.total1"
                     :disabled="true"
                     :format="{ thousands: true }"
+                    :maxlength="12"
                   />
                 </td>
                 <td>
@@ -1126,6 +1148,7 @@
                     v-model="scope.sqty"
                     :disabled="true"
                     :format="{ thousands: true }"
+                    :maxlength="9"
                   />
                 </td>
                 <td>
@@ -1134,6 +1157,7 @@
                     v-model="scope.nqty"
                     :disabled="true"
                     :format="{ thousands: true }"
+                    :maxlength="9"
                   />
                 </td>
                 <td>
@@ -1142,6 +1166,7 @@
                     v-model="scope.spqty"
                     :disabled="true"
                     :format="{ thousands: true }"
+                    :maxlength="9"
                   />
                 </td>
                 <td>
@@ -1150,12 +1175,40 @@
                     v-model="scope.npqty"
                     :disabled="true"
                     :format="{ thousands: true }"
+                    :maxlength="9"
                   />
                 </td>
-                <td><c-input v-model="scope.formula1" :disabled="store.isDetail" /></td>
-                <td><c-input v-model="scope.formula2" :disabled="store.isDetail" /></td>
-                <td><c-input v-model="scope.descrip" :disabled="store.isDetail" /></td>
-                <td class="text-center">{{ scope.mkindno1 }}</td>
+                <td>
+                  <c-input
+                    v-model="scope.formula1"
+                    :disabled="store.isDetail"
+                    :maxlength="254"
+                    :length-auto-width="false"
+                    condensed
+                    width="200"
+                  />
+                </td>
+                <td>
+                  <c-input
+                    v-model="scope.formula2"
+                    :disabled="store.isDetail"
+                    :maxlength="254"
+                    :length-auto-width="false"
+                    condensed
+                    width="200"
+                  />
+                </td>
+                <td>
+                  <c-input
+                    v-model="scope.descrip"
+                    :disabled="store.isDetail"
+                    :maxlength="20"
+                    condensed
+                  />
+                </td>
+                <td>
+                  <div class="text-center w-mkindno1">{{ scope.mkindno1 }}</div>
+                </td>
               </template>
             </c-table>
           </hdsItem>
@@ -1392,5 +1445,14 @@
   .div-prot-ikind {
     border: 1px solid white;
     padding: 0;
+  }
+  .w-rec {
+    width: 68px;
+  }
+  .w-mkindno1 {
+    width: 60px;
+  }
+  .nowrap {
+    white-space: nowrap;
   }
 </style>

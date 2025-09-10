@@ -202,6 +202,11 @@ const menu: MenuEntry[] = [
             path: 'MiscExpense',
             name: 'B07雜支作業系統',
             component: () => import('@/views/Document/OpsOwner/MiscExpense.vue')
+          },
+          {
+            title: '雜支作業-查詢',
+            path: 'MiscExpenseSearch',
+            component: () => import('@/views/Document/OpsOwner/MiscExpenseSearch.vue')
           }
           // { title: '分攤比例', path: '' },
           // { title: '工地耗轉作業', path: '' }
