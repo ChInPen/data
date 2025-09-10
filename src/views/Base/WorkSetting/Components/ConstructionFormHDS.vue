@@ -406,28 +406,34 @@
     title-divider
     width="auto"
   >
-    <div class="d-flex gap-3 flex-wrap">
-      <c-select
-        v-model="secForm.headitemno"
-        v-model:title="secForm.headitemno1"
-        label="大項目"
-        :items="headList"
-        item-title="headitemno1"
-        item-value="headitemno"
-        hide-search
-        width="250"
-      />
-      <c-select
-        v-model="secForm.detitemno"
-        v-model:title="secForm.detitemno1"
-        label="中項目"
-        :items="detListDDL"
-        item-title="detitemno1"
-        item-value="detitemno"
-        hide-search
-        width="300"
-      />
-      <c-input class="sec-input" v-model="secForm.secitem" label="細項目" :maxlength="40" />
+    <v-row no-gutters>
+      <v-col cols="auto">
+        <c-select
+          v-model="secForm.headitemno"
+          v-model:title="secForm.headitemno1"
+          label="大項目"
+          :items="headList"
+          item-title="headitemno1"
+          item-value="headitemno"
+          hide-search
+          width="250"
+        />
+      </v-col>
+      <v-col cols="auto" class="ms-4">
+        <c-select
+          v-model="secForm.detitemno"
+          v-model:title="secForm.detitemno1"
+          label="中項目"
+          :items="detListDDL"
+          item-title="detitemno1"
+          item-value="detitemno"
+          hide-search
+          width="300"
+        />
+      </v-col>
+    </v-row>
+    <div class="d-flex mt-4">
+      <c-input v-model="secForm.secitem" label="細項目" :maxlength="40" />
     </div>
     <template v-slot:buttons>
       <div class="col-auto">
@@ -444,8 +450,4 @@
   </c-dialog>
 </template>
 
-<style scoped>
-  .sec-input {
-    flex: 0 0 100%; /* 佔滿一整行 */
-  }
-</style>
+<style scoped></style>
