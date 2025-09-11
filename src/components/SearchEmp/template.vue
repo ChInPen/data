@@ -24,7 +24,7 @@
   const storeSet = () => {
     if (formData.value) store.target.value = formData
     if (props.setting && props.setting.length > 0) store.pickSetting = [...props.setting]
-    if (props.row) store.target.row = props.row
+    if (typeof props.row === 'number' && props.row >= 0) store.target.row = props.row
     if (isEnter.value) {
       store.isSearch = true
       store.searchText = props.searchText ?? ''

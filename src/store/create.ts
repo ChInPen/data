@@ -224,8 +224,12 @@ export const createDocStore = <K extends string>(options: {
         router.push(this.path2)
       },
       goback(router: Router, list: any[], value?: string) {
-        if (value) this[options.keyName] = value as any
         this.list = list
+        if (value) {
+          this[options.keyName] = value as any
+        } else {
+          this[options.keyName] = this.list[this.list.length - 1]?.[options.keyName] ?? ''
+        }
         this.action = 'detail'
         router?.push(this.path1)
       },

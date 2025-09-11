@@ -5,9 +5,9 @@ export const useMiscExpenseStore = createDocStore<'ono'>({
   id: 'miscExpense',
   keyName: 'ono',
   path1: '/menu/MiscExpense',
-  path2: '/menu/MiscExpenseSearch',
-  persist: {
-    key: 'misc-expense-store',
-    storage: localStorage
-  }
+  path2: '/menu/MiscExpenseSearch'
+  // persist: {
+  //   key: 'misc-expense-store',
+  //   storage: localStorage
+  // }
 })

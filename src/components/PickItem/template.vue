@@ -41,6 +41,10 @@
     seclist: {
       type: Array as PropType<iSecItem[]>,
       default: []
+    },
+    mkind6: {
+      type: Boolean,
+      default: false
     }
   })
   const emits = defineEmits(['pick'])
@@ -157,7 +161,7 @@
         itemno: itemno ?? '',
         itemname: itemname ?? '',
         ikindno: ikindno ?? '',
-        mkindno: mkindno ?? []
+        mkindno: props.mkind6 ? ['6'] : (mkindno ?? [])
       }
     }).then((res: any) => {
       if (res?.status === 200) {
@@ -306,7 +310,7 @@
           <v-col :cols="4">
             <c-input v-model="filter.itemno" label="工料編號" />
           </v-col>
-          <v-col :cols="8">
+          <v-col :cols="8" v-if="!mkind6">
             <v-row dense :align="'center'" justify="end">
               <v-col cols="auto" class="fs-5">工料分類：</v-col>
               <v-col cols="auto" v-for="mkind in mkindCheckbox" :key="mkind.value">
