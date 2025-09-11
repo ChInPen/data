@@ -1,51 +1,36 @@
-<script lang="ts" setup>
-  import { computed, ref, watch } from 'vue'
-  import { cButton, cBread, cSelect } from '@/components/Common' // 共用元件
+<script setup lang="ts">
+  import { ref, watch, computed } from 'vue'
   import { callApi } from '@/utils/uapi' // 呼叫api的方法
   import api from '@/api' // api清單
   import config from '@/config/config'
   import { message } from '@/components/Message/service'
-  // ======================================
-  import ProtStart from '@/views/Analytics/composable/Prot/ProtStart.vue'
-  import ProtEnd from '@/views/Analytics/composable/Prot/ProtEnd.vue'
-  import SuppStart from '@/views/Analytics/composable/Supp/SuppStart.vue'
-  import SuppEnd from '@/views/Analytics/composable/Supp/SuppEnd.vue'
-  import SuppMultiBut from '@/views/Analytics/composable/Supp/SuppMultiBut.vue'
-  import DateRange from '@/views/Report/composable/DateRange.vue'
-  // 表單/列印/EXCEL
+  import { cButton, cBread, cInput, cSelect } from '@/components/Common' // 共用元件
+  import EmpStart from '@/views/Analytics/composable/Emp/EmpStart.vue'
+  import EmpEnd from '@/views/Analytics/composable/Emp/EmpEnd.vue'
+  import EmpMultiBut from '@/views/Analytics/composable/Emp/EmpMultiBut.vue'
+  import FeetNoDDL from '@/views/Analytics/composable/FeetNoDDL.vue'
   const formData = ref({
-    date1_s: '',
-    date1_e: '',
-    suppno_s: '',
-    suppno_e: '',
-    suppno_list: [] as any,
-    protno_s: '',
-    protno_e: '',
-    order: '1'
+    date1: '',
+    empno_s: '',
+    empno_e: '',
+    footNote: '20',
+    projectSelection: '1',
+    empno_List: []
   })
-  const formDataRange = ref({
-    dates: {
-      begin: '',
-      end: ''
-    }
-  })
-  // 排序
-  const orderNoDDL = ref({
+  // 報表內容
+  const printType = ref({
     list: [
-      { value: '1', title: '發票號碼' },
-      { value: '2', title: '發票日期' },
-      { value: '3', title: '工程編號' }
+      { value: '1', title: '內定報表' },
+      { value: '2', title: '內定報表(工時)' }
     ],
-    title: 'title',
-    value: 'value'
+    value: 'value',
+    title: 'title'
   })
-
   // 呼叫API送出列印資料
   const loadingPrint = ref(false)
   const loadingExcel = ref(false)
-  const onSubmitPrint = async (t: any) => {
-    console.log(JSON.stringify(formData.value, null, 2))
-    if (!formData.value.date1_e || !formData.value.date1_s) {
+  const onSubmitPrint = async (t: string) => {
+    if (!formData.value.date1) {
       message.alert({
         type: 'error',
         message: '查詢日期不可為空！'
@@ -58,13 +43,16 @@
     } else {
       loadingExcel.value = true
     }
-    const API = t === 'Print' ? api.InputVatDetails.Print : api.InputVatDetails.Excel
+    const API = t === 'Print' ? api.WorkerMonthlySummary.Print : api.WorkerMonthlySummary.Excel
     try {
       console.log(JSON.stringify(formData.value, null, 2))
       const res = await callApi({
         method: 'POST',
         url: API,
         data: formData.value,
+        // params: {
+        //   Print_Type: PrintType.value.PrintTypeRef
+        // },
         timeout: 120000 // 2分鐘
       })
       console.log('print res:', res)
@@ -94,18 +82,16 @@
     }
   }
 
-  //判斷是否進入多選模式
-  const isMulti = computed(() => (formData.value.suppno_list?.length ?? 0) > 0)
-
-  //一旦進入多選就清空單選，避免送出兩種條件
+  // 判斷是否進入多選模式
+  const isMulti = computed(() => (formData.value.empno_List?.length ?? 0) > 0)
+  // 一旦進入多選就清空單選，避免送出兩種條件
   watch(isMulti, (on) => {
     if (on) {
-      formData.value.suppno_e = ''
-      formData.value.suppno_s = ''
+      formData.value.empno_e = ''
+      formData.value.empno_s = ''
     }
   })
 </script>
-
 <template>
   <!-- 操作按鈕區 -->
   <c-bread>
@@ -140,61 +126,19 @@
       </v-col>
     </v-row>
   </c-bread>
-
-  <!-- 查詢表單 -->
-
   <v-card color="#1b2b36" rounded="lg" class="mt-4 sqte-form" elevation="2">
     <v-card-text class="pa-6">
-      <!-- 日期區間 -->
-      <v-row align="center" class="mb-3" dense>
-        <v-col cols="auto">
-          <DateRange
-            v-model:from="formData.date1_s"
-            v-model:to="formData.date1_e"
-            labelFrom="開始日期"
-            labelTo="結束日期"
-            dense
-          />
-        </v-col>
-      </v-row>
-      <!-- 廠商區間 -->
-      <v-row align="center" class="mb-3" dense>
-        <v-col cols="auto">
-          <SuppStart v-model="formData.suppno_s" :disabled="isMulti" dense />
-        </v-col>
-        <v-col cols="auto" class="text-center d-none d-md-block">
-          <span class="text-h5 text-grey-lighten-1">～</span>
-        </v-col>
-        <v-col cols="auto">
-          <SuppEnd v-model="formData.suppno_e" :disabled="isMulti" dense />
-        </v-col>
-        <v-col cols="auto">
-          <SuppMultiBut v-model="formData.suppno_list" dense />
-        </v-col>
-      </v-row>
-      <!-- 工程區間 -->
-      <v-row align="center" class="mb-3" dense>
-        <v-col cols="auto">
-          <ProtStart v-model="formData.protno_s" dense />
-        </v-col>
-        <v-col cols="auto" class="text-center d-none d-md-block">
-          <span class="text-h5 text-grey-lighten-1">～</span>
-        </v-col>
-        <v-col cols="auto">
-          <ProtEnd v-model="formData.protno_e" dense />
-        </v-col>
-      </v-row>
-      <!-- 排序 -->
+      <!-- 報表類別 -->
       <v-row align="center" class="mb-3" dense>
         <v-col cols="11">
           <v-row>
-            <v-col cols="6" class="u-wch w-7ch">
+            <v-col cols="6" class="u-wch w-20ch">
               <c-select
-                v-model="formData.order"
-                label="排序"
-                :items="orderNoDDL.list"
-                :item-title="orderNoDDL.title"
-                :item-value="orderNoDDL.value"
+                v-model="formData.projectSelection"
+                label="報表內容"
+                :items="printType.list"
+                :item-title="printType.title"
+                :item-value="printType.value"
                 hide-search
                 class="sheet"
               />
@@ -202,11 +146,45 @@
           </v-row>
         </v-col>
       </v-row>
+      <!-- 日期 -->
+      <v-row align="center">
+        <v-col cols="auto">
+          <c-input type="datemoon" label="點工月份" v-model="formData.date1" class="pad" />
+        </v-col>
+      </v-row>
+      <!-- 人員區間 -->
+      <v-row align="center">
+        <v-col cols="auto">
+          <EmpStart v-model="formData.empno_e" dense />
+        </v-col>
+        <v-col cols="auto" class="text-center d-none d-md-block">
+          <span class="text-h5 text-grey-lighten-1">～</span>
+        </v-col>
+        <v-col cols="auto">
+          <EmpEnd v-model="formData.empno_s" dense />
+        </v-col>
+        <v-col cols="auto">
+          <EmpMultiBut v-model="formData.empno_List" dense />
+        </v-col>
+      </v-row>
+      <!-- 註腳區間 -->
+      <v-row align="center">
+        <v-col cols="auto">
+          <FeetNoDDL
+            v-model="formData.footNote"
+            label="單行註腳"
+            :items="undefined"
+            :dense="true"
+            :hideSearch="true"
+          />
+        </v-col>
+      </v-row>
     </v-card-text>
   </v-card>
 </template>
+
 <style scoped>
   .sheet {
-    width: 250px;
+    width: 300px;
   }
 </style>

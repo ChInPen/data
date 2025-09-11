@@ -5,10 +5,14 @@
   import config from '@/config/config'
   import { message } from '@/components/Message/service'
   import { cButton, cBread, cSelect } from '@/components/Common' // 共用元件
-  import ProtRange from '@/views/Report/composable/ProtRange.vue' //工程多用框
-  import ItemRange from '@/views/Report/composable/ItemRange.vue' //工程多用框
   import DateRange from '@/views/Report/composable/DateRange.vue' //日期選擇框
-
+  import ProtStart from '@/views/Analytics/composable/Prot/ProtStart.vue'
+  import ProtEnd from '@/views/Analytics/composable/Prot/ProtEnd.vue'
+  import ProtMultiBut from '@/views/Analytics/composable/Prot/ProtMultiBut.vue'
+  import ItemStart from '@/views/Analytics/composable/Item/ItemStart.vue'
+  import ItemEnd from '@/views/Analytics/composable/Item/ItemEnd.vue'
+  import ItemMultiBut from '@/views/Analytics/composable/Item/ItemMultiBut.vue'
+  import FeetNoDDL from '@/views/Analytics/composable/FeetNoDDL.vue'
   const formData = ref({
     dates: {
       begin: '',
@@ -49,20 +53,6 @@
     value: 'valueOn',
     title: 'title'
   })
-  // 表尾註腳
-  const feetNoDDL = ref({
-    list: [
-      { feetno: '01', feetname: '第一組' },
-      { feetno: '02', feetname: '第二組' },
-      { feetno: '03', feetname: '第三組' },
-      { feetno: '04', feetname: '第四組' },
-      { feetno: '05', feetname: '第五組' },
-      { feetno: '20', feetname: '不列印' }
-    ],
-    value: 'feetno',
-    title: 'feetname'
-  })
-
   // 是否為明細表
   const isDetail = computed(() => reportData.value === '2')
 
@@ -74,7 +64,6 @@
   })
   // 呼叫API送出列印資料
   const loadingPrint = ref(false)
-  const loadingExcel = ref(false)
   // 送出時依類型組裝 payload
   const onSubmitPrint = async (t: any) => {
     const hasDate = !!(formData.value.dates.begin && formData.value.dates.end)
@@ -89,6 +78,8 @@
     const payload = isDetail.value
       ? { ...formData.value, itemnos: formDataDetail.value.itemnos }
       : { ...formData.value }
+
+    console.log(JSON.stringify(payload, null, 2))
 
     const API =
       reportData.value === '1'
@@ -125,6 +116,23 @@
       loadingPrint.value = false
     }
   }
+  // 判斷是否進入多選模式
+  const isMulti = computed(() => (formData.value.protnos.limiteds?.length ?? 0) > 0)
+  const isMulti2 = computed(() => (formDataDetail.value.itemnos.limiteds?.length ?? 0) > 0)
+
+  // 進入多選就清空單選，避免送出兩種條件
+  watch(isMulti, (on) => {
+    if (on) {
+      formData.value.protnos.begin = ''
+      formData.value.protnos.end = ''
+    }
+  })
+  watch(isMulti2, (on) => {
+    if (on) {
+      formDataDetail.value.itemnos.begin = ''
+      formDataDetail.value.itemnos.end = ''
+    }
+  })
 </script>
 <template>
   <!-- 操作按鈕區 -->
@@ -166,26 +174,52 @@
           </v-row>
         </v-col>
       </v-row>
-      <DateRange v-model="formData.dates" dense />
-      <ProtRange v-model="formData.protnos" dense />
-      <!-- 只有明細表才出現 itemRange -->
-      <ItemRange v-if="isDetail" v-model="formDataDetail.itemnos" dense />
-      <!-- 其他欄位 -->
+      <!-- 日期 -->
       <v-row align="center" class="mb-3" dense>
-        <v-col cols="11">
-          <v-row>
-            <v-col cols="6">
-              <c-select
-                v-model="formData.feetNo"
-                label="單行註腳"
-                :items="feetNoDDL.list"
-                :item-title="feetNoDDL.title"
-                :item-value="feetNoDDL.value"
-                hide-search
-                class="sheet"
-              />
-            </v-col>
-          </v-row>
+        <v-col>
+          <DateRange v-model="formData.dates" dense />
+        </v-col>
+      </v-row>
+      <!-- 工程區塊 -->
+      <v-row align="center" class="mb-3" dense>
+        <v-col cols="auto">
+          <ProtStart v-model="formData.protnos.begin" :disabled="isMulti" dense />
+        </v-col>
+        <v-col cols="auto" class="text-center d-none d-md-block">
+          <span class="text-h5 text-grey-lighten-1">～</span>
+        </v-col>
+        <v-col cols="auto">
+          <ProtEnd v-model="formData.protnos.end" :disabled="isMulti" dense />
+        </v-col>
+        <v-col cols="auto">
+          <ProtMultiBut v-model="formData.protnos.limiteds" dense />
+        </v-col>
+      </v-row>
+      <!-- 只有明細表才出現 itemRange -->
+      <v-row align="center" v-if="isDetail" class="mb-3" dense>
+        <v-col cols="auto">
+          <ItemStart v-model="formDataDetail.itemnos.begin" :disabled="isMulti2" dense />
+        </v-col>
+        <v-col cols="auto" class="text-center d-none d-md-block">
+          <span class="text-h5 text-grey-lighten-1">～</span>
+        </v-col>
+        <v-col cols="auto">
+          <ItemEnd v-model="formDataDetail.itemnos.end" :disabled="isMulti2" dense />
+        </v-col>
+        <v-col cols="auto">
+          <ItemMultiBut v-model="formDataDetail.itemnos.limiteds" dense />
+        </v-col>
+      </v-row>
+      <!-- 註腳區塊 -->
+      <v-row align="center" class="mb-3" dense>
+        <v-col cols="auto">
+          <FeetNoDDL
+            v-model="formData.feetNo"
+            label="單行註腳"
+            :items="undefined"
+            :dense="true"
+            :hideSearch="true"
+          />
         </v-col>
       </v-row>
     </v-card-text>

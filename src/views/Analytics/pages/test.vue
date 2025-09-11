@@ -1,135 +1,301 @@
-<script lang="ts" setup>
+<script setup lang="ts">
   import { ref, computed, watch } from 'vue'
-  import CodeFromField from '@/views/Analytics/composable/CustStart.vue'
-  import CodeToField from '@/views/Analytics/composable/CustEnd.vue'
-  import CodeMultiSelect from '@/views/Analytics/composable/CustMultiBut.vue'
-  import { useSearchSupp } from '@/store/searchSupp'
-  import { searchSupp } from '@/components/SearchSupp' // 單選彈窗
-  import MultiSupp from '@/components/MultiSupp/MultiSupp.vue' // 多選彈窗
-
-  type Model = { begin: string; end: string; limiteds: string[] }
-
-  const props = defineProps<{
-    modelValue: Model
-    dense?: boolean
-    widthFrom?: string
-    widthTo?: string
-  }>()
-  const emit = defineEmits<{ (e: 'update:modelValue', v: Model): void }>()
-
-  const m = computed<Model>({
-    get: () => props.modelValue,
-    set: (v) => emit('update:modelValue', v)
-  })
-
-  const isMulti = computed(() => (m.value.limiteds?.length ?? 0) > 0)
-  const multiCount = computed(() => m.value.limiteds?.length ?? 0)
-
-  // 單選 Dialog
-  const store = useSearchSupp()
-  const singleRef = ref<any>()
-  const selectedOne = ref({ begin: '', end: '' })
-
-  const openPicker = (side: 'from' | 'to') => {
-    const toKey = side === 'from' ? 'begin' : 'end'
-    store.set(selectedOne, [{ from: 'suppno', to: toKey }], { open: singleRef.value?.open })
+  import { cButton, cBread } from '@/components/Common'
+  import { callApi } from '@/utils/uapi' // 呼叫api的方法
+  import api from '@/api' // api清單
+  import config from '@/config/config'
+  import DateRange from '@/views/Report/composable/DateRange.vue'
+  import CustStart from '@/views/Analytics/composable/Cust/CustStart.vue'
+  import CustEnd from '@/views/Analytics/composable/Cust/CustEnd.vue'
+  import CustMultiBut from '@/views/Analytics/composable/Cust/CustMultiBut.vue'
+  import ProtStart from '@/views/Analytics/composable/Prot/ProtStart.vue'
+  import ProtEnd from '@/views/Analytics/composable/Prot/ProtEnd.vue'
+  import ProtMultiBut from '@/views/Analytics/composable/Prot/ProtMultiBut.vue'
+  import FeetNoDDL from '@/views/Analytics/composable/FeetNoDDL.vue'
+  import ItemStart from '@/views/Analytics/composable/Item/ItemStart.vue'
+  import ItemEnd from '@/views/Analytics/composable/Item/ItemEnd.vue'
+  import ItemMultiBut from '@/views/Analytics/composable/Item/ItemMultiBut.vue'
+  import SuppStart from '@/views/Analytics/composable/Supp/SuppStart.vue'
+  import SuppEnd from '@/views/Analytics/composable/Supp/SuppEnd.vue'
+  import SuppMultiBut from '@/views/Analytics/composable/Supp/SuppMultiBut.vue'
+  import EmpStart from '@/views/Analytics/composable/Emp/EmpStart.vue'
+  import EmpEnd from '@/views/Analytics/composable/Emp/EmpEnd.vue'
+  import EmpMultiBut from '@/views/Analytics/composable/Emp/EmpMultiBut.vue'
+  type SearchData = {
+    custno: string
+    custname: string
+    custabbr: string
+    con: string
+    tel: string
+    mobitel: string
+    uniform: string
+    ckindname: string
+    akindc: string
+    fax: string
+    boss: string
+    taxkindno: string
+    taxkindc: string
+    a_user: string
+    m_user: string
+    protno: string
+    protabbr: string
+    protname: string
+    protaddr: string
+    itemno: string
+    itemname: string
+    ikindname: string
+    mkindname: string
+    stkpurpc: number
+    stksalpc: number
+    suppno: string
+    suppabbr: string
+    suppname: string
+    con1: string
+    con2: string
+    tel1: string
+    tel2: string
+    mobitel1: string
+    mobitel2: string
+    mobitel3: string
+    compaddr: string
+    [key: string]: any
   }
 
-  // 回填單選
-  watch([() => selectedOne.value.begin, () => selectedOne.value.end], ([b, e], [ob, oe]) => {
-    const next = { ...m.value }
-    if (b !== ob) next.begin = b
-    if (e !== oe) next.end = e
-    emit('update:modelValue', next)
+  const formData = ref<Record<string, any>>({})
+  const model0 = ref('20') // 單選起
+  const model = ref('') // 單選起
+  const model2 = ref('') // 單選迄
+  const model3 = ref({ begin: '', end: '' }) // 日期
+  const model4 = ref<SearchData[]>([]) // 多選
+  const model5 = ref('') // 單選起
+  const model6 = ref('') // 單選迄
+  const model7 = ref<SearchData[]>([]) // 多選
+  const model8 = ref('')
+  const model9 = ref('')
+  const model10 = ref<SearchData[]>([]) // 多選
+  const model11 = ref('')
+  const model12 = ref('')
+  const model13 = ref<SearchData[]>([]) // 多選
+  const model14 = ref('')
+  const model15 = ref('')
+  const model16 = ref<SearchData[]>([]) // 多選
+
+  //判斷是否進入多選模式
+  const isMulti = computed(() => (model4.value?.length ?? 0) > 0)
+  const isMulti2 = computed(() => (model7.value?.length ?? 0) > 0)
+  const isMulti3 = computed(() => (model10.value?.length ?? 0) > 0)
+  const isMulti4 = computed(() => (model13.value?.length ?? 0) > 0)
+  const isMulti5 = computed(() => (model16.value?.length ?? 0) > 0)
+
+  //一旦進入多選就清空單選，避免送出兩種條件
+  watch(isMulti, (on) => {
+    if (on) {
+      model.value = ''
+      model2.value = ''
+    }
+  })
+  watch(isMulti2, (on) => {
+    if (on) {
+      model5.value = ''
+      model6.value = ''
+    }
+  })
+  watch(isMulti3, (on) => {
+    if (on) {
+      model8.value = ''
+      model9.value = ''
+    }
   })
 
-  // 多選 Dialog
-  const multiOpen = ref(false)
-  const selectedRows = ref<any[]>([])
+  watch(isMulti4, (on) => {
+    if (on) {
+      model11.value = ''
+      model12.value = ''
+    }
+  })
 
-  const onMultiPicks = (rows: any[]) => {
-    selectedRows.value = rows
-    const ids = rows.map((r) => String(r.suppno).trim()).filter(Boolean)
-    emit('update:modelValue', { begin: '', end: '', limiteds: ids })
-  }
-
-  const clearMulti = () => {
-    emit('update:modelValue', { ...m.value, limiteds: [] })
+  // 呼叫API送出列印資料
+  const loadingPrint = ref(false)
+  const loadingExcel = ref(false)
+  const onSubmitPrint = async (t) => {
+    if (loadingPrint.value || loadingExcel.value) return
+    if (t === 'Print') {
+      loadingPrint.value = true
+    } else {
+      loadingExcel.value = true
+    }
+    const API = t === 'Print' ? api.PettyCashQuery.Print : api.PettyCashQuery.Excel
+    try {
+      console.log(JSON.stringify(formData.value, null, 2))
+      const res = await callApi({
+        method: 'POST',
+        url: API,
+        data: formData.value,
+        // params: {
+        //   Print_Type: PrintType.value.PrintTypeRef
+        // },
+        timeout: 120000 // 2分鐘
+      })
+      console.log('print res:', res)
+      const path = typeof res === 'string' ? res : res?.data
+      if (t === 'Print') {
+        if (typeof path === 'string' && path.startsWith('PDF')) {
+          window.open(config.apiUri + '/' + path)
+        } else {
+          console.warn('沒有取得檔名', res)
+        }
+      } else {
+        if (typeof path === 'string' && path.startsWith('Excel')) {
+          window.open(config.apiUri + '/' + path)
+        } else {
+          console.warn('沒有取得檔名', res)
+        }
+      }
+    } catch (err) {
+      if (err.response) {
+        console.error('列印失敗:', err.response.status, err.response.data)
+      } else {
+        console.error('列印失敗:', err.message || err)
+      }
+    } finally {
+      loadingPrint.value = false
+      loadingExcel.value = false
+    }
   }
 </script>
 
 <template>
-  <v-row align="center" dense class="gap-y-2">
-    <v-col cols="12" md="3">
-      <CodeFromField
-        :label="'廠商編號(起)'"
-        :maxLength="8"
-        :alnumUpper="true"
-        :dense="dense"
-        :width="widthFrom || 'w-8ch'"
-        :model-value="m.begin"
-        :disabled="isMulti"
-        @update:modelValue="(v) => emit('update:modelValue', { ...m, begin: v })"
-        @open="openPicker('from')"
+  <!-- 操作按鈕區 -->
+  <c-bread>
+    <v-row justify="end" class="ma-0" dense>
+      <v-col cols="auto">
+        <c-button
+          kind="print"
+          :icon="loadingPrint ? '' : 'fa-solid fa-print'"
+          @click="onSubmitPrint('Print')"
+          :disabled="loadingPrint"
+        >
+          <template v-if="loadingPrint">
+            <i class="fa-solid fa-spinner fa-spin me-2"></i>
+            列印中...
+          </template>
+          <template v-else>列印</template>
+        </c-button>
+      </v-col>
+      <v-col cols="auto">
+        <c-button
+          kind="create"
+          :icon="loadingExcel ? '' : 'fa-solid fa-file-excel'"
+          @click="onSubmitPrint('Excel')"
+          :disabled="loadingExcel"
+        >
+          <template v-if="loadingExcel">
+            <i class="fa-solid fa-spinner fa-spin me-2"></i>
+            匯出中...
+          </template>
+          <template v-else>匯出Excel</template>
+        </c-button>
+      </v-col>
+    </v-row>
+  </c-bread>
+
+  <v-card color="#1b2b36" rounded="lg" class="mt-4 sqte-form" elevation="2">
+    <v-card-text class="pa-6">
+      <DateRange
+        v-model="model3"
+        v-model:from="formData.date1_s"
+        v-model:to="formData.date1_e"
+        labelFrom="開始日期"
+        labelTo="結束日期"
+        dense
       />
-    </v-col>
-
-    <v-col cols="12" md="1" class="text-center d-none d-md-block">
-      <span class="text-h5 text-grey-lighten-1">～</span>
-    </v-col>
-
-    <v-col cols="12" md="3">
-      <CodeToField
-        :label="'廠商編號(迄)'"
-        :maxLength="8"
-        :alnumUpper="true"
-        :dense="dense"
-        :width="widthTo || 'w-8ch'"
-        :model-value="m.end"
-        :disabled="isMulti"
-        @update:modelValue="(v) => emit('update:modelValue', { ...m, end: v })"
-        @open="openPicker('to')"
-      />
-    </v-col>
-
-    <v-col cols="12" md="auto">
-      <CodeMultiSelect
-        :count="multiCount"
-        :showClear="isMulti"
-        @open="multiOpen = true"
-        @clear="clearMulti"
-      />
-    </v-col>
-  </v-row>
-
-  <!-- 單選 -->
-  <search-supp ref="singleRef" @pick="store.pick" />
-
-  <!-- 多選 -->
-  <multi-supp v-model="multiOpen" @pick="onMultiPicks" :preselected="selectedRows" />
+      <!-- 業主區間 -->
+      <v-row align="center">
+        <v-col cols="auto">
+          <CustStart v-model="model" :disabled="isMulti" dense />
+        </v-col>
+        <v-col cols="auto" class="text-center d-none d-md-block">
+          <span class="text-h5 text-grey-lighten-1">～</span>
+        </v-col>
+        <v-col cols="auto">
+          <CustEnd v-model="model2" :disabled="isMulti" dense />
+        </v-col>
+        <v-col cols="auto">
+          <CustMultiBut v-model="model4" dense />
+        </v-col>
+      </v-row>
+      <!-- 工程區間 -->
+      <v-row align="center">
+        <v-col cols="auto">
+          <ProtStart v-model="model5" :disabled="isMulti2" dense />
+        </v-col>
+        <v-col cols="auto" class="text-center d-none d-md-block">
+          <span class="text-h5 text-grey-lighten-1">～</span>
+        </v-col>
+        <v-col cols="auto">
+          <ProtEnd v-model="model6" :disabled="isMulti2" dense />
+        </v-col>
+        <v-col cols="auto">
+          <ProtMultiBut v-model="model7" dense />
+        </v-col>
+      </v-row>
+      <!-- 工料區間 -->
+      <v-row align="center">
+        <v-col cols="auto">
+          <ItemStart v-model="model8" :disabled="isMulti3" dense />
+        </v-col>
+        <v-col cols="auto" class="text-center d-none d-md-block">
+          <span class="text-h5 text-grey-lighten-1">～</span>
+        </v-col>
+        <v-col cols="auto">
+          <ItemEnd v-model="model9" :disabled="isMulti3" dense />
+        </v-col>
+        <v-col cols="auto">
+          <ItemMultiBut v-model="model10" dense />
+        </v-col>
+      </v-row>
+      <!-- 廠商區間 -->
+      <v-row align="center">
+        <v-col cols="auto">
+          <SuppStart v-model="model11" :disabled="isMulti4" dense />
+        </v-col>
+        <v-col cols="auto" class="text-center d-none d-md-block">
+          <span class="text-h5 text-grey-lighten-1">～</span>
+        </v-col>
+        <v-col cols="auto">
+          <SuppEnd v-model="model12" :disabled="isMulti4" dense />
+        </v-col>
+        <v-col cols="auto">
+          <SuppMultiBut v-model="model13" dense />
+        </v-col>
+      </v-row>
+      <!-- 人員區間 -->
+      <v-row align="center">
+        <v-col cols="auto">
+          <EmpStart v-model="model14" :disabled="isMulti5" dense />
+        </v-col>
+        <v-col cols="auto" class="text-center d-none d-md-block">
+          <span class="text-h5 text-grey-lighten-1">～</span>
+        </v-col>
+        <v-col cols="auto">
+          <EmpEnd v-model="model15" :disabled="isMulti5" dense />
+        </v-col>
+        <v-col cols="auto">
+          <EmpMultiBut v-model="model16" dense />
+        </v-col>
+      </v-row>
+      <!-- 註腳區間 -->
+      <v-row align="center">
+        <v-col cols="auto">
+          <FeetNoDDL
+            v-model="model0"
+            label="單行註腳"
+            :items="undefined"
+            :dense="true"
+            :hideSearch="true"
+          />
+        </v-col>
+      </v-row>
+    </v-card-text>
+  </v-card>
 </template>
-
-<style scoped>
-  /* 跟你原本的 w-?ch 一致，方便沿用 */
-  :root {
-    --chpx: 16px;
-  }
-  .w-7ch {
-    --wch: calc(16 * var(--chpx));
-  }
-  .w-8ch {
-    --wch: calc(18 * var(--chpx));
-  }
-  .w-10ch {
-    --wch: calc(20 * var(--chpx));
-  }
-  .w-16ch {
-    --wch: calc(24 * var(--chpx));
-  }
-  .w-20ch {
-    --wch: calc(27 * var(--chpx));
-  }
-  .w-60ch {
-    --wch: calc(50 * var(--chpx));
-  }
-</style>

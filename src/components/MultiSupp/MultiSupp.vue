@@ -5,7 +5,7 @@
   import api from '@/api'
   import { message } from '@/components/Message/service'
 
-  // 資料庫進來的Cust
+  // 資料庫進來
   type SearchData = {
     suppno: string
     suppabbr: string

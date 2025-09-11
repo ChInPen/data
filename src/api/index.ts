@@ -295,5 +295,27 @@ export default {
     SummaryExcel: '/api/ProjectItem/ProjectItemSummary_Excel',
     DetailPrint: '/api/ProjectItem/ProjectItemDetail_Print',
     DetailExcel: '/api/ProjectItem/ProjectItemDetail_Print'
+  },
+  //工程庫存表
+  EngStock: {
+    Print: '/api/ProjectInventory/ProjectInventory_Print'
+  },
+  //工料庫存表
+  EngMatStock: {
+    Print: '/api/ItemInventory/ItemInventory_Print'
+  },
+  //工人月份統計表
+  WorkerMonthlySummary: {
+    Print: '/api/WorkerMonthly/WorkerMonthly_Print',
+    Excel: '/api/WorkerMonthly/WorkerMonthly_Excel'
+  },
+  //工人出勤明細表
+  WorkerAttendanceDetail: {
+    Print: '/api/WorkerAttendanceDetail/WorkerAttendanceDetail_Print',
+    Excel: '/api/WorkerAttendanceDetail/WorkerAttendanceDetail_Excel'
+  },
+  //工地工人出勤表
+  SiteWorkerAttendance: {
+    Print: '/api/WorkerAttendance/WorkerAttendance_Print'
   }
 }

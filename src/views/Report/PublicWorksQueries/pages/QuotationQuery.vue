@@ -539,7 +539,7 @@
               </v-row>
             </v-col>
             <v-col cols="1" class="text-center d-none d-md-block">
-              <span class="text-h5 text-grey-lighten-1 sep-1470">～</span>
+              <span class="text-h5 text-grey-lighten-1">～</span>
             </v-col>
             <v-col cols="auto">
               <v-row>
@@ -696,8 +696,6 @@
     .stack-1470 {
       flex: 0 0 100% !important;
       max-width: 100% !important;
-    }
-    .sep-1470 {
     }
   }
   @media (max-width: 1787.98px) {

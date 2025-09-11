@@ -5,9 +5,8 @@
   import config from '@/config/config'
   import { message } from '@/components/Message/service'
   import { cButton, cBread } from '@/components/Common' // 共用元件
-  import ProtSingle from '@/views/Report/composable/ProtSingle.vue' //工程單選框
   import DateRange from '@/views/Report/composable/DateRange.vue' //日期選擇框
-
+  import ProtStart from '@/views/Analytics/composable/Prot/ProtStart.vue'
   const formData = ref({
     protno: '',
     dates: {
@@ -90,8 +89,14 @@
   </c-bread>
   <v-card color="#1b2b36" rounded="lg" class="mt-4 sqte-form" elevation="2">
     <v-card-text class="pa-6">
+      <!-- 日期 -->
       <DateRange v-model="formData.dates" dense />
-      <ProtSingle v-model="formData.protno" dense />
+      <!-- Prot工程區塊 -->
+      <v-row align="center">
+        <v-col cols="auto">
+          <ProtStart v-model="formData.protno" dense />
+        </v-col>
+      </v-row>
     </v-card-text>
   </v-card>
 </template>
