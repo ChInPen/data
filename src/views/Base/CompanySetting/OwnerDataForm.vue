@@ -705,6 +705,8 @@
             striped="even"
             hover
             :header-props="{ align: 'center' }"
+            height="340"
+            fixed-header
             selectable
           >
             <template v-slot:item.rec1="{ scope }">

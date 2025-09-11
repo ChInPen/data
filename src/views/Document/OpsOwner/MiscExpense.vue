@@ -23,16 +23,72 @@
 
   const protdetList = ref<any[]>([])
 
+  //抓單筆資料
+  const getSingleData = () => {
+    if (store.ono) {
+      callApi({
+        method: 'POST',
+        url: api.Exes.Exes_Data,
+        params: { ono: store.ono }
+      }).then((res) => {
+        console.log(res)
+      })
+    }
+  }
+  //Renew
+  const getRenewData = () => {
+    callApi({
+      method: 'POST',
+      url: api.Exes.Exes_Renew
+    }).then((res) => {
+      console.log(res)
+    })
+  }
+
+  //首筆/上一筆/下一筆/尾筆
+  const onoChange = (type: 'first' | 'previous' | 'next' | 'last') => {
+    if (['first', 'previous', 'next', 'last'].includes(type)) {
+      store?.[type]?.()
+      getSingleData()
+    }
+  }
+  //新增
+  const create = () => {
+    getRenewData()
+    store.create()
+  }
+  //編輯
+  const edit = () => {
+    store.edit()
+  }
+  //複製
+  const copy = () => {
+    formData.value.ono = ''
+    store.copy()
+  }
+  //刪除
+  const del = () => {}
+  //放棄
+  const cancel = () => {
+    getSingleData()
+    store.browse()
+  }
+
   //查詢條件
   const filterDS = ref(false)
   const initSearch = (data) => {
     if (Array.isArray(data)) {
       store.init(data)
+      getSingleData()
     }
   }
   const handleSearch = (data) => {
     store.search(router, data)
   }
+
+  onMounted(() => {
+    getSingleData()
+  })
 </script>
 
 <template>
@@ -43,21 +99,49 @@
         <c-button kind="submit" icon="fa-solid fa-floppy-disk">儲存</c-button>
       </div>
       <div class="col-auto">
-        <c-button kind="cancel" icon="mdi-close-circle">放棄</c-button>
+        <c-button kind="cancel" icon="mdi-close-circle" @click="cancel">放棄</c-button>
       </div>
     </template>
     <template v-else>
       <div class="col-auto">
-        <c-button kind="record" icon="fa-solid fa-angles-left">首筆</c-button>
+        <c-button
+          kind="record"
+          icon="fa-solid fa-angles-left"
+          :disabled="store.isFirst"
+          @click="onoChange('first')"
+        >
+          首筆
+        </c-button>
       </div>
       <div class="col-auto">
-        <c-button kind="record" icon="fa-solid fa-angle-left">上一筆</c-button>
+        <c-button
+          kind="record"
+          icon="fa-solid fa-angle-left"
+          :disabled="store.isFirst"
+          @click="onoChange('previous')"
+        >
+          上一筆
+        </c-button>
       </div>
       <div class="col-auto">
-        <c-button kind="record" icon="fa-solid fa-angle-right">下一筆</c-button>
+        <c-button
+          kind="record"
+          icon="fa-solid fa-angle-right"
+          :disabled="store.isLast"
+          @click="onoChange('next')"
+        >
+          下一筆
+        </c-button>
       </div>
       <div class="col-auto">
-        <c-button kind="record" icon="fa-solid fa-angles-right">尾筆</c-button>
+        <c-button
+          kind="record"
+          icon="fa-solid fa-angles-right"
+          :disabled="store.isLast"
+          @click="onoChange('last')"
+        >
+          尾筆
+        </c-button>
       </div>
       <div class="col-auto">
         <c-button kind="print" icon="fa-solid fa-print">列印</c-button>
@@ -71,16 +155,16 @@
         </c-button>
       </div>
       <div class="col-auto">
-        <c-button kind="copy" icon="fa-solid fa-copy">複製</c-button>
+        <c-button kind="copy" icon="fa-solid fa-copy" @click="copy">複製</c-button>
       </div>
       <div class="col-auto">
-        <c-button kind="delete" icon="fa-solid fa-trash">刪除</c-button>
+        <c-button kind="delete" icon="fa-solid fa-trash" @click="del">刪除</c-button>
       </div>
       <div class="col-auto">
-        <c-button kind="edit" icon="fa-solid fa-pen-to-square">編輯</c-button>
+        <c-button kind="edit" icon="fa-solid fa-pen-to-square" @click="edit">編輯</c-button>
       </div>
       <div class="col-auto">
-        <c-button kind="create" icon="mdi-plus-circle">新增</c-button>
+        <c-button kind="create" icon="mdi-plus-circle" @click="create">新增</c-button>
       </div>
     </template>
   </c-bread>
@@ -238,169 +322,8 @@
               />
             </v-col>
           </v-row>
-          <!-- <v-row dense :align="'center'">
-            <v-col :cols="6" class="px-2">
-              <c-input
-                v-model="formData.consT_NO"
-                label="建造執照"
-                icon="fa-solid fa-id-card"
-                :disabled="store.isDetail"
-              />
-            </v-col>
-            <v-responsive width="100%"></v-responsive>
-            <v-col :cols="4" class="px-2">
-              <c-input
-                v-model="formData.consT_BY"
-                label="起造人"
-                icon="fa-solid fa-person-digging"
-                :disabled="store.isDetail"
-              />
-            </v-col>
-            <v-col :cols="4" class="px-2">
-              <c-input
-                v-model="formData.consT_MGR"
-                label="承造人"
-                icon="fa-solid fa-helmet-safety"
-                :disabled="store.isDetail"
-              />
-            </v-col>
-            <v-responsive width="100%"></v-responsive>
-            <v-col :cols="4" class="px-2">
-              <c-input
-                v-model="formData.dsgN_BY"
-                label="設計人"
-                icon="fa-solid fa-brush"
-                :disabled="store.isDetail"
-              />
-            </v-col>
-            <v-col :cols="4" class="px-2">
-              <c-input
-                v-model="formData.dsgN_CNO"
-                label="設計人開業證書字號"
-                icon="fa-solid fa-certificate"
-                :disabled="store.isDetail"
-              />
-            </v-col>
-            <v-responsive width="100%"></v-responsive>
-            <v-col :cols="4" class="px-2">
-              <c-input
-                v-model="formData.insP_MGR"
-                label="監造人"
-                icon="fa-solid fa-helmet-safety"
-                :disabled="store.isDetail"
-              />
-            </v-col>
-            <v-col :cols="4" class="px-2">
-              <c-input
-                v-model="formData.insP_NO"
-                label="監造人開業證書字號"
-                icon="fa-solid fa-certificate"
-                :disabled="store.isDetail"
-              />
-            </v-col>
-            <v-responsive width="100%"></v-responsive>
-            <v-col :cols="4" class="px-2">
-              <c-input
-                v-model="formData.enG_EMP"
-                label="專任工程人員"
-                icon="fa-solid fa-user-tie"
-                :disabled="store.isDetail"
-              />
-            </v-col>
-            <v-col :cols="4" class="px-2">
-              <c-input
-                v-model="formData.insP_TEL"
-                label="監造人電話"
-                icon="fa-solid fa-mobile-button"
-                :disabled="store.isDetail"
-              />
-            </v-col>
-            <v-responsive width="100%"></v-responsive>
-            <v-col :cols="4" class="px-2">
-              <c-input
-                v-model="formData.usE_PART"
-                label="使用分區"
-                icon="fa-solid fa-helmet-safety"
-                :disabled="store.isDetail"
-              />
-            </v-col>
-            <v-col :cols="4" class="px-2">
-              <c-input
-                v-model="formData.consT_TEL"
-                label="服務電話"
-                icon="fa-solid fa-phone-volume"
-                :disabled="store.isDetail"
-              />
-            </v-col>
-            <v-responsive width="100%"></v-responsive>
-            <v-col :cols="4" class="px-2">
-              <c-input
-                v-model="formData.ctrL_NO"
-                label="管制編號"
-                icon="fa-solid fa-hashtag"
-                :disabled="store.isDetail"
-              />
-            </v-col>
-            <v-col :cols="4" class="px-2">
-              <c-input
-                v-model="formData.pnP_TEL"
-                label="公害陳情專線"
-                icon="fa-solid fa-phone-volume"
-                :disabled="store.isDetail"
-              />
-            </v-col>
-            <v-responsive width="100%"></v-responsive>
-            <v-col :cols="6" class="px-2">
-              <c-input
-                v-model="formData.enG_DESC"
-                label="工程概要"
-                icon="fa-solid fa-file-lines"
-                :disabled="store.isDetail"
-              />
-            </v-col>
-          </v-row> -->
         </v-tabs-window-item>
-        <v-tabs-window-item value="image">
-          <!-- <v-row dense class="w-75 mx-auto">
-            <v-col cols="auto">
-              <c-button kind="create" icon="mdi-plus-circle" @click="protIKindAdd">新增</c-button>
-            </v-col>
-            <v-col cols="auto">
-              <c-button kind="delete" icon="fa-solid fa-trash" @click="protIKindDel">刪除</c-button>
-            </v-col>
-            <v-col cols="12">
-              <c-data-table
-                ref="protIKindTable"
-                v-model="protIKindList"
-                :headers="protIKindHeaders"
-                striped="even"
-                hover
-                :header-props="{ align: 'center' }"
-                selectable
-              >
-                <template v-slot:item.ikindno="{ scope, index }">
-                  <c-input
-                    v-model="scope.ikindno"
-                    :disabled="store.isDetail"
-                    @button="protIKindPick(index)"
-                    @keydown="(e: any) => protIKindKeydown(e, index)"
-                  />
-                </template>
-                <template v-slot:item.ikindname="{ scope }">
-                  <c-input v-model="scope.ikindname" :disabled="store.isDetail" />
-                </template>
-                <template v-slot:item.pimoney="{ scope }">
-                  <c-input
-                    type="number"
-                    v-model="scope.pimoney"
-                    :disabled="store.isDetail"
-                    :format="{ thousands: true }"
-                  />
-                </template>
-              </c-data-table>
-            </v-col>
-          </v-row> -->
-        </v-tabs-window-item>
+        <v-tabs-window-item value="image"></v-tabs-window-item>
       </v-tabs-window>
     </v-card-text>
   </v-card>

@@ -206,7 +206,8 @@ const menu: MenuEntry[] = [
           {
             title: '雜支作業-查詢',
             path: 'MiscExpenseSearch',
-            component: () => import('@/views/Document/OpsOwner/MiscExpenseSearch.vue')
+            component: () => import('@/views/Document/OpsOwner/MiscExpenseSearch.vue'),
+            meta: { from: ['/menu/MiscExpense'] }
           }
           // { title: '分攤比例', path: '' },
           // { title: '工地耗轉作業', path: '' }

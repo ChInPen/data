@@ -75,4 +75,8 @@
   .btn-icon-margin {
     margin-right: 5px;
   }
+
+  .c-btn.v-btn--disabled {
+    opacity: 0.5;
+  }
 </style>

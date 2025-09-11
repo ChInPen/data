@@ -269,7 +269,7 @@
             hover
             selectable
             :pagination="false"
-            height="380"
+            height="320"
             fixed-header
           >
             <template v-slot:item.headitem="{ scope }">
@@ -299,7 +299,7 @@
             hover
             selectable
             :pagination="false"
-            height="380"
+            height="320"
             fixed-header
           >
             <template v-slot:item.detitem="{ scope }">
@@ -329,7 +329,7 @@
             hover
             selectable
             :pagination="false"
-            height="380"
+            height="320"
             fixed-header
           >
             <template v-slot:item.secitem="{ scope }">

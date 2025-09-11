@@ -5,8 +5,8 @@
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
   import config from '@/config/config'
-  import { useSearchCust } from '@/store/searchCust'
-  const store = useSearchCust()
+  // import { useSearchCust } from '@/store/searchCust'
+  // const store = useSearchCust()
 
   const isOpen = defineModel({ default: false })
 
@@ -50,30 +50,45 @@
     })
   }
 
+  //查詢業主彈窗
   //用 v-model 操控的方式
   const searchCustDS = ref(false)
   //用 ref實例的open() 操控的方式
   const searchRef = ref()
-  const chooseInit = () => {
-    store.set(printForm, [{ from: 'custno', to: 'initNo' }])
+  const pickSetting = ref()
+  const isEnter = ref(false)
+  const searchText = ref('')
+  const searchCustOpen = (to: 'initNo' | 'finalNo') => {
+    pickSetting.value = [{ from: 'custno', to }]
     searchRef.value?.open()
   }
-  const keydownInit = (e: KeyboardEvent) => {
-    store.keyEnter(e, printForm, [{ from: 'custno', to: 'initNo' }], printForm.value.initNo, {
-      open: searchRef.value?.open
-    })
+  const searchCustEnter = (to: 'initNo' | 'finalNo') => {
+    pickSetting.value = [{ from: 'custno', to }]
+    isEnter.value = true
+    searchText.value = printForm.value?.[to] ?? ''
+    searchRef.value?.open()
   }
-  const chooseFinal = () => {
-    store.set(printForm, [{ from: 'custno', to: 'finalNo' }])
-    searchCustDS.value = true
-  }
-  const keydownFinal = (e: KeyboardEvent) => {
-    store.keyEnter(e, printForm, [{ from: 'custno', to: 'finalNo' }], printForm.value.finalNo, {
-      open: () => {
-        searchCustDS.value = true
-      }
-    })
-  }
+
+  // const chooseInit = () => {
+  //   store.set(printForm, [{ from: 'custno', to: 'initNo' }])
+  //   searchRef.value?.open()
+  // }
+  // const keydownInit = (e: KeyboardEvent) => {
+  //   store.keyEnter(e, printForm, [{ from: 'custno', to: 'initNo' }], printForm.value.initNo, {
+  //     open: searchRef.value?.open
+  //   })
+  // }
+  // const chooseFinal = () => {
+  //   store.set(printForm, [{ from: 'custno', to: 'finalNo' }])
+  //   searchCustDS.value = true
+  // }
+  // const keydownFinal = (e: KeyboardEvent) => {
+  //   store.keyEnter(e, printForm, [{ from: 'custno', to: 'finalNo' }], printForm.value.finalNo, {
+  //     open: () => {
+  //       searchCustDS.value = true
+  //     }
+  //   })
+  // }
 </script>
 
 <template>
@@ -91,19 +106,31 @@
         />
       </v-col>
       <v-col cols="12">
-        <c-input
+        <!-- <c-input
           v-model="printForm.initNo"
           label="起始業主編號"
           @button="chooseInit"
           @keydown="keydownInit"
+        /> -->
+        <c-input
+          v-model="printForm.initNo"
+          label="起始業主編號"
+          @button="searchCustOpen('initNo')"
+          @keyEnter="searchCustEnter('initNo')"
         />
       </v-col>
       <v-col cols="12">
-        <c-input
+        <!-- <c-input
           v-model="printForm.finalNo"
           label="終止業主編號"
           @button="chooseFinal"
           @keydown="keydownFinal"
+        /> -->
+        <c-input
+          v-model="printForm.finalNo"
+          label="終止業主編號"
+          @button="searchCustOpen('finalNo')"
+          @keyEnter="searchCustEnter('finalNo')"
         />
       </v-col>
       <v-col cols="12"></v-col>
@@ -128,5 +155,12 @@
     </template>
   </c-dialog>
 
-  <search-cust ref="searchRef" v-model="searchCustDS" @pick="store.pick" />
+  <search-cust
+    ref="searchRef"
+    v-model="searchCustDS"
+    v-model:form="printForm"
+    v-model:keyenter="isEnter"
+    :setting="pickSetting"
+    :search-text="searchText"
+  />
 </template>

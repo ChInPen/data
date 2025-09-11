@@ -23,10 +23,7 @@
 <template>
   <v-card color="#1b2b36" rounded="3">
     <v-card-text>
-      <v-row dense justify="start">
-        <v-col cols="auto" class="text-custom-2">操作人員</v-col>
-      </v-row>
-      <v-row dense class="mt-2" justify="center">
+      <v-row dense justify="center">
         <v-col cols="auto" class="px-2">
           <c-input
             type="date"

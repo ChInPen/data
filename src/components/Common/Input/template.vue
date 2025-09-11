@@ -46,7 +46,7 @@
     },
     condensed: Boolean
   })
-  const emit = defineEmits(['change', 'button'])
+  const emit = defineEmits(['change', 'button', 'keydown', 'keyEnter'])
 
   const numberFormatOptions = computed(() => {
     const { minus, decimal, decAfterN } = props.format ?? {}
@@ -178,6 +178,15 @@
     }
   }
 
+  // 處理 keydown event
+  const handleKeyDown = (e: KeyboardEvent) => {
+    // 如果還在輸入法組字中，則不要進入
+    if (!e.isComposing) {
+      if (e.key === 'Enter') emit('keyEnter', e)
+    }
+    emit('keydown', e)
+  }
+
   //名稱取5碼帶入簡稱
   const nameChange = () => {
     emit('change')
@@ -235,6 +244,7 @@
     @focusin="handleFocusin"
     :width="lengthWidth"
     :maxlength="maxLength"
+    @keydown="handleKeyDown"
   >
     <template v-slot:prepend-inner>
       <div class="prepend-inner-content">

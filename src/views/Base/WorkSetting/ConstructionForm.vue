@@ -1043,8 +1043,6 @@
               v-model="protdetList"
               striped="even"
               hover
-              height="340"
-              fixed-header
               selectable
               header-align="center"
             >

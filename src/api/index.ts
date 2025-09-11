@@ -182,7 +182,8 @@ export default {
     Exes_Upd: `/api/Exes/Exes_Upd`,
     Exes_Del: `/api/Exes/Exes_Del`,
     Exeslist: `/api/Exes/Exeslist`,
-    Exes_Data: `/api/Exes/Exes_Data`
+    Exes_Data: `/api/Exes/Exes_Data`,
+    Exes_Renew: `/api/Exes/Exes_ReNew`
   },
   //圖檔
   Photo: {

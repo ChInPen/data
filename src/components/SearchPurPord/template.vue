@@ -1,15 +1,35 @@
 <script lang="ts" setup>
   import { ref, watch, nextTick } from 'vue'
-  import { cInput, cSelect, cDialog, cButton, cTable } from '@/components/Common'
+  import type { PropType } from 'vue'
+  import { cInput, cDialog, cButton, cTable } from '@/components/Common'
   import { callApi } from '@/utils/uapi'
   import api from '@/api'
   import { message } from '@/components/Message/service'
+  import type { PickSetting } from '@/store/create'
   import { useSearchSupp } from '@/store/searchSupp'
   const store = useSearchSupp()
   import type { SearchData } from './type'
 
   const model = defineModel({ default: false })
+  const formData2 = defineModel('form')
+  const isEnter = defineModel('keyenter', { default: false })
+  const props = defineProps({
+    setting: Array as PropType<PickSetting<SearchData>[]>,
+    row: Number,
+    searchText: String
+  })
   const emits = defineEmits(['pick'])
+
+  // store 變數設置
+  const storeSet = () => {
+    if (formData2.value) store.target.value = formData2
+    if (props.setting && props.setting.length > 0) store.pickSetting = [...props.setting]
+    if (props.row) store.target.row = props.row
+    if (isEnter.value) {
+      store.isSearch = true
+      store.searchText = props.searchText ?? ''
+    }
+  }
 
   // dialog 開關
   const isOpen = ref(false)
@@ -83,6 +103,7 @@
   }
   // 選擇
   const handleChoose = (raw: SearchData) => {
+    store.pick(raw)
     emits('pick', raw)
     isOpen.value = false
   }
@@ -92,11 +113,18 @@
     () => model.value,
     async (newVal) => {
       if (newVal) {
+        storeSet()
         if (store.isSearch) {
+          // 如果沒輸入就 return
+          if (!store.searchText || !store.searchText?.trim()) {
+            handleDialogClose()
+            return
+          }
+
           filter.value.filter1 = store.searchText
           await handleSearch()
           if (tbData.value.length == 1) {
-            emits('pick', tbData.value[0])
+            handleChoose(tbData.value[0])
             handleDialogClose()
             return
           }
@@ -113,6 +141,7 @@
     nextTick(() => {
       handleClear() //清空查詢條件
       tbData.value = []
+      isEnter.value = false
       store.clear()
       model.value = false
     })

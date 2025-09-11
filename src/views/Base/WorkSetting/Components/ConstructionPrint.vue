@@ -5,8 +5,6 @@
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
   import config from '@/config/config'
-  import { useSearchProt } from '@/store/searchProt'
-  const store = useSearchProt()
 
   const isOpen = defineModel({ default: false })
 
@@ -54,23 +52,18 @@
   const searchProtDS = ref(false)
   //用 ref實例的open() 操控的方式
   const searchRef = ref()
-  const chooseInit = () => {
-    store.set(printForm, [{ from: 'protno', to: 'initNo' }])
+  const pickSetting = ref()
+  const isEnter = ref(false)
+  const searchText = ref('')
+  const searchProtOpen = (to: 'initNo' | 'finalNo') => {
+    pickSetting.value = [{ from: 'protno', to }]
     searchRef.value?.open()
   }
-  const keydownInit = (e: KeyboardEvent) => {
-    store.keyEnter(e, printForm, [{ from: 'protno', to: 'initNo' }], printForm.value.initNo, {
-      open: searchRef.value?.open
-    })
-  }
-  const chooseFinal = () => {
-    store.set(printForm, [{ from: 'protno', to: 'finalNo' }])
+  const searchProtEnter = (to: 'initNo' | 'finalNo') => {
+    pickSetting.value = [{ from: 'protno', to }]
+    isEnter.value = true
+    searchText.value = printForm.value?.[to] ?? ''
     searchRef.value?.open()
-  }
-  const keydownFinal = (e: KeyboardEvent) => {
-    store.keyEnter(e, printForm, [{ from: 'protno', to: 'finalNo' }], printForm.value.finalNo, {
-      open: searchRef.value?.open
-    })
   }
 </script>
 
@@ -92,16 +85,16 @@
         <c-input
           v-model="printForm.initNo"
           label="起始工程編號"
-          @button="chooseInit"
-          @keydown="keydownInit"
+          @button="searchProtOpen('initNo')"
+          @keyEnter="searchProtEnter('initNo')"
         />
       </v-col>
       <v-col cols="12">
         <c-input
           v-model="printForm.finalNo"
           label="終止工程編號"
-          @button="chooseFinal"
-          @keydown="keydownFinal"
+          @button="searchProtOpen('finalNo')"
+          @keyEnter="searchProtEnter('finalNo')"
         />
       </v-col>
       <v-col cols="12"></v-col>
@@ -126,5 +119,12 @@
     </template>
   </c-dialog>
 
-  <search-prot ref="searchRef" v-model="searchProtDS" @pick="store.pick" />
+  <search-prot
+    ref="searchRef"
+    v-model="searchProtDS"
+    v-model:form="printForm"
+    v-model:keyenter="isEnter"
+    :setting="pickSetting"
+    :search-text="searchText"
+  />
 </template>
