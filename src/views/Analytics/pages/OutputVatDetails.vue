@@ -1,22 +1,20 @@
 <script lang="ts" setup>
   import { computed, ref, watch } from 'vue'
-  import { cButton, cInput, cBread, cSelect } from '@/components/Common' // 共用元件
-  import type { SearchData } from '@/views/Report/shared/types/SearchDataType'
-  import { searchCust } from '@/components/SearchCust' // 廠商彈窗元件查詢
-  import { searchProt } from '@/components/SearchProt' // 工程彈窗元件查詢
-  import MultiCust from '@/components/MultiCust/MultiCust.vue' // 廠商編號彈窗(多選)
+  import { cButton, cBread, cSelect } from '@/components/Common' // 共用元件
   import { callApi } from '@/utils/uapi' // 呼叫api的方法
   import api from '@/api' // api清單
   import config from '@/config/config'
-  import { useSearchCust } from '@/store/searchCust'
-  const storeSupp = useSearchCust()
-  import { useSearchProt } from '@/store/searchProt'
   import { message } from '@/components/Message/service'
-  const storeProt = useSearchProt()
+  import CustStart from '@/views/Analytics/composable/Cust/CustStart.vue'
+  import CustEnd from '@/views/Analytics/composable/Cust/CustEnd.vue'
+  import CustMultiBut from '@/views/Analytics/composable/Cust/CustMultiBut.vue'
+  import ProtStart from '@/views/Analytics/composable/Prot/ProtStart.vue'
+  import ProtEnd from '@/views/Analytics/composable/Prot/ProtEnd.vue'
+  import DateRange from '@/views/Report/composable/DateRange.vue'
   // 表單/列印/EXCEL
   const formData = ref({
-    date1_s: '1140101',
-    date1_e: '1140901',
+    date1_s: '',
+    date1_e: '',
     custno_s: '',
     custno_e: '',
     custno_list: [],
@@ -44,85 +42,7 @@
     value: 'valueOn',
     title: 'title'
   })
-  // 廠商單選/多選控制
-  const custPickOpen = ref() //控制單選視窗開關
-  const MultiCustDs = ref(false) //控制多選視窗開關
-  const isMultiSupp = ref(false) //控制是否為多選狀態
-  const selectedCust = ref<SearchData[]>([]) //控制多選
-  const selectedSuppOne = ref({ begin: '', end: '' }) //控制單選
-  const openSuppPicker = (t: 'from' | 'to') => {
-    const toKey = t === 'from' ? 'begin' : 'end'
-    storeSupp.set(selectedSuppOne, [{ from: 'custno', to: toKey }], {
-      open: custPickOpen.value?.open
-    })
-  }
-  watch(
-    [() => selectedSuppOne.value.begin, () => selectedSuppOne.value.end],
-    ([val1, val2], [old1, old2]) => {
-      if (val1 !== old1) formData.value.custno_s = val1
-      if (val2 !== old2) formData.value.custno_e = val2
-    }
-  )
-  const onMultiCustPicks = (rows: any[]) => {
-    selectedCust.value = rows
-    formData.value.custno_list = rows.map((r) => String(r.custno).trim()).filter(Boolean)
-    isMultiSupp.value = formData.value.custno_list.length > 0
-    selectedSuppOne.value.begin = ''
-    selectedSuppOne.value.end = ''
-  }
 
-  // 工程單選/多選控制
-  const projectPickOpen = ref() //控制單選視窗開關
-  const selectedProtOne = ref({ begin: '', end: '' }) //控制單選
-  const openProjectPicked = (t: 'from' | 'to') => {
-    const toKey = t === 'from' ? 'begin' : 'end'
-    storeProt.set(selectedProtOne, [{ from: 'protno', to: toKey }], {
-      open: projectPickOpen.value?.open
-    })
-  }
-  watch(
-    [() => selectedProtOne.value.begin, () => selectedProtOne.value.end],
-    ([val1, val2], [old1, old2]) => {
-      if (val1 !== old1) formData.value.protno_s = val1
-      if (val2 !== old2) formData.value.protno_e = val2
-    }
-  )
-  // 共用過濾：只留英數，截到指定長度
-  const alnumN = (v: string, n: number, toUpper = true) => {
-    const s = String(v ?? '')
-      .normalize('NFKC')
-      .replace(/[^0-9a-z]/gi, '')
-      .slice(0, n)
-    return toUpper ? s.toUpperCase() : s
-  }
-
-  // 廠商 8 碼
-  const suppNoFromModel = computed({
-    get: () => formData.value.custno_s,
-    set: (val) => {
-      formData.value.custno_s = alnumN(val, 8)
-    }
-  })
-  const suppNoToModel = computed({
-    get: () => formData.value.custno_e,
-    set: (val) => {
-      formData.value.custno_e = alnumN(val, 8)
-    }
-  })
-
-  // 工程 16 碼
-  const projectNoFromModel = computed({
-    get: () => formData.value.protno_s,
-    set: (val) => {
-      formData.value.protno_s = alnumN(val, 16)
-    }
-  })
-  const projectNoToModel = computed({
-    get: () => formData.value.protno_e,
-    set: (val) => {
-      formData.value.protno_e = alnumN(val, 16)
-    }
-  })
   // 呼叫API送出列印資料
   const loadingPrint = ref(false)
   const loadingExcel = ref(false)
@@ -175,6 +95,16 @@
       loadingExcel.value = false
     }
   }
+  //判斷是否進入多選模式
+  const isMulti = computed(() => (formData.value.custno_list?.length ?? 0) > 0)
+
+  //一旦進入多選就清空單選，避免送出兩種條件
+  watch(isMulti, (on) => {
+    if (on) {
+      formData.value.custno_s = ''
+      formData.value.custno_e = ''
+    }
+  })
 </script>
 
 <template>
@@ -228,135 +158,52 @@
                 :item-title="printTypeDDL.title"
                 :item-value="printTypeDDL.value"
                 hide-search
+                class="sheet"
               />
             </v-col>
           </v-row>
         </v-col>
       </v-row>
-      <!-- 報價日期區間 -->
+      <!-- 日期區間 -->
       <v-row align="center" class="mb-3" dense>
-        <v-col cols="11">
-          <v-row align="center">
-            <v-col md="3" class="col4-min">
-              <v-row>
-                <v-col cols="auto" class="u-wch w-7ch">
-                  <c-input
-                    type="date"
-                    v-model="formData.date1_s"
-                    label="開始日期"
-                    density="compact"
-                  />
-                </v-col>
-              </v-row>
-            </v-col>
-            <v-col cols="1" class="text-center d-none d-md-block">
-              <span class="text-h5 text-grey-lighten-1 sep-1470">～</span>
-            </v-col>
-            <v-col cols="auto">
-              <v-row>
-                <v-col cols="auto" class="u-wch w-7ch">
-                  <c-input
-                    type="date"
-                    v-model="formData.date1_e"
-                    label="結束日期"
-                    density="compact"
-                  />
-                </v-col>
-              </v-row>
-            </v-col>
-          </v-row>
+        <v-col cols="auto">
+          <DateRange
+            v-model:from="formData.date1_s"
+            v-model:to="formData.date1_e"
+            labelFrom="開始日期"
+            labelTo="結束日期"
+            dense
+          />
         </v-col>
       </v-row>
-      <!-- 廠商編號區間 -->
+      <!-- 業主區間 -->
       <v-row align="center" class="mb-3" dense>
-        <v-col cols="11">
-          <v-row align="center">
-            <v-col md="3" class="col4-min">
-              <v-row>
-                <v-col cols="auto" class="u-wch w-8ch">
-                  <c-input
-                    v-model="suppNoFromModel"
-                    label="業主編號"
-                    :disabled="isMultiSupp"
-                    :maxlength="8"
-                    density="compact"
-                    @button="openSuppPicker('from')"
-                    :length-auto-width="false"
-                  />
-                </v-col>
-              </v-row>
-            </v-col>
-            <v-col cols="1" class="text-center d-none d-md-block">
-              <span class="text-h5 text-grey-lighten-1 sep-1470">～</span>
-            </v-col>
-            <v-col cols="auto">
-              <v-row>
-                <v-col cols="auto" class="u-wch w-8ch">
-                  <c-input
-                    v-model="suppNoToModel"
-                    label="業主編號"
-                    :disabled="isMultiSupp"
-                    :maxlength="8"
-                    density="compact"
-                    @button="openSuppPicker('to')"
-                    :length-auto-width="false"
-                  />
-                </v-col>
-              </v-row>
-            </v-col>
-            <v-col cols="auto" class="stack-1470">
-              <div class="btn">
-                <c-button
-                  kind="search"
-                  icon="fa-solid fa-magnifying-glass"
-                  @click="MultiCustDs = true"
-                >
-                  多選式
-                </c-button>
-              </div>
-            </v-col>
-          </v-row>
+        <v-col cols="auto">
+          <CustStart v-model="formData.custno_s" :disabled="isMulti" dense />
+        </v-col>
+        <v-col cols="auto" class="text-center d-none d-md-block">
+          <span class="text-h5 text-grey-lighten-1">～</span>
+        </v-col>
+        <v-col cols="auto">
+          <CustEnd v-model="formData.custno_e" :disabled="isMulti" dense />
+        </v-col>
+        <v-col cols="auto">
+          <CustMultiBut v-model="formData.custno_list" dense />
         </v-col>
       </v-row>
-
-      <!-- 工程編號區間 -->
+      <!-- 工程區間 -->
       <v-row align="center" class="mb-3" dense>
-        <v-col cols="11">
-          <v-row align="center">
-            <v-col md="3" class="col4-min">
-              <v-row>
-                <v-col cols="auto" class="u-wch w-16ch">
-                  <c-input
-                    v-model="projectNoFromModel"
-                    label="工程編號"
-                    :maxlength="16"
-                    density="compact"
-                    @button="openProjectPicked('from')"
-                    :length-auto-width="false"
-                  />
-                </v-col>
-              </v-row>
-            </v-col>
-            <v-col cols="1" class="text-center d-none d-md-block">
-              <span class="text-h5 text-grey-lighten-1 sep-1470">～</span>
-            </v-col>
-            <v-col cols="auto">
-              <v-row>
-                <v-col cols="auto" class="u-wch w-16ch">
-                  <c-input
-                    v-model="projectNoToModel"
-                    label="工程編號"
-                    :maxlength="16"
-                    density="compact"
-                    @button="openProjectPicked('to')"
-                    :length-auto-width="false"
-                  />
-                </v-col>
-              </v-row>
-            </v-col>
-          </v-row>
+        <v-col cols="auto">
+          <ProtStart v-model="formData.protno_s" dense />
+        </v-col>
+        <v-col cols="auto" class="text-center d-none d-md-block">
+          <span class="text-h5 text-grey-lighten-1">～</span>
+        </v-col>
+        <v-col cols="auto">
+          <ProtEnd v-model="formData.protno_e" dense />
         </v-col>
       </v-row>
+      <!-- 排序區間 -->
       <v-row align="center" class="mb-3" dense>
         <v-col cols="11">
           <v-row>
@@ -368,6 +215,7 @@
                 :item-title="orderNoDDL.title"
                 :item-value="orderNoDDL.value"
                 hide-search
+                class="sheet"
               />
             </v-col>
           </v-row>
@@ -375,86 +223,9 @@
       </v-row>
     </v-card-text>
   </v-card>
-
-  <!-- 彈窗元件 -->
-  <search-cust ref="custPickOpen" @pick="storeSupp.pick" />
-  <search-prot ref="projectPickOpen" @pick="storeProt.pick" />
-  <multi-cust v-model="MultiCustDs" @pick="onMultiCustPicks" :preselected="selectedCust" />
 </template>
 <style scoped>
-  .u-wch {
-    width: var(--wch);
-    min-width: var(--wch);
-    max-width: var(--wch);
-    flex: 0 0 var(--wch);
-  }
-  .sqte-form {
-    --chpx: 16px;
-    --from-slot-w: calc(20 * var(--chpx));
-  }
-  .w-7ch {
-    --wch: calc(16 * var(--chpx));
-  }
-  .w-8ch {
-    --wch: calc(18 * var(--chpx));
-  }
-  .w-10ch {
-    --wch: calc(20 * var(--chpx));
-  }
-  .w-16ch {
-    --wch: calc(24 * var(--chpx));
-  }
-  .w-60ch {
-    --wch: calc(50 * var(--chpx));
-  }
-  .w-20ch {
-    --wch: calc(27 * var(--chpx));
-  }
-  /* 按鈕尺寸 */
-  .btn {
-    width: 150px;
-  }
-  /* ~的尺寸跟對齊 */
-  .sep-cell {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    /* 可選固定寬，對齊更穩（不想固定就拿掉下一行） */
-    min-width: 24px;
-    padding-inline: 8px;
-  }
-
-  .sep {
-    line-height: 1;
-    display: inline-block;
-    /* 想要大一點可調整大小 */
-    font-size: 1.25rem;
-  }
-  /* < md：最小 432px，空間夠可拉寬；不夠就換行 */
-  .col4-min {
-    min-width: 400px;
-    flex: 1 1 400px;
-  }
-  .title-text {
-    width: 120px;
-  }
-  @media (max-width: 1469.98px) {
-    .stack-1470 {
-      flex: 0 0 100% !important;
-      max-width: 100% !important;
-    }
-    .sep-1470 {
-    }
-  }
-  @media (max-width: 1787.98px) {
-    .stack-1787 {
-      flex: 0 0 100% !important;
-      max-width: 100% !important;
-      /* 下面三行是關鍵：覆蓋 u-wch 的 width/min/max，否則仍是固定 w-60ch */
-      width: 100% !important;
-      min-width: 0 !important;
-      /* 視需求：若想讓它可拉伸就用 none，若只想不小於行寬也可留 100% */
-      /* max-width: none !important;  */
-    }
+  .sheet {
+    width: 250px;
   }
 </style>

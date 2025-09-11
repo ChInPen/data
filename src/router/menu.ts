@@ -374,13 +374,6 @@ const menu: MenuEntry[] = [
             component: () => import('@/views/Analytics/pages/OutputVatDetails.vue')
           },
           {
-            title: '工程工資彙總表',
-            path: 'ProjectWageSummary',
-            name: '工程工資彙總表',
-            // component: () => import('@/views/Report/composable/test.vue')
-            component: () => import('@/views/Analytics/pages/ProjectWageSummary.vue')
-          },
-          {
             title: '工程日誌報表',
             path: 'EngLog',
             name: '工程日誌報表',
@@ -393,17 +386,53 @@ const menu: MenuEntry[] = [
             component: () => import('@/views/Analytics/pages/EngCostSum.vue')
           },
           {
+            title: '工程庫存表',
+            path: 'EngStock',
+            name: '工程庫存表',
+            component: () => import('@/views/Analytics/pages/EngStock.vue')
+          },
+          {
             title: '工程材料明細/彙總表',
             path: 'EngMatSum',
             name: '工程材料明細/彙總表',
             component: () => import('@/views/Analytics/pages/EngMatSum.vue')
           },
           {
-            title: '測試用',
-            path: 'test',
-            name: '測試用',
-            component: () => import('@/views/Analytics/pages/test.vue')
+            title: '工料庫存表',
+            path: 'MatStock',
+            name: '工料庫存表',
+            component: () => import('@/views/Analytics/pages/MatStock.vue')
+          },
+          {
+            title: '工程工資明細/彙總表',
+            path: 'ProjectWageSummary',
+            name: '工程工資明細/彙總表',
+            component: () => import('@/views/Analytics/pages/ProjectWageSummary.vue')
+          },
+          {
+            title: '工人月份統計表',
+            path: 'WorkerMonthlySummary',
+            name: '工人月份統計表',
+            component: () => import('@/views/Analytics/pages/WorkerMonthlySummary.vue')
+          },
+          {
+            title: '工人出勤明細表',
+            path: 'WorkerAttendanceDetail',
+            name: '工人出勤明細表',
+            component: () => import('@/views/Analytics/pages/WorkerAttendanceDetail.vue')
+          },
+          {
+            title: '工地工人出勤表',
+            path: 'SiteWorkerAttendance',
+            name: '工地工人出勤表',
+            component: () => import('@/views/Analytics/pages/SiteWorkerAttendance.vue')
           }
+          // {
+          //   title: '測試用',
+          //   path: 'test',
+          //   name: '測試用',
+          //   component: () => import('@/views/Analytics/pages/test.vue')
+          // }
         ]
       }
     ]

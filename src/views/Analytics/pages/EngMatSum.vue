@@ -5,9 +5,12 @@
   import config from '@/config/config'
   import { message } from '@/components/Message/service'
   import { cButton, cBread, cSelect } from '@/components/Common' // 共用元件
-  import ProtSingle from '@/views/Report/composable/ProtSingle.vue' //工程多用框
-  import ItemRange from '@/views/Report/composable/ItemRange.vue' //工程多用框
   import DateRange from '@/views/Report/composable/DateRange.vue' //日期選擇框
+  import ProtStart from '@/views/Analytics/composable/Prot/ProtStart.vue'
+  import ProtMultiBut from '../composable/Prot/ProtMultiBut.vue'
+  import ItemStart from '../composable/Item/ItemStart.vue'
+  import ItemEnd from '../composable/Item/ItemEnd.vue'
+  import ItemMultiBut from '../composable/Item/ItemMultiBut.vue'
 
   const formData = ref({
     dates: {
@@ -16,7 +19,7 @@
     },
     protno: {
       value: '',
-      limiteds: []
+      limiteds: [] as any[]
     },
     feetNo: '05'
   })
@@ -90,8 +93,14 @@
 
     const API =
       reportData.value === '1'
-        ? api.EngMatSum.SummaryPrint // 彙總表 API
-        : api.EngMatSum.DetailPrint // 明細表 API
+        ? t === 'Print'
+          ? api.EngMatSum.SummaryPrint
+          : api.EngMatSum.SummaryExcel // 彙總表 API
+        : t === 'Print'
+          ? api.EngMatSum.DetailPrint
+          : api.EngMatSum.DetailExcel // 明細表 API
+    console.log(JSON.stringify(formData.value, null, 2))
+    console.log(API)
     try {
       const res = await callApi({
         method: 'POST',
@@ -123,6 +132,21 @@
       loadingPrint.value = false
     }
   }
+  // ✅ 判斷是否進入多選模式
+  const isMulti = computed(() => (formData.value.protno.limiteds?.length ?? 0) > 0)
+  const isMulti2 = computed(() => (formDataDetail.value.itemnos.limiteds?.length ?? 0) > 0)
+  // ✅ 一旦進入多選就清空單選，避免送出兩種條件
+  watch(isMulti, (on) => {
+    if (on) {
+      formData.value.protno.value = ''
+    }
+  })
+  watch(isMulti2, (on) => {
+    if (on) {
+      formDataDetail.value.itemnos.begin = ''
+      formDataDetail.value.itemnos.end = ''
+    }
+  })
 </script>
 <template>
   <!-- 操作按鈕區 -->
@@ -178,10 +202,37 @@
           </v-row>
         </v-col>
       </v-row>
-      <DateRange v-model="formData.dates" dense />
-      <ProtSingle v-model="formData.protno.value" dense />
+      <!-- 日期區間 -->
+      <v-row align="center" class="mb-3" dense>
+        <v-col>
+          <DateRange v-model="formData.dates" dense />
+        </v-col>
+      </v-row>
+      <!-- 工程區塊 -->
+      <v-row align="center" class="mb-3" dense>
+        <v-col cols="auto">
+          <ProtStart v-model="formData.protno.value" :disabled="isMulti" dense />
+        </v-col>
+        <v-col cols="auto">
+          <ProtMultiBut v-model="formData.protno.limiteds" dense />
+        </v-col>
+      </v-row>
       <!-- 只有明細表才出現 itemRange -->
-      <ItemRange v-if="isDetail" v-model="formDataDetail.itemnos" dense />
+      <!-- 工料區塊 -->
+      <v-row align="center" v-if="isDetail" class="mb-3" dense>
+        <v-col cols="auto">
+          <ItemStart v-model="formDataDetail.itemnos.begin" :disabled="isMulti2" dense />
+        </v-col>
+        <v-col cols="auto" class="text-center d-none d-md-block">
+          <span class="text-h5 text-grey-lighten-1">～</span>
+        </v-col>
+        <v-col cols="auto">
+          <ItemEnd v-model="formDataDetail.itemnos.end" :disabled="isMulti2" dense />
+        </v-col>
+        <v-col cols="auto">
+          <ItemMultiBut v-model="formDataDetail.itemnos.limiteds" dense />
+        </v-col>
+      </v-row>
       <!-- 其他欄位 -->
       <v-row align="center" class="mb-3" dense>
         <v-col cols="11">

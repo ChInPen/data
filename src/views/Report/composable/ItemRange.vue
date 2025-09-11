@@ -58,7 +58,7 @@
 </script>
 
 <template>
-  <v-row align="center" class="mb-3" dense>
+  <v-row align="center" dense>
     <!-- 外部標題（可關閉/改字） -->
     <v-col v-if="showTitle" cols="auto" class="d-flex align-center">
       <h5 class="mb-0 font-weight-medium title-text">{{ titleText }}</h5>

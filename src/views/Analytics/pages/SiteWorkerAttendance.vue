@@ -1,69 +1,47 @@
-<script lang="ts" setup>
-  import { computed, ref, watch, watchEffect } from 'vue'
-  import { cButton, cInput, cBread, cSelect } from '@/components/Common' // 共用元件
+<script setup lang="ts">
+  import { ref, watch, computed } from 'vue'
   import { callApi } from '@/utils/uapi' // 呼叫api的方法
   import api from '@/api' // api清單
   import config from '@/config/config'
   import { message } from '@/components/Message/service'
-  import FeetNoDDL from '@/views/Analytics/composable/FeetNoDDL.vue'
+  import { cButton, cBread } from '@/components/Common' // 共用元件
   import ProtStart from '@/views/Analytics/composable/Prot/ProtStart.vue'
-  import ProtMultiBut from '../composable/Prot/ProtMultiBut.vue'
+  import FeetNoDDL from '@/views/Analytics/composable/FeetNoDDL.vue'
   import DateRange from '@/views/Report/composable/DateRange.vue'
-  // 表單/列印/EXCEL
   const formData = ref({
     date1_s: '',
     date1_e: '',
     protno: '',
-    protNo_List: [],
     footNote: '20'
   })
-  const indata = ref({
-    dates: {
-      begin: '',
-      end: ''
-    }
-  })
-  // 排序
-  const orderNoDDL = ref({
-    list: [
-      { value: '1', title: '彙總表' },
-      { value: '2', title: '明細表' }
-    ],
-    title: 'title',
-    value: 'value',
-    initial: '1'
-  })
-  watchEffect(() => {
-    formData.value.date1_s = indata.value.dates.begin
-    formData.value.date1_e = indata.value.dates.end
-  })
+
   // 呼叫API送出列印資料
   const loadingPrint = ref(false)
-  const onSubmitPrint = async (t: any) => {
-    console.log(JSON.stringify(formData.value, null, 2))
-
-    if (!formData.value.date1_e || !formData.value.date1_s) {
+  const loadingExcel = ref(false)
+  const onSubmitPrint = async (t: string) => {
+    if (!formData.value.date1_s || !formData.value.date1_e) {
       message.alert({
         type: 'error',
         message: '查詢日期不可為空！'
       })
       return
     }
-    if (loadingPrint.value) return
-    if (!loadingPrint.value) {
+    if (loadingPrint.value || loadingExcel.value) return
+    if (t === 'Print') {
       loadingPrint.value = true
+    } else {
+      loadingExcel.value = true
     }
-    console.log('loadingPrint.value', loadingPrint.value)
-    const API =
-      orderNoDDL.value.initial === '1'
-        ? api.ProjectWageSummary.SummaryPrint
-        : api.ProjectWageSummary.DetailPrint
-    console.log(JSON.stringify(formData.value, null, 2))
+    const API = t === 'Print' ? api.SiteWorkerAttendance.Print : api.SiteWorkerAttendance.Print
     try {
+      console.log(JSON.stringify(formData.value, null, 2))
       const res = await callApi({
         method: 'POST',
         url: API,
         data: formData.value,
+        // params: {
+        //   Print_Type: PrintType.value.PrintTypeRef
+        // },
         timeout: 120000 // 2分鐘
       })
       console.log('print res:', res)
@@ -89,18 +67,10 @@
       }
     } finally {
       loadingPrint.value = false
+      loadingExcel.value = false
     }
   }
-  // 判斷是否進入多選模式
-  const isMulti = computed(() => (formData.value.protNo_List?.length ?? 0) > 0)
-  // 進入多選就清空單選，避免送出兩種條件
-  watch(isMulti, (on) => {
-    if (on) {
-      formData.value.protno = ''
-    }
-  })
 </script>
-
 <template>
   <!-- 操作按鈕區 -->
   <c-bread>
@@ -121,45 +91,22 @@
       </v-col>
     </v-row>
   </c-bread>
-
-  <!-- 查詢表單 -->
-
   <v-card color="#1b2b36" rounded="lg" class="mt-4 sqte-form" elevation="2">
     <v-card-text class="pa-6">
-      <!-- 報表內容 -->
-      <v-row align="center" class="mb-3" dense>
-        <v-col cols="11">
-          <v-row>
-            <v-col cols="6" class="u-wch w-7ch">
-              <c-select
-                v-model="orderNoDDL.initial"
-                label="報表內容"
-                :items="orderNoDDL.list"
-                :item-title="orderNoDDL.title"
-                :item-value="orderNoDDL.value"
-                hide-search
-                class="sheet"
-              />
-            </v-col>
-          </v-row>
-        </v-col>
-      </v-row>
-      <!-- 日期區間 -->
-      <v-row align="center" class="mb-3" dense>
-        <v-col>
-          <DateRange v-model="indata.dates" dense />
-        </v-col>
-      </v-row>
-      <!-- 工程區塊 -->
-      <v-row align="center" class="mb-3" dense>
+      <!-- 日期 -->
+      <DateRange
+        v-model:from="formData.date1_s"
+        v-model:to="formData.date1_e"
+        labelFrom="開始日期"
+        labelTo="結束日期"
+        dense
+      />
+      <v-row align="center">
         <v-col cols="auto">
-          <ProtStart v-model="formData.protno" :disabled="isMulti" dense />
-        </v-col>
-        <v-col cols="auto">
-          <ProtMultiBut v-model="formData.protNo_List" dense />
+          <ProtStart v-model="formData.protno" dense />
         </v-col>
       </v-row>
-      <!-- 註腳區塊 -->
+      <!-- 註腳區間 -->
       <v-row align="center">
         <v-col cols="auto">
           <FeetNoDDL
@@ -174,8 +121,9 @@
     </v-card-text>
   </v-card>
 </template>
+
 <style scoped>
   .sheet {
-    width: 250px;
+    width: 300px;
   }
 </style>

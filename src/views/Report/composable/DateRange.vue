@@ -1,76 +1,117 @@
 <script lang="ts" setup>
-  import { computed } from 'vue'
+  import { computed, ref } from 'vue'
   import { cInput } from '@/components/Common'
 
   type Range = { begin: string; end: string }
 
-  const props = defineProps<{
-    modelValue: Range
-    labelFrom?: string
-    labelTo?: string
-    dense?: boolean
-  }>()
+  // 命名 v-model（扁平）
+  const from = defineModel<string>('from', { default: '' })
+  const to = defineModel<string>('to', { default: '' })
+
+  // 巢狀 v-model（物件）
+  const props = withDefaults(
+    defineProps<{
+      modelValue?: Range
+      mode?: 'object' | 'flat' | 'auto'
+      labelFrom?: string
+      labelTo?: string
+      dense?: boolean
+      disabled?: boolean
+    }>(),
+    {
+      mode: 'auto',
+      labelFrom: '開始日期',
+      labelTo: '結束日期',
+      dense: false,
+      disabled: false
+    }
+  )
 
   const emit = defineEmits<{ (e: 'update:modelValue', v: Range): void }>()
 
-  const m = computed({
-    get: () => props.modelValue,
-    set: (v: Range) => emit('update:modelValue', v)
+  const syncing = ref(false)
+
+  // 統一的 range（同你原本邏輯）
+  const range = computed<Range>({
+    get() {
+      if (props.mode === 'object') {
+        return { begin: props.modelValue?.begin ?? '', end: props.modelValue?.end ?? '' }
+      }
+      if (props.mode === 'flat') {
+        return { begin: from.value, end: to.value }
+      }
+      const hasObject = props.modelValue !== undefined
+      return hasObject
+        ? { begin: props.modelValue?.begin ?? '', end: props.modelValue?.end ?? '' }
+        : { begin: from.value, end: to.value }
+    },
+    set(v) {
+      if (syncing.value) return
+      syncing.value = true
+      try {
+        if (props.mode === 'object' || (props.mode === 'auto' && props.modelValue !== undefined)) {
+          emit('update:modelValue', { begin: v.begin ?? '', end: v.end ?? '' })
+        } else {
+          from.value = v.begin ?? ''
+          to.value = v.end ?? ''
+        }
+      } finally {
+        syncing.value = false
+      }
+    }
   })
+
+  /** ✅ 兩個可寫 computed，給 v-model 綁定 */
+  const beginProxy = computed({
+    get: () => range.value.begin,
+    set: (val: string) => {
+      range.value = { ...range.value, begin: val }
+    }
+  })
+  const endProxy = computed({
+    get: () => range.value.end,
+    set: (val: string) => {
+      range.value = { ...range.value, end: val }
+    }
+  })
+
+  defineOptions({ inheritAttrs: false })
 </script>
 
 <template>
-  <v-row align="center" dense>
-    <v-col md="3" class="mb-3">
+  <v-row align="center" v-bind="$attrs">
+    <v-col cols="auto">
       <c-input
         type="date"
-        :label="labelFrom ?? '開始日期'"
+        :label="labelFrom"
         :density="dense ? 'compact' : undefined"
-        v-model="m.begin"
+        :disabled="disabled"
+        v-model="beginProxy"
+        class="pad"
       />
     </v-col>
-    <v-col cols="1" class="text-center d-none d-md-block">
+    <v-col cols="auto" class="text-center d-none d-md-block">
       <span class="text-h5 text-grey-lighten-1">～</span>
     </v-col>
-    <v-col cols="auto" class="u-wch w-7ch mb-3">
+    <v-col cols="auto">
       <c-input
         type="date"
-        :label="labelTo ?? '結束日期'"
+        :label="labelTo"
         :density="dense ? 'compact' : undefined"
-        v-model="m.end"
+        :disabled="disabled"
+        v-model="endProxy"
+        class="pad-end"
       />
     </v-col>
   </v-row>
 </template>
 
 <style scoped>
-  .u-wch {
-    width: var(--wch);
-    min-width: var(--wch);
-    max-width: var(--wch);
-    flex: 0 0 var(--wch);
+  .pad {
+    margin: 0 12px 0 0;
+    padding: 0;
   }
-
-  .sqte-form {
-    --chpx: 16px;
-    --from-slot-w: calc(20 * var(--chpx));
-  }
-  .w-7ch {
-    --wch: calc(16 * var(--chpx));
-  }
-  .w-8ch {
-    --wch: calc(18 * var(--chpx));
-  }
-  .w-10ch {
-    --wch: calc(20 * var(--chpx));
-  }
-  .w-16ch {
-    --wch: calc(24 * var(--chpx));
-  }
-  .w-60ch {
-    --wch: calc(50 * var(--chpx));
-  }
-  .w-20ch {
-    --wch: calc(27 * var(--chpx));
+  .pad-end {
+    margin: 0 0 0 12px;
   }
 </style>

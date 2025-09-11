@@ -119,3 +119,34 @@ export const Format = (
   }
   return value
 }
+
+export const dateMonthFormat = (
+  value: string | number,
+  options?: {
+    dateTW?: boolean
+    sep?: string
+  }
+): string => {
+  let str = digit.base(value)
+  if (str === '') return ''
+  str = str.slice(0, 5)
+
+  if (options?.dateTW === true) {
+    const sep = options?.sep ?? '/'
+    if (str.length <= 3) return str
+    return `${str.slice(0, 3)}${sep}${str.slice(3)}`
+  }
+
+  return str
+}
+
+export const dateMonthValue = (
+  value: string | number,
+  _options?: {
+    dateTW?: boolean
+  }
+): string => {
+  let str = digit.base(value)
+  if (str === '') return ''
+  return str.slice(0, 5)
+}

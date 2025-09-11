@@ -7,6 +7,8 @@
     numberFormatValue,
     dateFormat,
     dateFormatValue,
+    dateMonthFormat,
+    dateMonthValue,
     Format
   } from '@/utils/uformat'
   const attr = useAttrs()
@@ -77,6 +79,8 @@
           })
         case 'date':
           return dateFormat(model.value, { dateTW: true })
+        case 'datemoon':
+          return dateMonthFormat(model.value, { dateTW: true })
         default:
           if (props.type === 'text' && formatOptions.value) {
             return Format(model.value, formatOptions.value)
@@ -88,6 +92,7 @@
       switch (props.type) {
         case 'number':
         case 'date':
+        case 'datemoon':
           if (!isComposing.value) {
             setInput(newVal)
           }
@@ -111,6 +116,9 @@
     if (props.type === 'date') {
       model.value = dateFormatValue(newVal, { dateTW: true })
     }
+    if (props.type === 'datemoon') {
+      model.value = dateMonthValue(newVal)
+    }
   }
   const disabled = computed(() => attr?.disabled ?? false)
   const redicon = computed(() => props.isRequired && disabled.value === false)
@@ -127,6 +135,9 @@
       //日期固定長度
       return 101 + 12 + padding + icon + label + btn + clear
     }
+    if (props.type === 'datemoon') {
+      return 70 + 12 + padding + icon + label + btn + clear
+    }
     if (props.lengthAutoWidth && props.maxlength) {
       const len = maxLength.value
       return len * word + 12 + padding + icon + label + password + btn + clear
@@ -136,8 +147,8 @@
   })
   //輸入框限制字數
   const maxLength = computed(() => {
+    if (props.type === 'datemoon') return 6
     if (!props.maxlength) return undefined
-
     if (props.type === 'number' && props.format?.thousands) {
       return props.maxlength + Math.floor((props.maxlength - 1) / 3)
     }
@@ -159,6 +170,7 @@
     if (props.type === 'number') return 'text'
     //日期類型
     if (props.type === 'date') return 'text'
+    if (props.type === 'datemoon') return 'text'
     //密碼類型
     if (props.type === 'password' && lookPass.value) return 'text'
     return props.type || 'text' //預設 'text'
@@ -172,7 +184,7 @@
   const onCompositionEnd = (e: Event) => {
     isComposing.value = false
     // 組字結束後馬上做一次格式化
-    if (props.type === 'number' || props.type === 'date') {
+    if (props.type === 'number' || props.type === 'date' || props.type === 'datemoon') {
       const target = e.target as HTMLInputElement
       setInput(target.value)
     }
