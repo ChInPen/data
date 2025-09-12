@@ -17,13 +17,17 @@
       labelTo?: string
       dense?: boolean
       disabled?: boolean
+      fromWidth?: string
+      toWidth?: string
     }>(),
     {
       mode: 'auto',
       labelFrom: '開始日期',
       labelTo: '結束日期',
       dense: false,
-      disabled: false
+      disabled: false,
+      fromWidth: '',
+      toWidth: ''
     }
   )
 
@@ -61,7 +65,7 @@
     }
   })
 
-  /** ✅ 兩個可寫 computed，給 v-model 綁定 */
+  /** 兩個可寫 computed，給 v-model 綁定 */
   const beginProxy = computed({
     get: () => range.value.begin,
     set: (val: string) => {
@@ -80,7 +84,11 @@
 
 <template>
   <v-row align="center" v-bind="$attrs">
-    <v-col cols="auto">
+    <v-col
+      cols="auto"
+      class="w-by-var"
+      :style="props.fromWidth ? { '--w': props.fromWidth } : null"
+    >
       <c-input
         type="date"
         :label="labelFrom"
@@ -93,7 +101,7 @@
     <v-col cols="auto" class="text-center d-none d-md-block">
       <span class="text-h5 text-grey-lighten-1">～</span>
     </v-col>
-    <v-col cols="auto">
+    <v-col cols="auto" class="w-by-var" :style="props.toWidth ? { '--w': props.toWidth } : null">
       <c-input
         type="date"
         :label="labelTo"
@@ -107,11 +115,7 @@
 </template>
 
 <style scoped>
-  .pad {
-    margin: 0 12px 0 0;
-    padding: 0;
-  }
-  .pad-end {
-    margin: 0 0 0 12px;
+  .w-by-var {
+    width: var(--w, auto);
   }
 </style>

@@ -157,7 +157,7 @@
   <v-card color="#1b2b36" rounded="lg" class="mt-4 sqte-form" elevation="2">
     <v-card-text class="pa-6">
       <!-- 報表類別 -->
-      <v-row align="center" class="mb-3" dense>
+      <v-row align="center">
         <v-col cols="11">
           <v-row>
             <v-col cols="6">
@@ -175,43 +175,43 @@
         </v-col>
       </v-row>
       <!-- 日期 -->
-      <v-row align="center" class="mb-3" dense>
-        <v-col>
+      <v-row align="center">
+        <v-col cols="auto">
           <DateRange v-model="formData.dates" dense />
         </v-col>
       </v-row>
       <!-- 工程區塊 -->
-      <v-row align="center" class="mb-3" dense>
+      <v-row align="center">
         <v-col cols="auto">
-          <ProtStart v-model="formData.protnos.begin" :disabled="isMulti" dense />
+          <ProtStart v-model="formData.protnos.begin" :disabled="isMulti" />
         </v-col>
-        <v-col cols="auto" class="text-center d-none d-md-block">
+        <v-col cols="auto" class="text-center d-none d-md-block p-3">
           <span class="text-h5 text-grey-lighten-1">～</span>
         </v-col>
         <v-col cols="auto">
-          <ProtEnd v-model="formData.protnos.end" :disabled="isMulti" dense />
+          <ProtEnd v-model="formData.protnos.end" :disabled="isMulti" />
         </v-col>
         <v-col cols="auto">
-          <ProtMultiBut v-model="formData.protnos.limiteds" dense />
+          <ProtMultiBut v-model="formData.protnos.limiteds" />
         </v-col>
       </v-row>
       <!-- 只有明細表才出現 itemRange -->
-      <v-row align="center" v-if="isDetail" class="mb-3" dense>
+      <v-row align="center" v-if="isDetail">
         <v-col cols="auto">
-          <ItemStart v-model="formDataDetail.itemnos.begin" :disabled="isMulti2" dense />
+          <ItemStart v-model="formDataDetail.itemnos.begin" :disabled="isMulti2" />
         </v-col>
-        <v-col cols="auto" class="text-center d-none d-md-block">
+        <v-col cols="auto" class="text-center d-none d-md-block p-3">
           <span class="text-h5 text-grey-lighten-1">～</span>
         </v-col>
         <v-col cols="auto">
-          <ItemEnd v-model="formDataDetail.itemnos.end" :disabled="isMulti2" dense />
+          <ItemEnd v-model="formDataDetail.itemnos.end" :disabled="isMulti2" />
         </v-col>
         <v-col cols="auto">
-          <ItemMultiBut v-model="formDataDetail.itemnos.limiteds" dense />
+          <ItemMultiBut v-model="formDataDetail.itemnos.limiteds" />
         </v-col>
       </v-row>
       <!-- 註腳區塊 -->
-      <v-row align="center" class="mb-3" dense>
+      <v-row align="center">
         <v-col cols="auto">
           <FeetNoDDL
             v-model="formData.feetNo"

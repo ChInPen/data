@@ -103,7 +103,7 @@
       />
       <v-row align="center">
         <v-col cols="auto">
-          <ProtStart v-model="formData.protno" dense />
+          <ProtStart v-model="formData.protno" />
         </v-col>
       </v-row>
       <!-- 註腳區間 -->

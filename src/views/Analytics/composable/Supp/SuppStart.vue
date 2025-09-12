@@ -1,4 +1,4 @@
-<!-- SuppStart.vue：業主搜尋框(起) -->
+<!-- SuppStart.vue：廠商搜尋框(起) -->
 <script lang="ts" setup>
   import { computed, ref, watch } from 'vue'
   import { cInput } from '@/components/Common'
@@ -28,7 +28,7 @@
     return toUpper ? s.toUpperCase() : s
   }
 
-  const ownerNoFromModel = computed({
+  const NoFromModel = computed({
     get: () => model.value,
     set: (val: string) => {
       const parsed = alnumN(val, props.maxlength, props.alnumUpper)
@@ -60,7 +60,7 @@
   <v-row>
     <v-col class="u-wch w-10ch">
       <c-input
-        v-model="ownerNoFromModel"
+        v-model="NoFromModel"
         label="廠商編號(起)"
         :disabled="props.disabled"
         :maxlength="props.maxlength"
@@ -69,7 +69,7 @@
         @button="openOwnerPicker"
         @keydown="
           (e: any) =>
-            storeSupp.keyEnter(e, formData, [{ from: 'suppno', to: 'suppno' }], ownerNoFromModel, {
+            storeSupp.keyEnter(e, formData, [{ from: 'suppno', to: 'suppno' }], NoFromModel, {
               open: openOwnerPicker
             })
         "

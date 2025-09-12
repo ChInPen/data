@@ -225,14 +225,25 @@ const menu: MenuEntry[] = [
             path: 'Purchase',
             name: 'B02採購作業系統',
             component: () => import('@/views/Document/OpsManufacturer/Purchase.vue')
-          }
+          },
           // { title: '發包作業', path: '' },
           // { title: '進貨作業', path: '' },
           // { title: '詢價比價單', path: '' },
           // { title: '採購估驗作業', path: '' },
           // { title: '發包估驗作業', path: '' },
           // { title: '應付工程款沖銷', path: '' },
-          // { title: '員工借支作業', path: '' },
+          {
+            title: '員工借支作業',
+            path: 'EmpLoan',
+            name: 'B05員工借支作業系統',
+            component: () => import('@/views/Document/EmpBorrow/EmpLoan.vue')
+          },
+          {
+            title: '員工借支作業',
+            path: 'EmpLoanForm',
+            component: () => import('@/views/Document/EmpBorrow/EmpLoanForm.vue'),
+            meta: { from: ['/menu/EmpLoan'] }
+          }
           // { title: '員工還款作業', path: '' },
           // { title: '領料作業', path: '' },
           // { title: '採購發票修改', path: '' }
@@ -426,13 +437,13 @@ const menu: MenuEntry[] = [
             path: 'SiteWorkerAttendance',
             name: '工地工人出勤表',
             component: () => import('@/views/Analytics/pages/SiteWorkerAttendance.vue')
+          },
+          {
+            title: '測試用',
+            path: 'test',
+            name: '測試用',
+            component: () => import('@/views/Analytics/pages/test.vue')
           }
-          // {
-          //   title: '測試用',
-          //   path: 'test',
-          //   name: '測試用',
-          //   component: () => import('@/views/Analytics/pages/test.vue')
-          // }
         ]
       }
     ]

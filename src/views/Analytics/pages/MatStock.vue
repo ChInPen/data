@@ -82,16 +82,16 @@
       <!-- 工料區塊 -->
       <v-row align="center">
         <v-col cols="auto">
-          <ItemStart v-model="fromDate.begin" :disabled="isMulti" dense />
+          <ItemStart v-model="fromDate.begin" :disabled="isMulti" />
         </v-col>
-        <v-col cols="auto" class="text-center d-none d-md-block">
+        <v-col cols="auto" class="text-center d-none d-md-block p-3">
           <span class="text-h5 text-grey-lighten-1">～</span>
         </v-col>
         <v-col cols="auto">
-          <ItemEnd v-model="fromDate.end" :disabled="isMulti" dense />
+          <ItemEnd v-model="fromDate.end" :disabled="isMulti" />
         </v-col>
         <v-col cols="auto">
-          <ItemMultiBut v-model="fromDate.limiteds" dense />
+          <ItemMultiBut v-model="fromDate.limiteds" />
         </v-col>
       </v-row>
       <!-- 註腳區塊 -->

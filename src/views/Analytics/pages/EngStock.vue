@@ -69,15 +69,15 @@
   <v-card color="#1b2b36" rounded="lg" class="mt-4 sqte-form" elevation="2">
     <v-card-text class="pa-6">
       <!-- 工程區塊 -->
-      <v-row align="center" class="mb-3" dense>
+      <v-row align="center">
         <v-col cols="auto">
-          <ProtStart v-model="formData.protno" dense />
+          <ProtStart v-model="formData.protno" />
         </v-col>
       </v-row>
       <!-- 註腳區塊 -->
-      <v-row align="center" class="mb-3" dense>
+      <v-row align="center">
         <v-col cols="auto">
-          <FeetNoDDL v-model="formData.feetNo" dense />
+          <FeetNoDDL v-model="formData.feetNo" />
         </v-col>
       </v-row>
     </v-card-text>

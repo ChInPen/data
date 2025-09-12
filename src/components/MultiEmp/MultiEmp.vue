@@ -34,10 +34,10 @@
     filter2: ''
   })
   const filterDDL = [
-    { name: 'empno', label: '業主編號' },
-    { name: 'empname', label: '業主簡稱' },
+    { name: 'empno', label: '人員編號' },
+    { name: 'empname', label: '人員名稱' },
     { name: 'tel1', label: '電    話' },
-    { name: 'mobitel', label: '傳    真' }
+    { name: 'mobitel', label: '手    機' }
   ]
 
   // 拷貝

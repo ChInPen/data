@@ -146,7 +146,7 @@
   <v-card color="#1b2b36" rounded="lg" class="mt-4 sqte-form" elevation="2">
     <v-card-text class="pa-6">
       <!-- 日期區間 -->
-      <v-row align="center" class="mb-3" dense>
+      <v-row align="center">
         <v-col cols="auto">
           <DateRange
             v-model:from="formData.date1_s"
@@ -158,34 +158,34 @@
         </v-col>
       </v-row>
       <!-- 廠商區間 -->
-      <v-row align="center" class="mb-3" dense>
+      <v-row align="center">
         <v-col cols="auto">
-          <SuppStart v-model="formData.suppno_s" :disabled="isMulti" dense />
+          <SuppStart v-model="formData.suppno_s" :disabled="isMulti" />
         </v-col>
-        <v-col cols="auto" class="text-center d-none d-md-block">
+        <v-col cols="auto" class="text-center d-none d-md-block p-3">
           <span class="text-h5 text-grey-lighten-1">～</span>
         </v-col>
         <v-col cols="auto">
-          <SuppEnd v-model="formData.suppno_e" :disabled="isMulti" dense />
+          <SuppEnd v-model="formData.suppno_e" :disabled="isMulti" />
         </v-col>
         <v-col cols="auto">
-          <SuppMultiBut v-model="formData.suppno_list" dense />
+          <SuppMultiBut v-model="formData.suppno_list" />
         </v-col>
       </v-row>
       <!-- 工程區間 -->
-      <v-row align="center" class="mb-3" dense>
+      <v-row align="center">
         <v-col cols="auto">
-          <ProtStart v-model="formData.protno_s" dense />
+          <ProtStart v-model="formData.protno_s" />
         </v-col>
-        <v-col cols="auto" class="text-center d-none d-md-block">
+        <v-col cols="auto" class="text-center d-none d-md-block p-3">
           <span class="text-h5 text-grey-lighten-1">～</span>
         </v-col>
         <v-col cols="auto">
-          <ProtEnd v-model="formData.protno_e" dense />
+          <ProtEnd v-model="formData.protno_e" />
         </v-col>
       </v-row>
       <!-- 排序 -->
-      <v-row align="center" class="mb-3" dense>
+      <v-row align="center">
         <v-col cols="11">
           <v-row>
             <v-col cols="6" class="u-wch w-7ch">

@@ -131,7 +131,7 @@
   <v-card color="#1b2b36" rounded="lg" class="mt-4 sqte-form" elevation="2">
     <v-card-text class="pa-6">
       <!-- 報表類別 -->
-      <v-row align="center" class="mb-3" dense>
+      <v-row align="center">
         <v-col cols="11">
           <v-row>
             <v-col cols="6" class="u-wch w-20ch">
@@ -159,16 +159,16 @@
       <!-- 人員區間 -->
       <v-row align="center">
         <v-col cols="auto">
-          <EmpStart v-model="formData.empno_e" dense />
+          <EmpStart v-model="formData.empno_e" />
         </v-col>
-        <v-col cols="auto" class="text-center d-none d-md-block">
+        <v-col cols="auto" class="text-center d-none d-md-block p-3">
           <span class="text-h5 text-grey-lighten-1">～</span>
         </v-col>
         <v-col cols="auto">
-          <EmpEnd v-model="formData.empno_s" dense />
+          <EmpEnd v-model="formData.empno_s" />
         </v-col>
         <v-col cols="auto">
-          <EmpMultiBut v-model="formData.empno_List" dense />
+          <EmpMultiBut v-model="formData.empno_List" />
         </v-col>
       </v-row>
       <!-- 註腳區間 -->
@@ -190,5 +190,8 @@
 <style scoped>
   .sheet {
     width: 300px;
+  }
+  .fixed {
+    width: 343px;
   }
 </style>

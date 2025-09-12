@@ -1,4 +1,4 @@
-<!-- SuppEnd.vue：業主搜尋框(迄) -->
+<!-- SuppEnd.vue：廠商搜尋框(迄) -->
 <script lang="ts" setup>
   import { computed, ref, watch } from 'vue'
   import { cInput } from '@/components/Common'

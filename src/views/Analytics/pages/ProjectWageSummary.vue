@@ -7,7 +7,7 @@
   import { message } from '@/components/Message/service'
   import FeetNoDDL from '@/views/Analytics/composable/FeetNoDDL.vue'
   import ProtStart from '@/views/Analytics/composable/Prot/ProtStart.vue'
-  import ProtMultiBut from '../composable/Prot/ProtMultiBut.vue'
+  import ProtMultiBut from '@/views/Analytics/composable/Prot/ProtMultiBut.vue'
   import DateRange from '@/views/Report/composable/DateRange.vue'
   // 表單/列印/EXCEL
   const formData = ref({
@@ -127,7 +127,7 @@
   <v-card color="#1b2b36" rounded="lg" class="mt-4 sqte-form" elevation="2">
     <v-card-text class="pa-6">
       <!-- 報表內容 -->
-      <v-row align="center" class="mb-3" dense>
+      <v-row align="center">
         <v-col cols="11">
           <v-row>
             <v-col cols="6" class="u-wch w-7ch">
@@ -145,18 +145,18 @@
         </v-col>
       </v-row>
       <!-- 日期區間 -->
-      <v-row align="center" class="mb-3" dense>
+      <v-row align="center">
         <v-col>
           <DateRange v-model="indata.dates" dense />
         </v-col>
       </v-row>
       <!-- 工程區塊 -->
-      <v-row align="center" class="mb-3" dense>
+      <v-row align="center">
         <v-col cols="auto">
-          <ProtStart v-model="formData.protno" :disabled="isMulti" dense />
+          <ProtStart v-model="formData.protno" :disabled="isMulti" />
         </v-col>
         <v-col cols="auto">
-          <ProtMultiBut v-model="formData.protNo_List" dense />
+          <ProtMultiBut v-model="formData.protNo_List" />
         </v-col>
       </v-row>
       <!-- 註腳區塊 -->
