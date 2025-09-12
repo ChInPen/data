@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-  import { ref, onMounted } from 'vue'
+  import { ref, onMounted, watch } from 'vue'
   import {
     cButton,
     cInput,
@@ -16,23 +16,20 @@
   import { message } from '@/components/Message/service'
   import { pickAddr } from '@/components/PickAddr'
   import { auditInfo } from '@/components/AuditInfo'
-  import webPermissions from './Components/EmployeeWeb.vue'
+  import webPermissions from '@/views/Base/Staff/Components/EmployeeWeb.vue'
 
   const store = useEmployeeStore()
   const router = useRouter()
-  import { nextTick, watch } from 'vue'
-  nextTick(() => {
-    watch(
-      () => store.action,
-      (nv, ov) => {
-        if (nv !== ov) {
-          console.log('[CHANGE] store.action:', ov, '→', nv)
-          console.trace()
-        }
-      }
-    )
-  })
 
+  // 追蹤 action 任何變化 + 誰改的（console.trace）
+  watch(
+    () => store.action,
+    (nv, ov) => {
+      console.log('[TRACE] store.action:', ov, '→', nv)
+      console.trace()
+    },
+    { immediate: true }
+  )
   type EmpSkill = {
     //人員工種
     empno: string
@@ -116,7 +113,7 @@
 
   //取消&返回 按鈕
   const handleCancel = () => {
-    store.clear(router)
+    router.push({ path: '/menu/EmpLoan' })
   }
   //檢查欄位規則
   const checkData = () => {
@@ -143,12 +140,8 @@
   }
   //送出存檔
   const saveData = () => {
-    const create = { ...formData.value }
-    const item = Object.fromEntries(
-      Object.keys(create ?? {}).map((key) => [key, create?.[key] ?? ''])
-    )
     return {
-      emp: item,
+      emp: { ...formData.value },
       data: empSkills.value.map((x) => ({ ...x, empno: formData.value.empno })),
       empwebparDatas: webPerData.value.map((x) => ({
         ...x,

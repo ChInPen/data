@@ -7,10 +7,10 @@
   import { cButton, cBread, cSelect } from '@/components/Common' // 共用元件
   import DateRange from '@/views/Report/composable/DateRange.vue' //日期選擇框
   import ProtStart from '@/views/Analytics/composable/Prot/ProtStart.vue'
-  import ProtMultiBut from '../composable/Prot/ProtMultiBut.vue'
-  import ItemStart from '../composable/Item/ItemStart.vue'
-  import ItemEnd from '../composable/Item/ItemEnd.vue'
-  import ItemMultiBut from '../composable/Item/ItemMultiBut.vue'
+  import ProtMultiBut from '@/views/Analytics/composable/Prot/ProtMultiBut.vue'
+  import ItemStart from '@/views/Analytics/composable/Item/ItemStart.vue'
+  import ItemEnd from '@/views/Analytics/composable/Item/ItemEnd.vue'
+  import ItemMultiBut from '@/views/Analytics/composable/Item/ItemMultiBut.vue'
 
   const formData = ref({
     dates: {
@@ -132,10 +132,10 @@
       loadingPrint.value = false
     }
   }
-  // ✅ 判斷是否進入多選模式
+  // 判斷是否進入多選模式
   const isMulti = computed(() => (formData.value.protno.limiteds?.length ?? 0) > 0)
   const isMulti2 = computed(() => (formDataDetail.value.itemnos.limiteds?.length ?? 0) > 0)
-  // ✅ 一旦進入多選就清空單選，避免送出兩種條件
+  // 多選就清空單選，避免送出兩種條件
   watch(isMulti, (on) => {
     if (on) {
       formData.value.protno.value = ''
@@ -185,7 +185,7 @@
   <v-card color="#1b2b36" rounded="lg" class="mt-4 sqte-form" elevation="2">
     <v-card-text class="pa-6">
       <!-- 報表類別 -->
-      <v-row align="center" class="mb-3" dense>
+      <v-row align="center">
         <v-col cols="11">
           <v-row>
             <v-col cols="6">
@@ -203,38 +203,38 @@
         </v-col>
       </v-row>
       <!-- 日期區間 -->
-      <v-row align="center" class="mb-3" dense>
+      <v-row align="center">
         <v-col>
           <DateRange v-model="formData.dates" dense />
         </v-col>
       </v-row>
       <!-- 工程區塊 -->
-      <v-row align="center" class="mb-3" dense>
+      <v-row align="center">
         <v-col cols="auto">
-          <ProtStart v-model="formData.protno.value" :disabled="isMulti" dense />
+          <ProtStart v-model="formData.protno.value" :disabled="isMulti" />
         </v-col>
         <v-col cols="auto">
-          <ProtMultiBut v-model="formData.protno.limiteds" dense />
+          <ProtMultiBut v-model="formData.protno.limiteds" />
         </v-col>
       </v-row>
       <!-- 只有明細表才出現 itemRange -->
       <!-- 工料區塊 -->
-      <v-row align="center" v-if="isDetail" class="mb-3" dense>
+      <v-row align="center" v-if="isDetail">
         <v-col cols="auto">
-          <ItemStart v-model="formDataDetail.itemnos.begin" :disabled="isMulti2" dense />
+          <ItemStart v-model="formDataDetail.itemnos.begin" :disabled="isMulti2" />
         </v-col>
-        <v-col cols="auto" class="text-center d-none d-md-block">
+        <v-col cols="auto" class="text-center d-none d-md-block p-3">
           <span class="text-h5 text-grey-lighten-1">～</span>
         </v-col>
         <v-col cols="auto">
-          <ItemEnd v-model="formDataDetail.itemnos.end" :disabled="isMulti2" dense />
+          <ItemEnd v-model="formDataDetail.itemnos.end" :disabled="isMulti2" />
         </v-col>
         <v-col cols="auto">
-          <ItemMultiBut v-model="formDataDetail.itemnos.limiteds" dense />
+          <ItemMultiBut v-model="formDataDetail.itemnos.limiteds" />
         </v-col>
       </v-row>
       <!-- 其他欄位 -->
-      <v-row align="center" class="mb-3" dense>
+      <v-row align="center">
         <v-col cols="11">
           <v-row>
             <v-col cols="6">
