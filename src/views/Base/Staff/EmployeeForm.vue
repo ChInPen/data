@@ -131,8 +131,12 @@
   }
   //送出存檔
   const saveData = () => {
+    const create = { ...formData.value }
+    const item = Object.fromEntries(
+      Object.keys(create ?? {}).map((key) => [key, create?.[key] ?? ''])
+    )
     return {
-      emp: { ...formData.value },
+      emp: item,
       data: empSkills.value.map((x) => ({ ...x, empno: formData.value.empno })),
       empwebparDatas: webPerData.value.map((x) => ({
         ...x,

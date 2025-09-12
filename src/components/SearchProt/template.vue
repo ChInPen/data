@@ -29,10 +29,6 @@
       store.isSearch = true
       store.searchText = props.searchText ?? ''
     }
-    console.log(store.target.row)
-    console.log(store.pickSetting)
-    console.log(store.isSearch)
-    console.log(store.searchText)
   }
 
   // dialog 開關

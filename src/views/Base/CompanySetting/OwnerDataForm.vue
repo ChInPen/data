@@ -180,7 +180,10 @@
   //送出存檔
   const saveData = () => {
     //存檔需要的欄位
-    const cust = { ...formData.value }
+    const create = { ...formData.value }
+    const cust = Object.fromEntries(
+      Object.keys(create ?? {}).map((key) => [key, create?.[key] ?? ''])
+    )
     //數字欄位
     cust.custud3 = formData.value?.custud3 ?? 0
     cust.emckday = formData.value?.emckday ?? 25

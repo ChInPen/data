@@ -16,7 +16,11 @@
   const props = defineProps({
     setting: Array as PropType<PickSetting<SearchData>[]>,
     row: Number,
-    searchText: String
+    searchText: String,
+    mkindno: {
+      type: Array<String | Number>,
+      default: []
+    }
   })
   const emits = defineEmits(['pick'])
 
@@ -74,6 +78,12 @@
     obj[filter.value.type2] = ['stkpurpc', 'stksalpc'].includes(filter.value.type2)
       ? Number(filter.value.filter2)
       : (filter.value.filter2 ?? '')
+
+    if (props.mkindno && props.mkindno.length > 0) {
+      //用 v-bind:mkindno 控制要查的類別
+      obj.mkindno = props.mkindno.join(',')
+    }
+
     await callApi({
       method: 'POST',
       url: api.Item.Item_List,

@@ -103,12 +103,15 @@
   //送出存檔
   const saveData = () => {
     //存檔需要的欄位
-    const data = { ...formData.value }
+    const create = { ...formData.value }
+    const data = Object.fromEntries(
+      Object.keys(create ?? {}).map((key) => [key, create?.[key] ?? ''])
+    )
     delete data.a_USER
     delete data.a_DATE1
     delete data.m_USER
     delete data.m_DATE1
-    // //數字欄位
+    //數字欄位
     data.emckday = formData.value?.emckday ?? 25
     data.afterck = formData.value?.afterck ?? 0
 

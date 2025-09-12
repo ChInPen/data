@@ -113,7 +113,10 @@
   //送出存檔
   const saveData = () => {
     //存檔需要的欄位
-    const project = { ...formData.value }
+    const create = { ...formData.value }
+    const project = Object.fromEntries(
+      Object.keys(create ?? {}).map((key) => [key, create?.[key] ?? ''])
+    )
     project.inde = '1'
     //數字欄位
     project.covesum = formData.value?.covesum ?? 0

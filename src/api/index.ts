@@ -178,8 +178,7 @@ export default {
   },
   //雜支作業
   Exes: {
-    Exes_Add: `/api/Exes/Exes_Add`,
-    Exes_Upd: `/api/Exes/Exes_Upd`,
+    Exes_Save: `/api/Exes/Exes_Save`,
     Exes_Del: `/api/Exes/Exes_Del`,
     Exeslist: `/api/Exes/Exeslist`,
     Exes_Data: `/api/Exes/Exes_Data`,

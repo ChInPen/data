@@ -23,7 +23,7 @@ const createAxiosInstance = (): AxiosInstance => {
     baseURL: baseURL, // 設定 API 的基本 URL
     timeout: 5000, // 設定超時時間為 5 秒
     headers: {
-      'Content-Type': 'application/json' // 設定請求頭的 Content-Type
+      // 'Content-Type': 'application/json' // 設定請求頭的 Content-Type
     }
   })
   // 增加請求攔截器

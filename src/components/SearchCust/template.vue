@@ -97,7 +97,7 @@
   const handleChoose = (raw: SearchData) => {
     store.pick(raw)
     emits('pick', raw)
-    model.value = false
+    isOpen.value = false
   }
 
   // dialog 開啟時 (父層控制)

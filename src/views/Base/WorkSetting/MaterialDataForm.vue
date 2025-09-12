@@ -200,7 +200,10 @@
   //送出存檔
   const saveData = () => {
     //存檔需要的欄位
-    const item = { ...formData.value }
+    const create = { ...formData.value }
+    const item = Object.fromEntries(
+      Object.keys(create ?? {}).map((key) => [key, create?.[key] ?? ''])
+    )
     delete item.a_USER
     delete item.a_DATE1
     delete item.m_USER

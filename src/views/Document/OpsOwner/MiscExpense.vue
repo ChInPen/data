@@ -3,6 +3,8 @@
   import { cButton, cInput, cSelect, cTable, cBread } from '@/components/Common' //共用元件
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
+  import { message } from '@/components/Message/service' //訊息窗元件
+  import { GenerateRec } from '@/utils/ucommon'
   import { useMiscExpenseStore } from '@/store/miscexpense'
   import { useRouter } from 'vue-router'
   import Filter from './Components/MiscExpenseFilter.vue'
@@ -10,6 +12,7 @@
   import { searchProt } from '@/components/SearchProt'
   import { pickItem } from '@/components/PickItem'
   import { projectType } from '@/components/ProjectType'
+  import { searchItem } from '@/components/SearchItem'
 
   const store = useMiscExpenseStore()
   const router = useRouter()
@@ -145,6 +148,131 @@
     store.browse()
   }
 
+  //檢查欄位規則
+  const checkData = () => {
+    //必填:protno，date1
+    const requiredFields = [
+      { key: 'protno', label: '工程編號' },
+      { key: 'date1', label: '雜支日期' }
+    ]
+    let missing = requiredFields
+      .filter((field) => !formData.value?.[field.key])
+      .map((field) => field.label)
+      .join('、')
+    if (missing) missing = `${missing}不可為空白`
+    return missing
+  }
+  //送出存檔
+  const saveData = () => {
+    //存檔需要的欄位
+    const create = { ...formData.value }
+    const item = Object.fromEntries(
+      Object.keys(create ?? {}).map((key) => [key, create?.[key] ?? ''])
+    )
+    item.before_price = formData.value.before_price === 0 ? '0' : String(item.before_price)
+    item.execflag = '0'
+    //數字欄位
+    item.amount = formData.value?.amount ?? 0
+    item.sum1 = formData.value?.amount ?? 0
+    item.tax = formData.value?.amount ?? 0
+    item.exestmo3 = 0
+    //日期 (因為 renew 或 data 的 api 傳過來有加斜線)
+    item.date1 = (item.date1 as string).replaceAll('/', '')
+    item.datea = (item.datea as string).replaceAll('/', '')
+    item.a_date = (item.a_date as string).replaceAll('/', '')
+    item.m_date = (item.m_date as string).replaceAll('/', '')
+    //明細
+    const exesdet = exesdetList.value.map((obj: any) => ({
+      ...obj,
+      ono: formData.value.ono ?? ''
+    }))
+    //轉成form-data type
+    const fromdata = new FormData()
+    for (var key in item) {
+      if (item.hasOwnProperty(key)) {
+        // 過濾掉繼承屬性
+        fromdata.append(key, item[key])
+      }
+    }
+    fromdata.append('Exesdet', JSON.stringify(exesdet))
+
+    return fromdata
+  }
+  const callSaveApi = () => {
+    // 新增和修改用同個api
+    callApi({
+      method: 'POST',
+      url: api.Exes.Exes_Save,
+      data: saveData()
+    }).then((res: any) => {
+      if (res?.status === 200) {
+        const data = res?.data
+        if (data === '') {
+          message.alert({
+            type: 'success',
+            message: '存檔成功',
+            autoClose: 2,
+            onConfirm: () => {
+              cancel()
+            }
+          })
+        } else {
+          message.alert({
+            type: 'error',
+            message: data
+          })
+        }
+      }
+    })
+  }
+  const handleSave = () => {
+    const check = checkData()
+    if (check) {
+      message.alert({
+        type: 'warning',
+        message: check
+      })
+      return
+    }
+    message.confirm({
+      type: 'question',
+      message: `確定要送出雜支資料？`,
+      onConfirm: () => {
+        callSaveApi()
+      }
+    })
+  }
+
+  //表身表格-新增
+  const exesdetAdd = () => {
+    pickItemRow.value = undefined
+    pickItemMode.value = 'add'
+    pickItemDS.value = true
+  }
+  //表身表格-插入
+  const exesdetIns = () => {
+    const selectIndex = exesdetTable.value?.selectIndex?.[0]
+    if (typeof selectIndex === 'number' && selectIndex >= 0) {
+      exesdetList.value.splice(selectIndex, 0, { ...exesdetEmpty })
+    }
+    GenerateRec(exesdetList.value)
+  }
+  //表身表格-刪除
+  const exesdetDel = () => {
+    const selectIndex = exesdetTable.value?.selectIndex?.[0]
+    if (typeof selectIndex === 'number' && selectIndex >= 0) {
+      exesdetList.value.splice(selectIndex, 1)
+    }
+    GenerateRec(exesdetList.value)
+  }
+  //表身表格-工料 button
+  const exesdetPickItem = (row: number) => {
+    if (typeof row === 'number' && row >= 0) {
+      pickItemRow.value = row
+      pickItemMode.value = 'insert'
+      pickItemDS.value = true
+    }
+  }
   //表身表格-規格說明
   const exesdetProType = () => {
     const selectIndex = exesdetTable.value?.selectIndex?.[0]
@@ -167,6 +295,52 @@
     detSearchProtText.value = text
     detKeyenterProt.value = true
     detProtDS.value = true
+  }
+  //表身表格-查詢工料彈窗
+  const searcItemDS = ref(false)
+  const detKeyenterItem = ref(false)
+  const detSearchItemRow = ref()
+  const detSearchItemText = ref('')
+  const detSearchItemEnter = (row: number, text: string) => {
+    detSearchItemRow.value = row
+    detSearchItemText.value = text
+    detKeyenterItem.value = true
+    searcItemDS.value = true
+  }
+
+  //算 稅額 & 金額
+  const countTotal = () => {
+    exesdetList.value.forEach((det) => {
+      const qty = Number(det.qty) || 0
+      const price = Number(det.price) || 0
+      det.taxprice = qty * price * taxRate.value * 0.01
+      det.total1 = qty * price + det.taxprice
+      countSum()
+    })
+  }
+  const countSingleTotal = (det: typeof exesdetEmpty, taxprice?: number) => {
+    const qty = Number(det.qty) || 0
+    const price = Number(det.price) || 0
+    const taxpriceCount = qty * price * taxRate.value * 0.01
+    det.taxprice = typeof taxprice === 'number' ? taxprice : taxpriceCount
+    det.total1 = qty * price + det.taxprice
+    countSum()
+  }
+  // 算 稅前合計、營業稅額、雜支總額
+  const countSum = () => {
+    let priceSum = 0,
+      taxpriceSum = 0,
+      totalSum = 0
+    exesdetList.value.forEach((det) => {
+      const qty = Number(det.qty) || 0
+      const price = Number(det.price) || 0
+      priceSum += qty * price
+      taxpriceSum += det.taxprice
+      totalSum += det.total1
+    })
+    formData.value.sum1 = priceSum
+    formData.value.tax = taxpriceSum
+    formData.value.amount = totalSum
   }
 
   //查詢條件
@@ -205,6 +379,19 @@
 
   //勾選工料彈窗
   const pickItemDS = ref(false)
+  const pickItemRow = ref()
+  const pickItemMode = ref()
+  const exesdetItemPick = () => {
+    if (pickItemMode.value === 'insert') {
+      const selectIndex = exesdetTable.value?.selectIndex?.[0]
+      if (typeof selectIndex === 'number' && selectIndex >= 0) {
+        exesdetList.value[selectIndex].protno = formData.value.protno ?? ''
+        exesdetList.value[selectIndex].protabbr = formData.value.protabbr ?? ''
+      }
+    }
+    GenerateRec(exesdetList.value)
+    countTotal()
+  }
 
   //規格說明彈窗
   const pjtDS = ref(false)
@@ -244,7 +431,7 @@
   <c-bread>
     <template v-if="!store.isDetail">
       <div class="col-auto">
-        <c-button kind="submit" icon="fa-solid fa-floppy-disk">儲存</c-button>
+        <c-button kind="submit" icon="fa-solid fa-floppy-disk" @click="handleSave">儲存</c-button>
       </div>
       <div class="col-auto">
         <c-button kind="cancel" icon="mdi-close-circle" @click="cancel">放棄</c-button>
@@ -420,17 +607,6 @@
             <v-col cols="auto" class="px-2">
               <c-input
                 type="number"
-                v-model="after_price"
-                label="零用金餘額"
-                icon="fa-solid fa-hand-holding-dollar"
-                :disabled="true"
-                :format="{ thousands: true }"
-                :maxlength="12"
-              />
-            </v-col>
-            <v-col cols="auto" class="px-2">
-              <c-input
-                type="number"
                 v-model="formData.sum1"
                 label="稅前合計"
                 icon="fa-solid fa-dollar-sign"
@@ -456,6 +632,17 @@
                 v-model="formData.amount"
                 label="雜支總額"
                 icon="fa-solid fa-dollar-sign"
+                :disabled="true"
+                :format="{ thousands: true }"
+                :maxlength="12"
+              />
+            </v-col>
+            <v-col cols="auto" class="px-2">
+              <c-input
+                type="number"
+                v-model="after_price"
+                label="零用金餘額"
+                icon="fa-solid fa-hand-holding-dollar"
                 :disabled="true"
                 :format="{ thousands: true }"
                 :maxlength="12"
@@ -503,13 +690,13 @@
     <v-card-text>
       <v-row dense>
         <v-col cols="auto" v-if="!store.isDetail">
-          <c-button kind="create" icon="mdi-plus-circle" @click="pickItemDS = true">新增</c-button>
+          <c-button kind="create" icon="mdi-plus-circle" @click="exesdetAdd">新增</c-button>
         </v-col>
         <v-col cols="auto" v-if="!store.isDetail">
-          <c-button kind="insert" icon="mdi-arrow-down-circle">插入</c-button>
+          <c-button kind="insert" icon="mdi-arrow-down-circle" @click="exesdetIns">插入</c-button>
         </v-col>
         <v-col cols="auto" v-if="!store.isDetail">
-          <c-button kind="delete" icon="fa-solid fa-trash">刪除</c-button>
+          <c-button kind="delete" icon="fa-solid fa-trash" @click="exesdetDel">刪除</c-button>
         </v-col>
         <v-col cols="auto">
           <c-button kind="protype" icon="fa-solid fa-clipboard-list" @click="exesdetProType">
@@ -553,7 +740,8 @@
               :disabled="store.isDetail"
               :maxlength="20"
               condensed
-              @button=""
+              @button="exesdetPickItem(index)"
+              @keyEnter="detSearchItemEnter(index, scope.itemno)"
             />
           </td>
           <td>
@@ -585,6 +773,7 @@
               :disabled="store.isDetail"
               :format="{ thousands: true }"
               :maxlength="11"
+              @change="countSingleTotal(scope)"
             />
           </td>
           <td>
@@ -605,6 +794,7 @@
               :disabled="store.isDetail"
               :format="{ thousands: true }"
               :maxlength="11"
+              @change="countSingleTotal(scope)"
             />
           </td>
           <td>
@@ -614,13 +804,14 @@
               :disabled="store.isDetail"
               :format="{ thousands: true }"
               :maxlength="12"
+              @change="countSingleTotal(scope, scope.taxprice)"
             />
           </td>
           <td>
             <c-input
               type="number"
               v-model="scope.total1"
-              :disabled="store.isDetail"
+              :disabled="true"
               :format="{ thousands: true }"
               :maxlength="15"
             />
@@ -636,7 +827,7 @@
           </td>
           <td>
             <c-input
-              v-model="scope.total1"
+              v-model="scope.invono"
               :disabled="store.isDetail"
               :format="{ number: true, english: true }"
               :maxlength="10"
@@ -679,11 +870,39 @@
     :row="detSearchProtRow"
     :search-text="detSearchProtText"
   />
-  <pickItem v-model="pickItemDS" show-ikind mkind6 />
+  <pickItem
+    v-model="pickItemDS"
+    v-model:form="exesdetList"
+    :setting="[
+      { from: 'itemno' },
+      { from: 'itemname' },
+      { from: 'ibompqty', to: 'qty' },
+      { from: 'stkunit', to: 'unit' }
+    ]"
+    :row="pickItemRow"
+    :mode="pickItemMode"
+    :empty="{
+      ...exesdetEmpty,
+      protno: formData.protno ?? '',
+      protabbr: formData.protabbr ?? ''
+    }"
+    show-ikind
+    mkind6
+    @pick="exesdetItemPick"
+  />
   <project-type
     v-model="pjtDS"
     :items="pjtItems"
     @save="handlePJTsave"
     :disabled="store.isDetail"
+  />
+  <search-item
+    v-model="searcItemDS"
+    v-model:form="exesdetList"
+    v-model:keyenter="detKeyenterItem"
+    :setting="[{ from: 'itemno' }, { from: 'itemname' }, { from: 'stkunit', to: 'unit' }]"
+    :row="detSearchItemRow"
+    :search-text="detSearchItemText"
+    :mkindno="[6]"
   />
 </template>

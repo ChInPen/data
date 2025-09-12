@@ -13,14 +13,14 @@
   import type { DataTableHeader } from 'vuetify'
   import { callApi } from '@/utils/uapi'
   import api from '@/api'
+  import type { PickSetting } from '@/store/create'
   import { usePickItem } from '@/store/pickItem'
   const store = usePickItem()
   import type { SearchData } from './type'
   import { pickIKind } from '@/components/PickIKind'
-  import { usePickIKind } from '@/store/pickIKind'
-  const ikindstore = usePickIKind()
 
   const isOpen = defineModel({ default: false })
+  const formData = defineModel('form')
   const props = defineProps({
     showIkind: {
       type: Boolean,
@@ -45,9 +45,22 @@
     mkind6: {
       type: Boolean,
       default: false
-    }
+    },
+    setting: Array as PropType<PickSetting<SearchData>[]>,
+    row: Number,
+    mode: String as PropType<'add' | 'insert'>,
+    empty: Object
   })
   const emits = defineEmits(['pick'])
+
+  // store 變數設置
+  const storeSet = () => {
+    if (formData.value) store.target.value = formData
+    if (props.setting && props.setting.length > 0) store.pickSetting = [...props.setting]
+    if (typeof props.row === 'number' && props.row >= 0) store.target.row = props.row
+    if (['add', 'insert'].includes(props.mode)) store.mode = props.mode
+    if (props.empty) store.empty = { ...props.empty }
+  }
 
   //查詢條件
   const filter = ref({
@@ -138,6 +151,15 @@
       }
     }
   )
+  // Dialog開啟時
+  watch(
+    () => isOpen.value,
+    (newVal) => {
+      if (newVal) {
+        storeSet()
+      }
+    }
+  )
 
   //表格資料
   const tbData = ref<SearchData[]>([])
@@ -186,26 +208,25 @@
   }
   // 取回
   const handleSend = () => {
-    const checkList: any[] = itemTableRef.value?.checked ?? []
-    emits(
-      'pick',
-      checkList.map((x) => ({
-        ...x,
-        ...filterHDS.value,
-        mkindno1:
-          x.mkindno == '1'
-            ? '材料'
-            : x.mkindno == '2'
-              ? '工資'
-              : x.mkindno == '3'
-                ? '費用'
-                : x.mkindno == '4'
-                  ? '外包'
-                  : x.mkindno == '6'
-                    ? '雜支'
-                    : ''
-      }))
-    )
+    let checkList: any[] = itemTableRef.value?.checked ?? []
+    checkList = checkList.map((x) => ({
+      ...x,
+      ...filterHDS.value,
+      mkindno1:
+        x.mkindno == '1'
+          ? '材料'
+          : x.mkindno == '2'
+            ? '工資'
+            : x.mkindno == '3'
+              ? '費用'
+              : x.mkindno == '4'
+                ? '外包'
+                : x.mkindno == '6'
+                  ? '雜支'
+                  : ''
+    }))
+    store.pick(checkList)
+    emits('pick', checkList)
     isOpen.value = false
   }
 
@@ -241,17 +262,13 @@
 
   //選擇工料類別彈窗
   const pickIKindRef = ref()
+  const pickIKindEnter = ref(false)
   const handleIKindOpen = () => {
     pickIKindRef.value?.open()
   }
-  const handleIKindKeyEnter = (e: KeyboardEvent) => {
-    const searchText = filter.value.ikindno
-    ikindstore.keyEnter(e, '', [], searchText, { open: pickIKindRef.value?.open })
-  }
-  const handleIKindPick = (data) => {
-    const { ikindno, ikindname } = data
-    if (ikindno) filter.value.ikindno = ikindno
-    if (ikindname) filter.value.ikindname = ikindname
+  const handleIKindKeyEnter = () => {
+    pickIKindEnter.value = true
+    pickIKindRef.value?.open()
   }
 </script>
 
@@ -330,7 +347,9 @@
           <v-col :cols="7">
             <c-input v-model="filter.itemno" label="工料名稱" />
           </v-col>
-          <v-col class="fs-5 fw-bold text-danger ps-2">請選擇工料分類...</v-col>
+          <v-col class="fs-5 fw-bold text-danger ps-2">
+            {{ mkind6 ? '' : '請選擇工料分類...' }}
+          </v-col>
           <v-col cols="auto" class="mt-2">
             <c-button kind="clear" icon="fa-solid fa-eraser" @click="handleClear">清空</c-button>
           </v-col>
@@ -346,7 +365,7 @@
               v-model="filter.ikindno"
               label="工料類別"
               @button="handleIKindOpen"
-              @keydown="handleIKindKeyEnter"
+              @keyEnter="handleIKindKeyEnter"
             />
           </v-col>
           <v-col :cols="3" v-if="showIkind">
@@ -384,7 +403,13 @@
     </c-data-table>
   </c-dialog>
 
-  <pickIKind ref="pickIKindRef" @pick="handleIKindPick" />
+  <pickIKind
+    ref="pickIKindRef"
+    v-model:form="filter"
+    v-model:keyenter="pickIKindEnter"
+    :setting="[{ from: 'ikindno' }, { from: 'ikindname' }]"
+    :search-text="filter.ikindno"
+  />
 </template>
 
 <style scoped></style>
