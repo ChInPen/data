@@ -299,7 +299,7 @@
   }
   /* 下拉選項禁用時底色  */
   .v-list-item--disabled {
-    background-color: #b0bccf;
+    background-color: #82878f;
   }
   /* 比較緊湊的文字間距 */
   .v-select.condensed :deep(.v-select__selection-text) {

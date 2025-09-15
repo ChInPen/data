@@ -8,6 +8,7 @@
   import { useMiscExpenseStore } from '@/store/miscexpense'
   import { useRouter } from 'vue-router'
   import Filter from './Components/MiscExpenseFilter.vue'
+  import Print from './Components/MiscExpensePrint.vue'
   import { searchEmp } from '@/components/SearchEmp'
   import { searchProt } from '@/components/SearchProt'
   import { pickItem } from '@/components/PickItem'
@@ -141,7 +142,42 @@
     store.copy()
   }
   //刪除
-  const del = () => {}
+  const del = () => {
+    if (store.ono) {
+      message.confirm({
+        type: 'question',
+        message: `確定要刪除「${store.ono}」雜支單？`,
+        onConfirm: () => {
+          //刪除
+          callApi({
+            method: 'POST',
+            url: api.Exes.Exes_Del,
+            data: { ono: store.ono }
+          }).then((res) => {
+            if (res?.status === 200) {
+              const data = res?.data
+              if (data === '') {
+                message.alert({
+                  type: 'success',
+                  message: '刪除成功',
+                  autoClose: 2,
+                  onConfirm: () => {
+                    if (!store.isFirst) onoChange('previous')
+                    else if (!store.isLast) onoChange('next')
+                  }
+                })
+              } else {
+                message.alert({
+                  type: 'error',
+                  message: `刪除失敗：${data}`
+                })
+              }
+            }
+          })
+        }
+      })
+    }
+  }
   //放棄
   const cancel = () => {
     getSingleData()
@@ -173,8 +209,8 @@
     item.execflag = '0'
     //數字欄位
     item.amount = formData.value?.amount ?? 0
-    item.sum1 = formData.value?.amount ?? 0
-    item.tax = formData.value?.amount ?? 0
+    item.sum1 = formData.value?.sum1 ?? 0
+    item.tax = formData.value?.tax ?? 0
     item.exestmo3 = 0
     //日期 (因為 renew 或 data 的 api 傳過來有加斜線)
     item.date1 = (item.date1 as string).replaceAll('/', '')
@@ -213,13 +249,17 @@
             message: '存檔成功',
             autoClose: 2,
             onConfirm: () => {
+              if (formData.value.ono) {
+                store.list.push({ ono: store.ono })
+                store.ono = formData.value.ono
+              }
               cancel()
             }
           })
         } else {
           message.alert({
             type: 'error',
-            message: data
+            message: `存檔失敗：${data}`
           })
         }
       }
@@ -264,6 +304,7 @@
       exesdetList.value.splice(selectIndex, 1)
     }
     GenerateRec(exesdetList.value)
+    countSum()
   }
   //表身表格-工料 button
   const exesdetPickItem = (row: number) => {
@@ -347,7 +388,7 @@
   const filterDS = ref(false)
   const initSearch = (data) => {
     if (Array.isArray(data)) {
-      store.init(data)
+      store.init(data.map(({ ono }) => ({ ono })))
       getSingleData()
     }
   }
@@ -420,6 +461,14 @@
     }
   }
 
+  //列印
+  const printDS = ref(false)
+  const printOpen = () => {
+    if (store.ono) {
+      printDS.value = true
+    }
+  }
+
   onMounted(() => {
     getSingleData()
     getUnitApi()
@@ -479,7 +528,7 @@
         </c-button>
       </div>
       <div class="col-auto">
-        <c-button kind="print" icon="fa-solid fa-print">列印</c-button>
+        <c-button kind="print" icon="fa-solid fa-print" @click="printOpen">列印</c-button>
       </div>
       <div class="col-auto">
         <c-button kind="browse" icon="fa-solid fa-eye" @click="store.search(router)">瀏覽</c-button>
@@ -905,4 +954,5 @@
     :search-text="detSearchItemText"
     :mkindno="[6]"
   />
+  <Print v-model="printDS" :no="`${store.ono}`" />
 </template>

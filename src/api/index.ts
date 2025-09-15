@@ -178,11 +178,13 @@ export default {
   },
   //雜支作業
   Exes: {
-    Exes_Save: `/api/Exes/Exes_Save`,
-    Exes_Del: `/api/Exes/Exes_Del`,
-    Exeslist: `/api/Exes/Exeslist`,
-    Exes_Data: `/api/Exes/Exes_Data`,
-    Exes_Renew: `/api/Exes/Exes_ReNew`
+    Exes_Save: '/api/Exes/Exes_Save',
+    Exes_Del: '/api/Exes/Exes_Del',
+    Exeslist: '/api/Exes/Exeslist',
+    Exes_Data: '/api/Exes/Exes_Data',
+    Exes_Renew: '/api/Exes/Exes_ReNew',
+    Exes_Print: '/api/Exes/Exes_Print',
+    Exes_FootNote: '/api/Exes/Exes_FootNote'
   },
   //圖檔
   Photo: {

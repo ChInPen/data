@@ -57,7 +57,10 @@
         layer1.children.forEach((layer2) => {
           if ('children' in layer2) {
             layer2.children.forEach((layer3) => {
-              if ('path' in layer3 && route.path === `/menu/${layer3.path}`) {
+              const from = route?.meta?.from?.[0]
+              const isPath1 = 'path' in layer3 && route.path === `/menu/${layer3.path}`
+              const isPath2 = 'path' in layer3 && from && from === `/menu/${layer3.path}`
+              if (isPath1 || isPath2) {
                 open.value.push(layer1.title)
                 open.value.push(layer1.title + '>' + layer2.title)
                 selectedItem.value = {

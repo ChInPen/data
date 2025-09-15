@@ -169,7 +169,7 @@ export const createDocStore = <K extends string>(options: {
     state: () => ({
       [options.keyName]: '' as string,
       action: 'detail' as 'edit' | 'create' | 'copy' | 'detail',
-      list: [] as { K: string; [key: string]: any }[]
+      list: [] as { [options.keyName]: string; [key: string]: any }[]
     }),
     getters: {
       path1: () => options.path1,

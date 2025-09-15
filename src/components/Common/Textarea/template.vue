@@ -14,6 +14,10 @@
     isRequired: {
       type: Boolean,
       default: false
+    },
+    inputMaxRows: {
+      type: Number,
+      default: 0
     }
   })
 
@@ -21,6 +25,27 @@
     const disabled = attr?.disabled ?? false
     return props.isRequired && disabled === false
   })
+
+  //限制可輸入的行數
+  const checkMaxRows = (e) => {
+    if (props.inputMaxRows > 0) {
+      // 如果已經到達最大行數，就阻止按 Enter
+      const lines = model.value.split('\n')
+      if (lines.length >= props.inputMaxRows) {
+        e.preventDefault()
+      }
+    }
+  }
+  const enforceMaxRows = () => {
+    if (props.inputMaxRows > 0) {
+      // 如果 paste 或其它情況多出行數，截掉
+      let lines = model.value.split('\n')
+      if (lines.length > props.inputMaxRows) {
+        lines = lines.slice(0, props.inputMaxRows)
+        model.value = lines.join('\n')
+      }
+    }
+  }
 </script>
 
 <template>
@@ -32,6 +57,8 @@
     rounded="1"
     rows="3"
     no-resize
+    @keydown.enter="checkMaxRows"
+    @input="enforceMaxRows"
   >
     <template v-slot:prepend-inner>
       <div class="prepend-inner-content">

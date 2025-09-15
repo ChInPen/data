@@ -204,7 +204,7 @@ const menu: MenuEntry[] = [
             component: () => import('@/views/Document/OpsOwner/MiscExpense.vue')
           },
           {
-            title: '雜支作業-查詢',
+            title: '雜支作業',
             path: 'MiscExpenseSearch',
             component: () => import('@/views/Document/OpsOwner/MiscExpenseSearch.vue'),
             meta: { from: ['/menu/MiscExpense'] }

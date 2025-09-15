@@ -36,11 +36,12 @@
   const tableRef = ref()
   const goback = () => {
     const idx = tableRef.value?.selectIndex[0]
+    const onoList = tbData.value.map(({ ono }) => ({ ono }))
     if (typeof idx === 'number' && idx >= 0) {
       const ono = tbData.value[idx].ono
-      store.goback(router, [...tbData.value], ono)
+      store.goback(router, onoList, ono)
     } else {
-      store.goback(router, [...tbData.value])
+      store.goback(router, onoList)
     }
   }
 
