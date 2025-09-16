@@ -1,4 +1,4 @@
-<!-- 多選式(工料) -->
+<!-- 多選式 -->
 <script lang="ts" setup>
   import { computed, ref } from 'vue'
   import { cButton } from '@/components/Common'

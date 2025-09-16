@@ -70,20 +70,18 @@
   <c-bread>
     <v-row justify="end" class="ma-0" dense>
       <v-col cols="auto">
-        <v-col cols="auto">
-          <c-button
-            kind="create"
-            :icon="loadingExcel ? '' : 'fa-solid fa-file-excel'"
-            @click="onSubmitPrint('Excel')"
-            :disabled="loadingExcel"
-          >
-            <template v-if="loadingExcel">
-              <i class="fa-solid fa-spinner fa-spin me-2"></i>
-              匯出中...
-            </template>
-            <template v-else>匯出Excel</template>
-          </c-button>
-        </v-col>
+        <c-button
+          kind="create"
+          :icon="loadingExcel ? '' : 'fa-solid fa-file-excel'"
+          @click="onSubmitPrint('Excel')"
+          :disabled="loadingExcel"
+        >
+          <template v-if="loadingExcel">
+            <i class="fa-solid fa-spinner fa-spin me-2"></i>
+            匯出中...
+          </template>
+          <template v-else>匯出Excel</template>
+        </c-button>
       </v-col>
     </v-row>
   </c-bread>
@@ -94,7 +92,7 @@
       <!-- Prot工程區塊 -->
       <v-row align="center">
         <v-col cols="auto">
-          <ProtStart v-model="formData.protno" dense />
+          <ProtStart v-model="formData.protno" />
         </v-col>
       </v-row>
     </v-card-text>

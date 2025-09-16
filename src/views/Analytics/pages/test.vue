@@ -162,6 +162,12 @@
       loadingExcel.value = false
     }
   }
+
+  // =================測試
+  const form = ref({ email: '', phone: '' })
+  const onSubmit = () => {
+    /* form 驗證與送出 */
+  }
 </script>
 
 <template>
@@ -212,76 +218,76 @@
       <!-- 業主區間 -->
       <v-row align="center">
         <v-col cols="auto">
-          <CustStart v-model="model" :disabled="isMulti" dense />
+          <CustStart v-model="model" :disabled="isMulti" />
         </v-col>
         <v-col cols="auto" class="text-center d-none d-md-block">
           <span class="text-h5 text-grey-lighten-1">～</span>
         </v-col>
         <v-col cols="auto">
-          <CustEnd v-model="model2" :disabled="isMulti" dense />
+          <CustEnd v-model="model2" :disabled="isMulti" />
         </v-col>
         <v-col cols="auto">
-          <CustMultiBut v-model="model4" dense />
+          <CustMultiBut v-model="model4" />
         </v-col>
       </v-row>
       <!-- 工程區間 -->
       <v-row align="center">
         <v-col cols="auto">
-          <ProtStart v-model="model5" :disabled="isMulti2" dense />
+          <ProtStart v-model="model5" :disabled="isMulti2" />
         </v-col>
         <v-col cols="auto" class="text-center d-none d-md-block">
           <span class="text-h5 text-grey-lighten-1">～</span>
         </v-col>
         <v-col cols="auto">
-          <ProtEnd v-model="model6" :disabled="isMulti2" dense />
+          <ProtEnd v-model="model6" :disabled="isMulti2" />
         </v-col>
         <v-col cols="auto">
-          <ProtMultiBut v-model="model7" dense />
+          <ProtMultiBut v-model="model7" />
         </v-col>
       </v-row>
       <!-- 工料區間 -->
       <v-row align="center">
         <v-col cols="auto">
-          <ItemStart v-model="model8" :disabled="isMulti3" dense />
+          <ItemStart v-model="model8" :disabled="isMulti3" />
         </v-col>
         <v-col cols="auto" class="text-center d-none d-md-block">
           <span class="text-h5 text-grey-lighten-1">～</span>
         </v-col>
         <v-col cols="auto">
-          <ItemEnd v-model="model9" :disabled="isMulti3" dense />
+          <ItemEnd v-model="model9" :disabled="isMulti3" />
         </v-col>
         <v-col cols="auto">
-          <ItemMultiBut v-model="model10" dense />
+          <ItemMultiBut v-model="model10" />
         </v-col>
       </v-row>
       <!-- 廠商區間 -->
       <v-row align="center">
         <v-col cols="auto">
-          <SuppStart v-model="model11" :disabled="isMulti4" dense />
+          <SuppStart v-model="model11" :disabled="isMulti4" />
         </v-col>
         <v-col cols="auto" class="text-center d-none d-md-block">
           <span class="text-h5 text-grey-lighten-1">～</span>
         </v-col>
         <v-col cols="auto">
-          <SuppEnd v-model="model12" :disabled="isMulti4" dense />
+          <SuppEnd v-model="model12" :disabled="isMulti4" />
         </v-col>
         <v-col cols="auto">
-          <SuppMultiBut v-model="model13" dense />
+          <SuppMultiBut v-model="model13" />
         </v-col>
       </v-row>
       <!-- 人員區間 -->
       <v-row align="center">
         <v-col cols="auto">
-          <EmpStart v-model="model14" :disabled="isMulti5" dense />
+          <EmpStart v-model="model14" :disabled="isMulti5" />
         </v-col>
         <v-col cols="auto" class="text-center d-none d-md-block">
           <span class="text-h5 text-grey-lighten-1">～</span>
         </v-col>
         <v-col cols="auto">
-          <EmpEnd v-model="model15" :disabled="isMulti5" dense />
+          <EmpEnd v-model="model15" :disabled="isMulti5" />
         </v-col>
         <v-col cols="auto">
-          <EmpMultiBut v-model="model16" dense />
+          <EmpMultiBut v-model="model16" />
         </v-col>
       </v-row>
       <!-- 註腳區間 -->
@@ -298,4 +304,36 @@
       </v-row>
     </v-card-text>
   </v-card>
+
+  <!-- ================測試=================== -->
+
+  <v-form ref="form" @submit.prevent="onSubmit">
+    <v-row>
+      <v-col cols="12" md="6">
+        <v-text-field
+          v-model="form.email"
+          label="Email"
+          type="email"
+          variant="outlined"
+          density="compact"
+          color="primary"
+          prepend-inner-icon="mdi-email"
+          clearable
+          :rules="[(v) => !!v || '必填', (v) => /.+@.+\..+/.test(v) || '格式不正確']"
+        />
+      </v-col>
+      <v-col cols="12" md="6">
+        <v-text-field
+          v-model="form.phone"
+          label="手機"
+          variant="outlined"
+          density="compact"
+          prepend-inner-icon="mdi-cellphone"
+          :rules="[(v) => !!v || '必填']"
+        />
+      </v-col>
+    </v-row>
+
+    <v-btn type="submit" color="primary">送出</v-btn>
+  </v-form>
 </template>

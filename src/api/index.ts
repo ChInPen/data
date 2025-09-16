@@ -191,6 +191,14 @@ export default {
   Photo: {
     GetPhoto2: `${apiuridoc}/api/Photo/GetPhoto2`
   },
+  // 員工借支作業
+  EmpLoan: {
+    Search: '/api/Emborr/Emborr_List',
+    SearchOen: '/api/Emborr/Emborr_GetSingle',
+    Add: '/api/Emborr/Emborr_ADD',
+    UPDATE: '/api/Emborr/Emborr_EDIT',
+    Delete: '/api/Emborr/Emborr_DEL'
+  },
   // 報價作業查詢
   SqteBrow: {
     Search: '/api/SqteBrow/SqteBrow_Search',

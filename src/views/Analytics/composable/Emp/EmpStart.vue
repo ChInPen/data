@@ -1,8 +1,8 @@
-<!-- SuppStart.vue：業主搜尋框(起) -->
+<!-- SuppStart.vue：人員搜尋框(起) -->
 <script lang="ts" setup>
   import { computed, ref, watch } from 'vue'
   import { cInput } from '@/components/Common'
-  import { searchEmp } from '@/components/SearchEmp' // 廠商彈窗元件查詢
+  import { searchEmp } from '@/components/SearchEmp'
   import { useSearchEmp } from '@/store/searchEmp'
   const storeSupp = useSearchEmp()
   const model = defineModel<string>({ default: '' })

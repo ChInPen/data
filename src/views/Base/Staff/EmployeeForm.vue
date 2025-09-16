@@ -20,6 +20,18 @@
 
   const store = useEmployeeStore()
   const router = useRouter()
+  import { nextTick, watch } from 'vue'
+  nextTick(() => {
+    watch(
+      () => store.action,
+      (nv, ov) => {
+        if (nv !== ov) {
+          console.log('[CHANGE] store.action:', ov, '→', nv)
+          console.trace()
+        }
+      }
+    )
+  })
 
   type EmpSkill = {
     //人員工種
