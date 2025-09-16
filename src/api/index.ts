@@ -184,7 +184,8 @@ export default {
     Exes_Data: '/api/Exes/Exes_Data',
     Exes_Renew: '/api/Exes/Exes_ReNew',
     Exes_Print: '/api/Exes/Exes_Print',
-    Exes_FootNote: '/api/Exes/Exes_FootNote'
+    Exes_FootNote: '/api/Exes/Exes_FootNote',
+    Exes_PettyCash: '/api/Exes/Exes_PettyCash'
   },
   //圖檔
   Photo: {

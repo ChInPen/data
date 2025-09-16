@@ -86,8 +86,8 @@
           label="報表內容"
           :items="[
             { label: '簡要表', value: '1' },
-            { label: '簡要自訂ㄧ', disabled: true },
-            { label: '簡要自訂二', disabled: true }
+            { label: '簡要自定ㄧ', disabled: true },
+            { label: '簡要自定二', disabled: true }
           ]"
           item-title="label"
           item-value="value"

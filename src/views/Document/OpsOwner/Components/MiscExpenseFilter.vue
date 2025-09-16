@@ -148,7 +148,7 @@
       <v-col cols="12">
         <c-input
           v-model="filter.desud1"
-          label="說明自訂一"
+          label="說明自定一"
           icon="fa-solid fa-pencil"
           :maxlength="30"
         />

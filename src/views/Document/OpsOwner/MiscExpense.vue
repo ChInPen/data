@@ -7,6 +7,7 @@
   import { GenerateRec } from '@/utils/ucommon'
   import { useMiscExpenseStore } from '@/store/miscexpense'
   import { useRouter } from 'vue-router'
+  import { auditInfo } from '@/components/AuditInfo'
   import Filter from './Components/MiscExpenseFilter.vue'
   import Print from './Components/MiscExpensePrint.vue'
   import { searchEmp } from '@/components/SearchEmp'
@@ -306,19 +307,19 @@
     GenerateRec(exesdetList.value)
     countSum()
   }
+  //表身表格-規格說明
+  const exesdetProType = () => {
+    const selectIndex = exesdetTable.value?.selectIndex?.[0]
+    if (typeof selectIndex === 'number' && selectIndex >= 0) {
+      pjtDS.value = true
+    }
+  }
   //表身表格-工料 button
   const exesdetPickItem = (row: number) => {
     if (typeof row === 'number' && row >= 0) {
       pickItemRow.value = row
       pickItemMode.value = 'insert'
       pickItemDS.value = true
-    }
-  }
-  //表身表格-規格說明
-  const exesdetProType = () => {
-    const selectIndex = exesdetTable.value?.selectIndex?.[0]
-    if (typeof selectIndex === 'number' && selectIndex >= 0) {
-      pjtDS.value = true
     }
   }
   //表身表格-查詢工程彈窗
@@ -350,21 +351,20 @@
   }
 
   //算 稅額 & 金額
-  const countTotal = () => {
-    exesdetList.value.forEach((det) => {
-      const qty = Number(det.qty) || 0
-      const price = Number(det.price) || 0
-      det.taxprice = qty * price * taxRate.value * 0.01
-      det.total1 = qty * price + det.taxprice
-      countSum()
-    })
-  }
-  const countSingleTotal = (det: typeof exesdetEmpty, taxprice?: number) => {
+  const taxRule = (det: typeof exesdetEmpty, isTaxprice: boolean = false) => {
     const qty = Number(det.qty) || 0
     const price = Number(det.price) || 0
-    const taxpriceCount = qty * price * taxRate.value * 0.01
-    det.taxprice = typeof taxprice === 'number' ? taxprice : taxpriceCount
+    if (!isTaxprice) det.taxprice = qty * price * taxRate.value * 0.01
     det.total1 = qty * price + det.taxprice
+  }
+  const countTotal = () => {
+    exesdetList.value.forEach((det) => {
+      taxRule(det)
+    })
+    countSum()
+  }
+  const countSingleTotal = (det: typeof exesdetEmpty, isTaxprice: boolean = false) => {
+    taxRule(det, isTaxprice)
     countSum()
   }
   // 算 稅前合計、營業稅額、雜支總額
@@ -405,6 +405,20 @@
   const searchEmpEnter = () => {
     keyenterEmp.value = true
     searchEmpDS.value = true
+  }
+  const searchEmpPick = () => {
+    //取得人員的零用金
+    callApi({
+      method: 'POST',
+      url: api.Exes.Exes_PettyCash,
+      params: { empno: formData.value.empaccno }
+    }).then((res) => {
+      if (res.status === 200) {
+        if (typeof res.data === 'number' && res.data > 0) {
+          formData.value.before_price = res.data
+        }
+      }
+    })
   }
 
   //查詢工程彈窗
@@ -853,7 +867,7 @@
               :disabled="store.isDetail"
               :format="{ thousands: true }"
               :maxlength="12"
-              @change="countSingleTotal(scope, scope.taxprice)"
+              @change="countSingleTotal(scope, true)"
             />
           </td>
           <td>
@@ -893,6 +907,15 @@
     </v-card-text>
   </v-card>
 
+  <audit-info
+    class="mt-2"
+    v-if="store.action === 'edit' || store.action === 'detail'"
+    :a_date="formData.a_date"
+    :a_user="formData.a_user"
+    :m_date="formData.m_date"
+    :m_user="formData.m_user"
+  />
+
   <Filter v-model="filterDS" @init="initSearch" @search="handleSearch" />
   <search-emp
     v-model="searchEmpDS"
@@ -903,6 +926,7 @@
       { from: 'empname', to: 'empaccname' }
     ]"
     :search-text="formData.empaccno"
+    @pick="searchEmpPick"
   />
   <search-prot
     v-model="searcProtDS"

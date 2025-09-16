@@ -78,8 +78,8 @@
           label="報表內容"
           :items="[
             { label: '內定報表', value: 'Arranged' },
-            { label: '自訂1', disabled: true },
-            { label: '自訂2', disabled: true }
+            { label: '自定一', disabled: true },
+            { label: '自定二', disabled: true }
           ]"
           item-title="label"
           item-value="value"

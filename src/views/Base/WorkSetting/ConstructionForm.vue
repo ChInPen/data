@@ -31,7 +31,8 @@
   import { searchItem } from '@/components/SearchItem'
   import { useSearchItem } from '@/store/searchItem'
   const searchItemStore = useSearchItem()
-  import hdsItem from './Components/ConstructionFormHDS.vue'
+  // import hdsItem from './Components/ConstructionFormHDS.vue'
+  import { hdsItem } from '@/components/HdsItem'
   import plle from './Components/ConstructionFormPlle.vue'
   import { boms } from '@/components/Boms'
 
@@ -74,7 +75,6 @@
   //工程資料
   const formData = ref<Record<string, any>>({})
   const tabpage = ref('normal') //頁籤
-  const hdsRef = ref()
 
   //取消&返回 按鈕
   const handleCancel = () => {
@@ -947,7 +947,7 @@
             <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.protud1"
-                label="工程自訂一"
+                label="工程自定一"
                 icon="fa-solid fa-pencil"
                 :disabled="store.isDetail"
                 :maxlength="20"
@@ -956,7 +956,7 @@
             <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.protud2"
-                label="工程自訂二"
+                label="工程自定二"
                 icon="fa-solid fa-pencil"
                 :disabled="store.isDetail"
                 :maxlength="20"
@@ -1006,7 +1006,6 @@
         </v-tabs-window-item>
         <v-tabs-window-item value="protdet">
           <hdsItem
-            ref="hdsRef"
             v-model:head="headItemList"
             v-model:det="detItemList"
             v-model:sec="secItemList"

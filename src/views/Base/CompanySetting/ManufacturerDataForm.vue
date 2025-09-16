@@ -672,7 +672,7 @@
             <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.suppuD1"
-                label="廠商自訂1"
+                label="廠商自定一"
                 icon="fa-solid fa-pencil"
                 :disabled="store.isDetail"
                 :maxlength="20"
@@ -681,7 +681,7 @@
             <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.suppuD2"
-                label="廠商自訂2"
+                label="廠商自定二"
                 icon="fa-solid fa-pencil"
                 :disabled="store.isDetail"
                 :maxlength="30"

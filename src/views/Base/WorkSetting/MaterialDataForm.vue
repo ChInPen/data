@@ -648,7 +648,7 @@
                 <v-col :offset="1" class="px-2">
                   <c-input
                     v-model="formData.itemuD1"
-                    label="產品自訂1"
+                    label="產品自定一"
                     icon="fa-solid fa-pencil"
                     :disabled="store.isDetail"
                     :maxlength="12"
@@ -668,7 +668,7 @@
                 <v-col :offset="1" class="px-2">
                   <c-input
                     v-model="formData.itemuD2"
-                    label="產品自訂2"
+                    label="產品自定二"
                     icon="fa-solid fa-pencil"
                     :disabled="store.isDetail"
                     :maxlength="12"
@@ -688,7 +688,7 @@
                 <v-col :offset="1" class="px-2">
                   <c-input
                     v-model="formData.itemuD3"
-                    label="產品自訂3"
+                    label="產品自定三"
                     icon="fa-solid fa-pencil"
                     :disabled="store.isDetail"
                     :maxlength="12"

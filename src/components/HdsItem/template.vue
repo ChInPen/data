@@ -6,7 +6,11 @@
   import { getHeadItemNo1, getDetItemNo1, getSecItemNo1 } from '@/utils/ucommon' //數字轉中文
 
   defineProps({
-    disabled: Boolean
+    disabled: Boolean,
+    tbHeight: {
+      type: [String, Number],
+      default: '320'
+    }
   })
 
   const tabpageHDS = ref('protdet') //頁籤(大中細項目)
@@ -236,7 +240,7 @@
 <template>
   <v-card>
     <v-tabs v-model="tabpageHDS" class="c-sub-tabs">
-      <v-tab value="protdet">明細</v-tab>
+      <v-tab value="maindet" v-if="$slots.default">明細</v-tab>
       <v-tab value="head">大項目</v-tab>
       <v-tab value="det">中項目</v-tab>
       <v-tab value="sec">細項目</v-tab>
@@ -244,7 +248,7 @@
 
     <v-card-text>
       <v-tabs-window v-model="tabpageHDS">
-        <v-tabs-window-item value="protdet">
+        <v-tabs-window-item v-if="$slots.default" value="maindet">
           <slot></slot>
         </v-tabs-window-item>
         <v-tabs-window-item value="head">
@@ -269,7 +273,7 @@
             hover
             selectable
             :pagination="false"
-            height="320"
+            :height="tbHeight"
             fixed-header
           >
             <template v-slot:item.headitem="{ scope }">
@@ -299,7 +303,7 @@
             hover
             selectable
             :pagination="false"
-            height="320"
+            :height="tbHeight"
             fixed-header
           >
             <template v-slot:item.detitem="{ scope }">
@@ -329,7 +333,7 @@
             hover
             selectable
             :pagination="false"
-            height="320"
+            :height="tbHeight"
             fixed-header
           >
             <template v-slot:item.secitem="{ scope }">
@@ -449,5 +453,3 @@
     </template>
   </c-dialog>
 </template>
-
-<style scoped></style>

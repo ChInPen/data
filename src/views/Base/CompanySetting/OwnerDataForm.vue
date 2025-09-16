@@ -120,7 +120,7 @@
     { title: '電話', key: 'contel', sortable: false },
     { title: '行動電話', key: 'conmob', sortable: false },
     { title: '說明', key: 'condescrip', sortable: false },
-    { title: '自訂一', key: 'conud1', sortable: false }
+    { title: '自定一', key: 'conud1', sortable: false }
   ]
   //聯絡人表格資料
   const emptyObj = {
@@ -656,7 +656,7 @@
             <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.custud1"
-                label="客戶自訂1"
+                label="客戶自定一"
                 icon="fa-solid fa-pencil"
                 :disabled="store.isDetail"
                 :maxlength="20"
@@ -665,7 +665,7 @@
             <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.custud2"
-                label="客戶自訂2"
+                label="客戶自定二"
                 icon="fa-solid fa-pencil"
                 :disabled="store.isDetail"
                 :maxlength="20"
@@ -674,7 +674,7 @@
             <v-col cols="auto" class="px-2">
               <c-input
                 v-model="formData.custud3"
-                label="客戶自訂3"
+                label="客戶自定三"
                 icon="fa-solid fa-pencil"
                 :format="{ number: true }"
                 :disabled="store.isDetail"
