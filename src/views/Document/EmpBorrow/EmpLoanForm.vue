@@ -1,327 +1,246 @@
 <script lang="ts" setup>
-  import { ref, onMounted, watch } from 'vue'
-  import {
-    cButton,
-    cInput,
-    cSelect,
-    cTextarea,
-    cBread,
-    cDivider,
-    cSelectInput
-  } from '@/components/Common' //共用元件
+  import { ref, onMounted, watch, computed, watchEffect } from 'vue'
+  import { cButton, cInput, cBread, cDivider } from '@/components/Common' //共用元件
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
-  import { useEmployeeStore } from '@/store/employee'
+  import { useEmpLoanStore } from '@/store/empLoan'
   import { useRouter } from 'vue-router'
   import { message } from '@/components/Message/service'
-  import { pickAddr } from '@/components/PickAddr'
   import { auditInfo } from '@/components/AuditInfo'
-  import webPermissions from '@/views/Base/Staff/Components/EmployeeWeb.vue'
-
-  const store = useEmployeeStore()
+  import { searchEmp } from '@/components/SearchEmp'
+  const store = useEmpLoanStore()
   const router = useRouter()
-
-  // 追蹤 action 任何變化 + 誰改的（console.trace）
-  watch(
-    () => store.action,
-    (nv, ov) => {
-      console.log('[TRACE] store.action:', ov, '→', nv)
-      console.trace()
-    },
-    { immediate: true }
-  )
-  type EmpSkill = {
-    //人員工種
-    empno: string
-    skillno: string
-    daytpr: number
-    overtime: number
-    skillname: string
-  }
-
-  //下拉選單
-  const empsexDDL = ref([
-    {
-      empsex: '1',
-      empsexName: '男'
-    },
-    {
-      empsex: '2',
-      empsexName: '女'
+  // 頁面載入後執行
+  onMounted(() => {
+    getEmpApi()
+    if (store.action === 'edit' || store.action === 'copy' || store.action === 'detail') {
+      getEmpSingleApi(store.bno) //要取得bno
     }
-  ])
-  const empmarrDDL = ref([
-    {
-      empmarr: '1',
-      empmarrName: '已婚'
-    },
-    {
-      empmarr: '2',
-      empmarrName: '未婚'
-    }
-  ])
-  const departDDL = ref<{ deparno: string; deparname: string }[]>([])
-  const employeeDDL = ref<{ empno: string; empname: string }[]>([])
-  const skillDDL = ref<{ skillno: string; skillname: string }[]>([])
-  //抓部門下拉選單資料
-  const getDepartApi = async () => {
-    callApi({
-      method: 'GET',
-      url: api.Depar.GetAllDep
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const { data } = res?.data
-        if (Array.isArray(data)) {
-          departDDL.value = data
+  })
+  const getEmpSingleApi = async (bno: string) => {
+    try {
+      const res: any = await callApi({
+        method: 'POST',
+        url: api.EmpLoan.SearchOen,
+        data: {
+          bno: bno
         }
+      })
+      console.log(res.data)
+      formData.value = res.data
+      if (store.action === 'copy') {
+        formData.value.bno = ''
       }
-    })
+    } catch (error) {}
   }
-  //抓人員下拉選單資料
-  const getEmpApi = async () => {
-    callApi({
-      method: 'POST',
-      url: api.Emp.Emp_ListSimple
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const data = res?.data as any[] | undefined
-        if (data && Array.isArray(data)) {
-          employeeDDL.value = data.map(({ empno, empname }) => ({ empno, empname }))
-        }
-      }
-    })
-  }
-  //抓工種下拉選單資料
-  const getSkillApi = async () => {
-    callApi({
-      method: 'POST',
-      url: api.Skill.Skilllist,
-      data: {}
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const { _Lists } = res?.data
-        if (Array.isArray(_Lists)) {
-          skillDDL.value = _Lists
-        }
-      }
-    })
-  }
-
-  //人員資料
-  const formData = ref<Record<string, any>>({})
-  const empSkills = ref<EmpSkill[]>([])
-
   //取消&返回 按鈕
   const handleCancel = () => {
     router.push({ path: '/menu/EmpLoan' })
   }
-  //檢查欄位規則
-  const checkData = () => {
-    //必填:empno, empname
-    const requiredFields = [
-      { key: 'empno', label: '人員編號' },
-      { key: 'empname', label: '人員姓名' }
-    ]
-
-    let missing = requiredFields
-      .filter((field) => !formData.value?.[field.key])
-      .map((field) => field.label)
-      .join('、')
-    if (missing) missing = `${missing}不可為空白`
-
-    //檢查人員工種
-    let missing2 = empSkills.value
-      .map((s, i) => (!s.skillno ? i + 1 : ''))
-      .filter(Boolean)
-      .join('、')
-    if (missing2) missing2 = `第${missing2}筆工種不可為空白`
-
-    return missing && missing2 ? `${missing}\n${missing2}` : missing || missing2
-  }
-  //送出存檔
-  const saveData = () => {
-    return {
-      emp: { ...formData.value },
-      data: empSkills.value.map((x) => ({ ...x, empno: formData.value.empno })),
-      empwebparDatas: webPerData.value.map((x) => ({
-        ...x,
-        empno: formData.value.empno,
-        empname: formData.value.empname
-      })),
-      updatePhotoPath: ''
-    }
-  }
-  const callCreateApi = async () => {
-    callApi({
-      method: 'POST',
-      url: api.Emp.Emp_ADD,
-      data: saveData()
-    }).then((res: any) => {
-      if (res?.status === 200) {
-        const data = res?.data
-        if (data && data.state === 'success') {
-          message.alert({
-            type: 'success',
-            message: data?.msg ?? '',
-            autoClose: 2,
-            onConfirm: () => {
-              handleCancel()
-            }
-          })
-        }
-      }
-    })
-  }
-  const callEditApi = async () => {
-    callApi({
-      method: 'PUT',
-      url: api.Emp.Emp_EDIT,
-      data: saveData()
-    }).then((res: any) => {
-      if (res?.state === 'success') {
-        message.alert({
-          type: 'success',
-          message: res?.msg ?? '',
-          autoClose: 2,
-          onConfirm: () => {
-            handleCancel()
-          }
-        })
-      }
-    })
-  }
-  const handleSave = () => {
-    const check = checkData()
-    if (check) {
-      message.alert({
-        type: 'warning',
-        message: check
-      })
-      return
-    }
-    message.confirm({
-      type: 'question',
-      message: `確定要送出人員資料？`,
-      onConfirm: () => {
-        if (store.action === 'edit') {
-          callEditApi()
-        } else {
-          callCreateApi()
-        }
-      }
-    })
-  }
-  //新增工種資料
-  const empSkillAdd = () => {
-    empSkills.value.push({
-      empno: '',
-      skillno: '',
-      daytpr: 0,
-      overtime: 0,
-      skillname: ''
-    })
-  }
-  //刪除工種資料
-  const empSkillDel = (skill: EmpSkill) => {
-    const find = empSkills.value.indexOf(skill)
-    if (find >= 0) {
-      empSkills.value.splice(find, 1)
+  //人員資料
+  const formData = ref<Record<string, any>>({})
+  // 抓取員工所有資料
+  const employeeDDL = ref<{ empno: string; empname: string }[]>([])
+  const getEmpApi = async () => {
+    const res: any = await callApi({ method: 'POST', url: api.Emp.Emp_ListSimple })
+    if (res?.status === 200 && Array.isArray(res?.data)) {
+      employeeDDL.value = res.data.map(({ empno, empname }: any) => ({ empno, empname }))
     }
   }
 
-  //新增狀態呼叫 Renew api
-  const getRenewApi = async () => {
-    callApi({
-      method: 'GET',
-      url: api.Emp.Emp_ReNew
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const data = res?.data ?? {}
-        const { emp, empwebparDatas } = data
-        if (emp) formData.value = { ...emp }
-        if (empwebparDatas && Array.isArray(empwebparDatas)) webPerData.value = empwebparDatas
-      }
-    })
-  }
-  //編輯、複製、瀏覽呼叫 api
-  const getAllDataApi = async () => {
-    //抓人員基本資料
-    callApi({
-      method: 'POST',
-      url: api.Emp.Emp_GetSingle,
-      data: { empno: store.empno }
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const data = res?.data ?? {}
-        formData.value = {
-          ...data,
-          empno: ['edit', 'detail'].includes(store.action) ? (data?.empno ?? '') : ''
-        }
-      }
-    })
-    //抓人員工種資料
-    callApi({
-      method: 'GET',
-      url: api.Emp.EmpSkill_List,
-      params: { empno: store.empno }
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const data: any[] = res?.data ?? []
-        empSkills.value = data
-      }
-    })
-    //抓人員web權限資料
-    callApi({
-      method: 'GET',
-      url: api.Emp.EmpWebPar_List,
-      params: { empno: store.empno }
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const data: any[] = res?.data ?? []
-        webPerData.value = data
-      }
-    })
+  // 人員編號
+  const searchRef = ref()
+  const isEnter = ref(false)
+  const pickSetting = ref()
+  const searchText = ref('')
+  // 人員編號挑選
+  const searchItemOpen = (to: 'empno' | 'empokno' | 'empacno') => {
+    if (to === 'empno') {
+      pickSetting.value = [
+        { from: 'empno', to: 'empno' },
+        { from: 'empname', to: 'empname' }
+      ]
+    }
+    if (to === 'empokno') {
+      pickSetting.value = [
+        { from: 'empno', to: 'empokno' },
+        { from: 'empname', to: 'empokname' }
+      ]
+    }
+    if (to === 'empacno') {
+      pickSetting.value = [
+        { from: 'empno', to: 'empacno' },
+        { from: 'empname', to: 'empacname' }
+      ]
+    }
+    searchRef.value?.open()
   }
 
-  //起始動作
-  onMounted(() => {
-    //抓下拉選單資料
-    getDepartApi()
-    getEmpApi()
-    getSkillApi()
-    //抓單筆資料
-    if (store.action === 'create') {
-      getRenewApi()
-    } else if (store.empno) {
-      getAllDataApi()
+  const searchItemEnter = (to: 'empno' | 'empokno' | 'empacno') => {
+    if (to === 'empno') {
+      pickSetting.value = [
+        { from: 'empno', to: 'empno' },
+        { from: 'empname', to: 'empname' }
+      ]
+    }
+    if (to === 'empokno') {
+      pickSetting.value = [
+        { from: 'empno', to: 'empokno' },
+        { from: 'empname', to: 'empokname' }
+      ]
+    }
+    if (to === 'empacno') {
+      pickSetting.value = [
+        { from: 'empno', to: 'empacno' },
+        { from: 'empname', to: 'empacname' }
+      ]
+    }
+    isEnter.value = true
+    searchText.value = formData.value?.[to] ?? ''
+    searchRef.value?.open()
+  }
+
+  // 顯示用格式器（千分位）
+  const nf = new Intl.NumberFormat('zh-TW')
+  // 金額限制
+  const MAX_AMOUNT = 1_000_000
+  // 控制是否正在編輯金額
+  const isAmtEditing = ref(false)
+  // 借支金額
+  const borrprIO = computed({
+    get: () => {
+      const v = formData.value.borrpr
+      if (v === '' || v === null || v === undefined) return ''
+      return isAmtEditing.value ? String(v) : nf.format(Number(v))
+    },
+    set: (raw) => {
+      const digits = String(raw ?? '').replace(/\D/g, '')
+      if (!digits) {
+        formData.value.borrpr = ''
+        return
+      }
+      const n = Math.min(Number(digits), MAX_AMOUNT)
+      formData.value.borrpr = Number.isFinite(n) ? n : ''
     }
   })
 
-  //彈窗
-  const pcikAddrDS = ref(false)
-  const addrTarget = ref<'zip1' | 'zip2' | ''>('')
-  const pickAdder1 = () => {
-    addrTarget.value = 'zip1'
-    pcikAddrDS.value = true
+  // 讓編號跟姓名跟著連動
+  const linkCodeName = (codeKey: string, nameKey: string) => {
+    watchEffect(() => {
+      const code = String(formData.value?.[codeKey] ?? '').trim()
+      if (!code) {
+        formData.value[nameKey] = ''
+        return
+      }
+      const hit = employeeDDL.value?.find?.((x) => x.empno === code)
+      formData.value[nameKey] = hit?.empname ?? ''
+    })
   }
-  const pickAdder2 = () => {
-    addrTarget.value = 'zip2'
-    pcikAddrDS.value = true
+  linkCodeName('empno', 'empname') // 主員工
+  linkCodeName('empokno', 'empokname') // 核可人員
+  linkCodeName('empacno', 'empacname') // 出納人員
+
+  // ==============格式判斷==============
+
+  // 判斷空白（字串會 trim）
+  const isBlank = (v: any) =>
+    v === undefined || v === null || (typeof v === 'string' && v.trim() === '')
+
+  // 必填欄位清單（想調整就改這個陣列）
+  const REQUIRED_FIELDS = [
+    { key: 'date1', label: '借支日期' },
+    { key: 'empno', label: '員工編號' },
+    { key: 'empname', label: '員工名稱' },
+    { key: 'borrpr', label: '借支金額' },
+    { key: 'descrip', label: '借支原因' },
+    { key: 'empacno', label: '出納人員編號' },
+    { key: 'empokname', label: '出納人員名稱' },
+    { key: 'empokno', label: '核可人員編號' },
+    { key: 'empacname', label: '核可人員名稱' }
+  ] as const
+
+  // 檢查必填 + 型別/格式
+  const validateRequiredAndFormat = () => {
+    // 1) 必填
+    const missing = REQUIRED_FIELDS.filter(({ key }) =>
+      isBlank(formData.value?.[key as string])
+    ).map((x) => x.label)
+
+    if (missing.length) {
+      return `${missing.join('、')} 不可為空白`
+    }
+
+    // 2) 金額：大於 0 的整數
+    const amt = formData.value?.borrpr
+    if (!Number.isInteger(amt) || amt <= 0) {
+      return '借支金額必須為大於 0 的整數'
+    }
+    return '' // 通過
   }
-  const handlePickAddr = (data: any) => {
-    if (addrTarget.value === 'zip1') {
-      formData.value.ziprec1 = data.rec
-      formData.value.zip1 = data.zipno
-      formData.value.empaddr1 = data.zipname
-    } else if (addrTarget.value === 'zip2') {
-      formData.value.ziprec2 = data.rec
-      formData.value.zip2 = data.zipno
-      formData.value.empaddr2 = data.zipname
+  // 確認員工編號是否存在
+  const employeeExists = async (empno: string) => {
+    const code = String(empno ?? '').trim()
+    if (!code) return false
+    if (employeeDDL.value.some((e) => e.empno === code)) return true
+    try {
+      const res: any = await callApi({
+        method: 'POST',
+        url: api.Emp.Emp_GetSingle,
+        data: { empno: code }
+      })
+      return res?.status === 200 && !!res?.data?.empno
+    } catch {
+      return false
     }
   }
-  //web權限
-  const webPerDs = ref(false)
-  const webPerData = ref<any[]>([])
+
+  // 送出表單
+  const handleSave = async () => {
+    console.log('json', JSON.stringify(formData.value, null, 2))
+    const msg = validateRequiredAndFormat()
+    if (msg) {
+      message.alert({ type: 'warning', message: msg })
+      return
+    }
+    const targets: Array<{ key: 'empno' | 'empokno' | 'empacno'; label: string }> = [
+      { key: 'empno', label: '員工編號' },
+      { key: 'empokno', label: '核可人員編號' },
+      { key: 'empacno', label: '出納人員編號' }
+    ]
+    for (const { key, label } of targets) {
+      const ok = await employeeExists(formData.value?.[key])
+      if (!ok) {
+        message.alert({
+          type: 'warning',
+          message: `${label}（${formData.value?.[key] || '未填'}）不存在，請重新選擇或確認`
+        })
+        return
+      }
+    }
+    message.confirm({
+      type: 'question',
+      message: '確定要送出借支資料？',
+      onConfirm: async () => {
+        console.log('payload', JSON.stringify(formData.value, null, 2))
+        const apiUrl = store.action === 'edit' ? api.EmpLoan.UPDATE : api.EmpLoan.Add
+        const method = store.action === 'edit' ? 'PUT' : 'POST'
+        try {
+          const res = await callApi({
+            method: method,
+            url: apiUrl,
+            data: formData.value
+          })
+          console.log('res', res.status)
+          if (res.status === 200) {
+            message.alert({ type: 'success', message: '送出成功' })
+            handleCancel()
+          }
+        } catch (error) {
+          console.error(error)
+        }
+      }
+    })
+  }
 </script>
 
 <template>
@@ -341,336 +260,154 @@
   <!--資料-->
   <v-card color="#1b2b36" rounded="3">
     <v-card-text>
-      <c-divider>人員基本資料</c-divider>
+      <c-divider>基本資料</c-divider>
       <v-row dense class="mt-2" :align="'center'">
         <v-col cols="auto" class="px-2">
           <c-input
-            v-model="formData.empno"
-            label="人員編號"
-            :is-required="true"
+            v-model="formData.date1"
+            label="借支日期"
+            icon="fa-solid fa-calendar-day"
             :disabled="store.keyDisabled"
             :maxlength="10"
+            type="date"
+          />
+        </v-col>
+        <v-col cols="auto" class="px-2">
+          <c-input
+            v-model="formData.bno"
+            label="借支單號"
+            icon="fa-solid fa-receipt"
+            :maxlength="16"
+            disabled
+          />
+        </v-col>
+        <v-responsive width="100%" />
+        <v-col cols="auto" class="px-2">
+          <c-input
+            v-model="formData.empno"
+            label="員工編號"
+            icon="fa-solid fa-user-tag"
+            :disabled="store.isDetail"
+            :maxlength="10"
+            @button="searchItemOpen('empno')"
+            @keyEnter="searchItemEnter('empno')"
           />
         </v-col>
         <v-col cols="auto" class="px-2">
           <c-input
             v-model="formData.empname"
-            label="人員姓名"
-            :is-required="true"
-            :disabled="store.isDetail"
-            :maxlength="16"
-          />
-        </v-col>
-        <v-col cols="auto" class="px-2">
-          <c-select
-            v-model="formData.empsex"
-            label="性別"
-            icon="mdi-gender-male-female"
-            :items="empsexDDL"
-            item-title="empsexName"
-            item-value="empsex"
-            hide-search
-            :disabled="store.isDetail"
-            width="180"
-          />
-        </v-col>
-        <v-col cols="auto" class="px-2">
-          <c-button color="#388e3c" @click="webPerDs = true">web權限</c-button>
-        </v-col>
-        <v-responsive width="100%" />
-        <v-col cols="auto" class="px-2">
-          <c-input
-            v-model="formData.empidno"
-            label="身分證號"
+            label="員工名稱"
             icon="fa-solid fa-user"
-            :disabled="store.isDetail"
-            :format="{ number: true, english: true }"
+            disabled
             :maxlength="10"
-            :length-auto-width="false"
-            width="281"
-          />
-        </v-col>
-        <v-col cols="auto" class="px-2">
-          <c-input
-            type="date"
-            v-model="formData.empbirth1"
-            label="出生日期"
-            icon="fa-solid fa-calendar-day"
-            :disabled="store.isDetail"
-          />
-        </v-col>
-        <v-col cols="auto" class="px-2">
-          <c-select
-            v-model="formData.empmarr"
-            label="婚姻狀況"
-            icon="fa-solid fa-heart"
-            :items="empmarrDDL"
-            item-title="empmarrName"
-            item-value="empmarr"
-            hide-search
-            :disabled="store.isDetail"
-            width="230"
-          />
-        </v-col>
-        <v-col cols="auto" class="px-2">
-          <c-input
-            v-model="formData.password1"
-            label="密碼"
-            icon="fa-solid fa-unlock-keyhole"
-            :disabled="store.isDetail"
-            :format="{ number: true, english: true }"
-            :maxlength="16"
           />
         </v-col>
       </v-row>
-      <c-divider class="mt-3">聯絡資訊</c-divider>
+      <c-divider class="mt-3">金額</c-divider>
       <v-row dense class="mt-2">
         <v-col cols="auto" class="px-2">
           <c-input
-            v-model="formData.tel1"
-            label="聯絡電話"
-            icon="fa-solid fa-phone-volume"
-            :disabled="store.isDetail"
-            :maxlength="20"
-          />
-        </v-col>
-        <v-col cols="auto" class="px-2">
-          <c-input
-            v-model="formData.mobitel"
-            label="行動電話"
-            icon="fa-solid fa-mobile-button"
-            :disabled="store.isDetail"
-            :maxlength="20"
-          />
-        </v-col>
-        <v-col cols="auto" class="px-2">
-          <c-input
-            type="date"
-            v-model="formData.duedate1"
-            label="到職日期"
-            icon="fa-solid fa-calendar-day"
-            :disabled="store.isDetail"
-          />
-        </v-col>
-        <v-responsive width="100%" />
-        <v-col cols="auto" class="px-2">
-          <c-input
-            v-model="formData.empper"
-            label="緊急聯絡人"
-            icon="fa-solid fa-user"
-            :disabled="store.isDetail"
-            :maxlength="16"
-          />
-        </v-col>
-        <v-col cols="auto" class="px-2">
-          <c-input
-            v-model="formData.tel2"
-            label="緊急聯絡電話"
-            icon="fa-solid fa-phone-volume"
-            :disabled="store.isDetail"
-            :maxlength="20"
-          />
-        </v-col>
-        <v-col cols="auto" class="px-2">
-          <c-input
-            type="date"
-            v-model="formData.resdate1"
-            label="離職日期"
-            icon="fa-solid fa-calendar-day"
-            :disabled="store.isDetail"
-          />
-        </v-col>
-        <v-responsive width="100%" />
-        <v-col cols="auto" class="px-2">
-          <c-input
-            v-model="formData.zip1"
-            label="郵遞區號"
-            icon="fa-solid fa-location-dot"
-            :disabled="store.isDetail"
-            :readonly="!store.isDetail"
-            @button="pickAdder1"
-            :format="{ number: true }"
-            :maxlength="6"
-          />
-        </v-col>
-        <v-col cols="auto" class="px-2">
-          <c-input
-            v-model="formData.empaddr1"
-            label="戶籍地址"
-            icon="fa-solid fa-location-dot"
-            :disabled="store.isDetail"
-            :maxlength="60"
-          />
-        </v-col>
-        <v-col cols="auto" class="px-2">
-          <c-input
-            v-model="formData.zip2"
-            label="郵遞區號"
-            icon="fa-solid fa-location-dot"
-            :disabled="store.isDetail"
-            :readonly="!store.isDetail"
-            @button="pickAdder2"
-            :format="{ number: true }"
-            :maxlength="6"
-          />
-        </v-col>
-        <v-col cols="auto" class="px-2">
-          <c-input
-            v-model="formData.empaddr2"
-            label="通訊地址"
-            icon="fa-solid fa-location-dot"
-            :disabled="store.isDetail"
-            :maxlength="60"
-          />
-        </v-col>
-        <v-col cols="auto" class="px-2">
-          <c-input
-            v-model="formData.email"
-            label="E-MAIL"
-            icon="fa-solid fa-envelope"
-            :disabled="store.isDetail"
-            :maxlength="40"
-          />
-        </v-col>
-      </v-row>
-      <c-divider class="mt-3">公司資訊</c-divider>
-      <v-row dense class="mt-2">
-        <v-col cols="auto" class="px-2">
-          <c-select-input
-            front="select"
-            v-model="formData.deparno"
-            v-model:title="formData.deparname"
-            label="部門"
-            icon="fa-solid fa-building-user"
-            :items="departDDL"
-            item-title="deparname"
-            item-value="deparno"
-            :item-columns="[
-              { column: 'deparno', label: '部門編號' },
-              { column: 'deparname', label: '部門名稱' }
-            ]"
-            :disabled="store.isDetail"
-            width="215"
-            :input-maxlength="16"
-            condensed
-          />
-        </v-col>
-        <v-col cols="auto" class="px-2">
-          <c-select-input
-            front="select"
-            v-model="formData.chiefno"
-            v-model:title="formData.chiefname"
-            label="主管"
-            icon="fa-solid fa-user-tie"
-            :items="employeeDDL"
-            item-title="empname"
-            item-value="empno"
-            :item-columns="[
-              { column: 'empno', label: '人員編號' },
-              { column: 'empname', label: '人員名稱' }
-            ]"
-            :disabled="store.isDetail"
-            width="326"
-            :input-maxlength="16"
-            condensed
-          />
-        </v-col>
-        <v-col cols="auto" class="px-2">
-          <c-input
-            type="number"
-            v-model="formData.quotation"
-            label="報價級距"
-            :format="{ thousands: true }"
+            v-model="borrprIO"
+            label="借支金額"
             icon="fa-solid fa-money-bill"
             :disabled="store.isDetail"
-            :maxlength="9"
+            :maxlength="12"
+            type="text"
+            @focus="isAmtEditing = true"
+            @blur="isAmtEditing = false"
+          />
+        </v-col>
+        <v-col cols="auto" class="px-2">
+          <c-input
+            v-model="formData.descrip"
+            label="借支原因"
+            icon="fa-solid fa-note-sticky"
+            :disabled="store.isDetail"
+            width="600"
+          />
+        </v-col>
+      </v-row>
+      <c-divider class="mt-3">簽核</c-divider>
+      <v-row dense class="mt-2">
+        <v-responsive width="100%" />
+        <v-col cols="auto" class="px-2">
+          <c-input
+            v-model="formData.empokno"
+            label="核可人員"
+            icon="fa-solid fa-user-tag"
+            :disabled="store.isDetail"
+            :maxlength="10"
+            @button="searchItemOpen('empokno')"
+            @keyEnter="searchItemEnter('empokno')"
+          />
+        </v-col>
+        <v-col cols="auto" class="px-2">
+          <c-input
+            v-model="formData.empokname"
+            label="員工名稱"
+            icon="fa-solid fa-user"
+            disabled
+            :maxlength="10"
           />
         </v-col>
         <v-responsive width="100%" />
+        <v-col cols="auto" class="px-2">
+          <c-input
+            v-model="formData.empacno"
+            label="出納人員"
+            icon="fa-solid fa-user-tag"
+            :disabled="store.isDetail"
+            :maxlength="10"
+            @button="searchItemOpen('empacno')"
+            @keyEnter="searchItemEnter('empacno')"
+          />
+        </v-col>
+        <v-col cols="auto" class="px-2">
+          <c-input
+            v-model="formData.empacname"
+            label="員工名稱"
+            icon="fa-solid fa-user"
+            disabled
+            :maxlength="10"
+          />
+        </v-col>
+      </v-row>
+      <v-responsive width="100%" />
+      <c-divider class="mt-3">其他</c-divider>
+      <v-row dense class="mt-2">
         <v-col cols="auto" class="px-2">
           <c-input
             v-model="formData.memo1"
-            label="說明"
-            icon="fa-solid fa-pencil"
-            :disabled="store.isDetail"
-            :maxlength="67"
-          />
-        </v-col>
-        <v-col cols="10" class="px-2">
-          <c-textarea
-            v-model="formData.memo"
             label="備註"
             icon="fa-solid fa-pencil"
             :disabled="store.isDetail"
+            width="1015"
           />
         </v-col>
+        <v-responsive width="100%" />
+
+        <v-col cols="auto" class="px-2">
+          <c-input
+            v-model="formData.embud1"
+            label="借支自訂一"
+            icon="fa-solid fa-pencil"
+            :disabled="store.isDetail"
+            width="500"
+          />
+        </v-col>
+        <v-col cols="auto" class="px-2">
+          <c-input
+            v-model="formData.embud2"
+            label="借支自訂二"
+            icon="fa-solid fa-pencil"
+            :disabled="store.isDetail"
+            width="500"
+          />
+        </v-col>
+        <v-col cols="1" class="px-2"></v-col>
       </v-row>
     </v-card-text>
   </v-card>
-
-  <v-card color="#1b2b36" rounded="3" class="mt-2">
-    <v-card-text>
-      <v-row dense justify="space-between">
-        <v-col cols="auto" class="text-custom-2">工種資料</v-col>
-        <v-col cols="auto" v-if="!store.isDetail">
-          <c-button kind="create" icon="mdi-plus-circle" @click="empSkillAdd">新增工種</c-button>
-        </v-col>
-      </v-row>
-      <v-row
-        v-for="(skill, i) in empSkills"
-        :key="i"
-        dense
-        class="align-items-center justify-content-center"
-      >
-        <v-col cols="auto" class="text-custom-1 fw-normal">
-          {{ `${i + 1}`.padStart(2, '0') + '.' }}
-        </v-col>
-        <v-col cols="auto">
-          <c-select
-            v-model="skill.skillno"
-            v-model:title="skill.skillname"
-            label="工種"
-            icon="fa-solid fa-briefcase"
-            :items="skillDDL"
-            item-title="skillname"
-            item-value="skillno"
-            :item-columns="[
-              { column: 'skillno', label: '工種編號' },
-              { column: 'skillname', label: '工種名稱' }
-            ]"
-            :disabled="store.isDetail"
-            width="540"
-          />
-        </v-col>
-        <v-col cols="auto">
-          <c-input
-            type="number"
-            v-model="skill.daytpr"
-            label="日薪"
-            :format="{ thousands: true }"
-            icon="fa-solid fa-sack-dollar"
-            :disabled="store.isDetail"
-            :maxlength="8"
-          />
-        </v-col>
-        <v-col cols="auto">
-          <c-input
-            type="number"
-            v-model="skill.overtime"
-            label="加班"
-            :format="{ thousands: true }"
-            icon="fa-solid fa-sack-dollar"
-            :disabled="store.isDetail"
-            :maxlength="7"
-          />
-        </v-col>
-        <v-col cols="auto" v-if="!store.isDetail">
-          <c-button kind="delete" icon="mdi-close-circle" @click="empSkillDel(skill)" />
-        </v-col>
-      </v-row>
-    </v-card-text>
-  </v-card>
-
   <audit-info
     class="mt-2"
     v-if="store.action === 'edit' || store.action === 'detail'"
@@ -679,9 +416,14 @@
     :m_date="formData.m_date1"
     :m_user="formData.m_user"
   />
-
-  <pick-addr v-model="pcikAddrDS" @pick="handlePickAddr" />
-  <web-permissions v-model="webPerDs" v-model:data="webPerData" />
+  <!-- 單選彈窗 -->
+  <searchEmp
+    ref="searchRef"
+    v-model:form="formData"
+    v-model:keyenter="isEnter"
+    :setting="pickSetting"
+    :search-text="searchText"
+  />
 </template>
 
 <style scoped>

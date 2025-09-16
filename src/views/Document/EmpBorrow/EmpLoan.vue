@@ -1,14 +1,14 @@
 <script lang="ts" setup>
-  import { ref, onMounted } from 'vue'
+  import { ref, onMounted, watch } from 'vue'
   import { cButton, cInput, cTable, cBread } from '@/components/Common' //共用元件
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
   import { message } from '@/components/Message/service' //訊息窗元件
-  import { useEmployeeStore } from '@/store/employee'
+  import { useEmpLoanStore } from '@/store/empLoan'
   import { useRouter } from 'vue-router'
   import print from '@/views/Base/Staff/Components/EmployeePrint.vue'
   import { searchEmp } from '@/components/SearchEmp'
-  const store = useEmployeeStore()
+  const store = useEmpLoanStore()
   const router = useRouter()
 
   //表格欄位
@@ -67,47 +67,44 @@
       url: api.EmpLoan.Search,
       data: filter.value
     })
-    // console.log(res)
     if (res?.status === 200) {
       tbData.value = res.data
     }
   }
   //新增按鈕
   const handleCreate = () => {
-    store.$patch({ action: 'create', empno: '' })
-    router.push({ path: '/menu/EmpLoanForm' })
+    store.create(router)
   }
   //表格-編輯按鈕
   const handleEdit = (row: iData) => {
-    store.edit(row.empno, router)
+    store.edit(row.bno, router)
   }
   //表格-複製按鈕
   const handleCopy = (row: iData) => {
-    store.copy(row.empno, router)
+    store.copy(row.bno, router)
   }
   //表格-瀏覽按鈕
   const handleBrowse = (row: iData) => {
-    store.$patch({ action: 'detail', empno: '' })
-    router.push({ path: '/menu/EmpLoanForm' })
+    store.browse(row.bno, router)
   }
   //表格-刪除按鈕
   const handleDelete = (row: iData) => {
     message.confirm({
       type: 'question',
-      message: `確定要刪除「${row.empno}」${row.empname}？`,
+      message: `確定要刪除「${row.bno}」${row.empname}？`,
       onConfirm: () => {
         //刪除
         callApi({
-          method: 'POST',
-          url: api.Emp.Emp_DEL,
-          data: { empNo: row.empno }
+          method: 'DELETE',
+          url: api.EmpLoan.Delete,
+          data: { bno: row.bno }
         }).then((res: any) => {
           if (res?.status === 200) {
             const data = res?.data
             if (data && data.state === 'success') {
               message.alert({
                 type: 'success',
-                message: data?.msg ?? '',
+                message: '刪除成功!',
                 autoClose: 2,
                 onConfirm: () => {
                   filterSearch()
@@ -123,22 +120,91 @@
   onMounted(() => {
     filterSearch()
   })
-
+  watch(() => ({ ...filter.value }), filterSearch)
   //列印
   const printDS = ref(false)
+
+  // 排序
+  type SortKey = 'date1' | 'bno' | 'empname' | null
+  const sort = ref<{ key: SortKey; asc: boolean }>({ key: null, asc: true })
+
+  const parseDate1 = (v: string) => {
+    if (!v) return NaN
+    const s = String(v).trim()
+    if (s.includes('-')) return new Date(s).getTime()
+    const d = s.replace(/\D/g, '')
+    if (d.length === 7) {
+      const y = +d.slice(0, 3) + 1911,
+        m = +d.slice(3, 5) - 1,
+        dd = +d.slice(5, 7)
+      return new Date(y, m, dd).getTime()
+    }
+    if (d.length === 8) {
+      const y = +d.slice(0, 4),
+        m = +d.slice(4, 6) - 1,
+        dd = +d.slice(6, 8)
+      return new Date(y, m, dd).getTime()
+    }
+    return NaN
+  }
+  const cmpStr = (a?: string, b?: string) => {
+    const sa = (a ?? '').trim(),
+      sb = (b ?? '').trim()
+    if (!sa && !sb) return 0
+    if (!sa) return 1
+    if (!sb) return -1
+    return sa.localeCompare(sb, 'zh-Hant')
+  }
+  const cmpBno = (a?: string, b?: string) => {
+    const na = Number(a),
+      nb = Number(b)
+    return Number.isFinite(na) && Number.isFinite(nb) ? na - nb : cmpStr(a, b)
+  }
+
+  const applySort = () => {
+    const { key, asc } = sort.value
+    if (!key) return
+    const sign = asc ? 1 : -1
+    tbData.value = [...tbData.value].sort((a, b) => {
+      let diff = 0
+      if (key === 'date1') {
+        const ta = parseDate1(a.date1),
+          tb = parseDate1(b.date1)
+        if (isNaN(ta) && isNaN(tb)) diff = 0
+        else if (isNaN(ta)) diff = 1
+        else if (isNaN(tb)) diff = -1
+        else diff = ta - tb
+      } else if (key === 'bno') {
+        diff = cmpBno(a.bno, b.bno)
+      } else if (key === 'empname') {
+        diff = cmpStr(a.empname, b.empname)
+      }
+      return sign * diff
+    })
+  }
+
+  const toggleSort = (key: Exclude<SortKey, null>) => {
+    if (sort.value.key === key) sort.value.asc = !sort.value.asc
+    else {
+      sort.value.key = key
+      sort.value.asc = true
+    }
+    applySort()
+  }
+
+  const sortIcon = (key: Exclude<SortKey, null>) => {
+    if (sort.value.key !== key) return 'fa-solid fa-sort' // 中性
+    return sort.value.asc ? 'fa-solid fa-arrow-up-wide-short' : 'fa-solid fa-arrow-down-wide-short'
+  }
 </script>
 
 <template>
   <!--頂部 title & 按鈕區-->
   <c-bread>
     <div class="col-auto">
-      <c-button kind="print" icon="fa-solid fa-print" @click="printDS = true">列印</c-button>
-    </div>
-    <div class="col-auto">
       <c-button kind="create" icon="mdi-plus-circle" @click="handleCreate">新增</c-button>
     </div>
   </c-bread>
-
   <!--查詢條件-->
   <v-card color="#1b2b36" rounded="3">
     <v-card-text>
@@ -213,9 +279,34 @@
     hover
   >
     <template v-slot:head>
-      <th>借支日期</th>
-      <th>借支單號</th>
-      <th>員工名稱</th>
+      <th class="th-sort">
+        借支日期
+        <button
+          class="sort-btn"
+          :aria-pressed="sort.key === 'date1'"
+          @click.stop="toggleSort('date1')"
+        >
+          <i :class="sortIcon('date1')"></i>
+        </button>
+      </th>
+
+      <th class="th-sort">
+        借支單號
+        <button class="sort-btn" :aria-pressed="sort.key === 'bno'" @click.stop="toggleSort('bno')">
+          <i :class="sortIcon('bno')"></i>
+        </button>
+      </th>
+
+      <th class="th-sort">
+        員工名稱
+        <button
+          class="sort-btn"
+          :aria-pressed="sort.key === 'empname'"
+          @click.stop="toggleSort('empname')"
+        >
+          <i :class="sortIcon('empname')"></i>
+        </button>
+      </th>
       <th>借支金額</th>
       <th>核可人員</th>
       <th>出納人員</th>
