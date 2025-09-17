@@ -152,7 +152,8 @@
     },
     get selectIndex() {
       return modelSelectIndex.value
-    }
+    },
+    handleRowSelect
   })
 </script>
 

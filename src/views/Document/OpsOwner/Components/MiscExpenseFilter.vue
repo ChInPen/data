@@ -38,7 +38,6 @@
     })
     if (res?.status === 200) {
       const { _Lists } = res?.data
-      emit('init', _Lists)
       return _Lists
     }
   }
@@ -65,8 +64,13 @@
   }
 
   //起始動作
-  onMounted(() => {
-    if (!store.list || store.list.length == 0) searchApi()
+  onMounted(async () => {
+    let data
+    if (!['search', 'goback'].includes(store.action)) {
+      data = await searchApi()
+    }
+    emit('init', data)
+    store.browse()
   })
 
   //查詢工程彈窗

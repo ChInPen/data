@@ -163,8 +163,10 @@
                   message: '刪除成功',
                   autoClose: 2,
                   onConfirm: () => {
+                    const val = store.ono as string
                     if (!store.isFirst) onoChange('previous')
                     else if (!store.isLast) onoChange('next')
+                    store.delete(val)
                   }
                 })
               } else {
@@ -389,8 +391,8 @@
   const initSearch = (data) => {
     if (Array.isArray(data)) {
       store.init(data.map(({ ono }) => ({ ono })))
-      getSingleData()
     }
+    if (store.ono) getSingleData()
   }
   const handleSearch = (data) => {
     store.search(router, data)
@@ -484,7 +486,7 @@
   }
 
   onMounted(() => {
-    getSingleData()
+    //抓下拉選單
     getUnitApi()
   })
 </script>

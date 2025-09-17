@@ -38,7 +38,6 @@
     })
     if (res?.status === 200) {
       const { data } = res?.data
-      emit('init', data)
       return data
     }
   }
@@ -68,8 +67,13 @@
   }
 
   //起始動作
-  onMounted(() => {
-    if (!store.list || store.list.length == 0) searchApi()
+  onMounted(async () => {
+    let data
+    if (!['search', 'goback'].includes(store.action)) {
+      data = await searchApi()
+    }
+    emit('init', data)
+    store.browse()
   })
 
   //查詢業主彈窗

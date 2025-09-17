@@ -155,9 +155,12 @@
         />
       </div>
     </template>
-    <template v-slot:prepend-item v-if="!props.hideSearch && items?.length && items?.length > 0">
+    <template
+      v-slot:prepend-item
+      v-if="!(props.hideSearch && itemColumns.length == 0) && items?.length && items?.length > 0"
+    >
       <div class="select-search">
-        <v-list-item>
+        <v-list-item v-if="!props.hideSearch">
           <c-input
             ref="searchInput"
             v-model="search"
@@ -167,7 +170,7 @@
             @click.stop
           />
         </v-list-item>
-        <v-divider class="mt-1 mb-1"></v-divider>
+        <v-divider class="mt-1 mb-1" v-if="!props.hideSearch"></v-divider>
         <!-- 表頭 -->
         <v-list-item class="items-header" v-if="itemColumns.length > 0" density="compact">
           <v-list-item-title class="text-grey">

@@ -32,6 +32,7 @@
   import { pickItem } from '@/components/PickItem'
   import { boms } from '@/components/Boms'
   import { projectType } from '@/components/ProjectType'
+  import protTrade from './Components/QuotationProtTrade.vue'
   import { searchItem } from '@/components/SearchItem'
 
   const store = useQuotationStore() // useMiscExpenseStore()
@@ -196,31 +197,33 @@
         message: `確定要刪除「${formData.value.qno}」報價單？`,
         onConfirm: () => {
           //刪除
-          // callApi({
-          //   method: 'POST',
-          //   url: api.Sqte.Sqte_DEL,
-          //   params: { index1: store.index1 }
-          // }).then((res) => {
-          //   if (res?.status === 200) {
-          //     const data = res?.data
-          //     if (data === '') {
-          //       message.alert({
-          //         type: 'success',
-          //         message: '刪除成功',
-          //         autoClose: 2,
-          //         onConfirm: () => {
-          //           if (!store.isFirst) onoChange('previous')
-          //           else if (!store.isLast) onoChange('next')
-          //         }
-          //       })
-          //     } else {
-          //       message.alert({
-          //         type: 'error',
-          //         message: `刪除失敗：${data}`
-          //       })
-          //     }
-          //   }
-          // })
+          callApi({
+            method: 'POST',
+            url: api.Sqte.Sqte_DEL,
+            params: { index1: store.index1 }
+          }).then((res) => {
+            if (res?.status === 200) {
+              const data = res?.data
+              if (data.success === true) {
+                message.alert({
+                  type: 'success',
+                  message: '刪除成功',
+                  autoClose: 2,
+                  onConfirm: () => {
+                    const val = store.index1 as string
+                    if (!store.isFirst) onoChange('previous')
+                    else if (!store.isLast) onoChange('next')
+                    store.delete(val)
+                  }
+                })
+              } else {
+                message.alert({
+                  type: 'error',
+                  message: `刪除失敗：${data.message}`
+                })
+              }
+            }
+          })
         }
       })
     }
@@ -335,6 +338,29 @@
     detKeyenterItem.value = true
     searcItemDS.value = true
   }
+  //表身表格-工程交易彈窗
+  const protTradeDS = ref(false)
+  const protTradeTitle = ref('該工程交易')
+  const protTradeItemno = ref('')
+  const protTradeProtno = ref('')
+  const protTradeCurrent = () => {
+    const selectIndex = sqtedetTable.value?.selectIndex?.[0]
+    if (typeof selectIndex === 'number' && selectIndex >= 0) {
+      protTradeTitle.value = '該工程交易'
+      protTradeItemno.value = sqtedetList.value[selectIndex].itemno
+      protTradeProtno.value = formData.value.protno
+      protTradeDS.value = true
+    }
+  }
+  const protTradeAll = () => {
+    const selectIndex = sqtedetTable.value?.selectIndex?.[0]
+    if (typeof selectIndex === 'number' && selectIndex >= 0) {
+      protTradeTitle.value = '所有工程交易'
+      protTradeItemno.value = sqtedetList.value[selectIndex].itemno
+      protTradeProtno.value = ''
+      protTradeDS.value = true
+    }
+  }
 
   //勾選工料彈窗
   const pickItemDS = ref(false)
@@ -443,8 +469,8 @@
   const initSearch = (data) => {
     if (Array.isArray(data)) {
       store.init(data.map(({ index1 }) => ({ index1 })))
-      getSingleData()
     }
+    if (store.index1) getSingleData()
   }
   const handleSearch = (data) => {
     store.search(router, data)
@@ -538,6 +564,7 @@
   }
 
   onMounted(() => {
+    //抓下拉選單
     getTaxkindApi()
     getEmpApi()
     getUnitApi()
@@ -785,10 +812,18 @@
               <c-button kind="photo" icon="fa-solid fa-images">看圖</c-button>
             </v-col>
             <v-col cols="auto">
-              <c-button kind="trade" icon="fa-solid fa-file-invoice-dollar">該工程交易</c-button>
+              <c-button
+                kind="trade"
+                icon="fa-solid fa-file-invoice-dollar"
+                @click="protTradeCurrent"
+              >
+                該工程交易
+              </c-button>
             </v-col>
             <v-col cols="auto">
-              <c-button kind="trade" icon="fa-solid fa-file-invoice-dollar">所有工程交易</c-button>
+              <c-button kind="trade" icon="fa-solid fa-file-invoice-dollar" @click="protTradeAll">
+                所有工程交易
+              </c-button>
             </v-col>
           </v-row>
           <c-table
@@ -1195,6 +1230,12 @@
     :row="detSearchItemRow"
     :search-text="detSearchItemText"
     @pick="sqtedetItemPick"
+  />
+  <prot-trade
+    v-model="protTradeDS"
+    :title="protTradeTitle"
+    :itemno="protTradeItemno"
+    :protno="protTradeProtno"
   />
 </template>
 

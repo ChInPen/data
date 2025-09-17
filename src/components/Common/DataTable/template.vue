@@ -87,6 +87,23 @@
     return model.value.findIndex((x) => x === data)
   }
 
+  //欄位規格
+  const headersComp = computed(() => {
+    if (props.showIndex) {
+      const heads = props.headers ? [...props.headers] : []
+      const headIndex: DataTableHeader = {
+        title: '#',
+        key: 'index',
+        align: 'center',
+        sortable: false
+      }
+      heads.unshift(headIndex)
+      return heads
+    } else {
+      return props.headers
+    }
+  })
+
   //監聽
   const changePage = ref(false) //切換分頁用的判斷flag
   watch(
@@ -188,7 +205,8 @@
     },
     get checked() {
       return checkedRows.value
-    }
+    },
+    handleRowSelect
   })
 </script>
 
@@ -200,7 +218,7 @@
     }"
     v-model="selected"
     v-model:page="currentPage"
-    :headers="headers"
+    :headers="headersComp"
     :items="model"
     :items-per-page="pageNum"
     :header-props="{
@@ -242,7 +260,10 @@
               showSelect && !isSelected(internalItem) ? toggleSelect(internalItem, index) : null
             "
           >
-            <template v-if="!itemSlotList.includes(`item.${col?.key ?? ''}`)">
+            <template v-if="col.key === 'index'">
+              {{ computIndex(item) + 1 }}
+            </template>
+            <template v-else-if="!itemSlotList.includes(`item.${col?.key ?? ''}`)">
               {{ col?.key ? item[col.key] : '' }}
             </template>
             <template v-else>
