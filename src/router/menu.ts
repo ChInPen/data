@@ -192,6 +192,12 @@ const menu: MenuEntry[] = [
             name: 'B01報價作業系統',
             component: () => import('@/views/Document/OpsOwner/Quotation.vue')
           },
+          {
+            title: '報價作業',
+            path: 'QuotationSearch',
+            component: () => import('@/views/Document/OpsOwner/QuotationSearch.vue'),
+            meta: { from: ['/menu/Quotation'] }
+          },
           // { title: '報價請款作業', path: '' },
           // { title: '工程請款明細', path: '' },
           // { title: '工程請款作業', path: '' },

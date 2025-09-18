@@ -189,7 +189,7 @@
 
   //檢查欄位規則
   const checkData = () => {
-    //必填:protno，date1
+    //必填:protno, date1
     const requiredFields = [
       { key: 'protno', label: '工程編號' },
       { key: 'date1', label: '雜支日期' }
@@ -226,16 +226,16 @@
       ono: formData.value.ono ?? ''
     }))
     //轉成form-data type
-    const fromdata = new FormData()
+    const formdata = new FormData()
     for (var key in item) {
       if (item.hasOwnProperty(key)) {
         // 過濾掉繼承屬性
-        fromdata.append(key, item[key])
+        formdata.append(key, item[key])
       }
     }
-    fromdata.append('Exesdet', JSON.stringify(exesdet))
+    formdata.append('Exesdet', JSON.stringify(exesdet))
 
-    return fromdata
+    return formdata
   }
   const callSaveApi = () => {
     // 新增和修改用同個api
@@ -252,7 +252,7 @@
             message: '存檔成功',
             autoClose: 2,
             onConfirm: () => {
-              if (formData.value.ono) {
+              if (store.action === 'create' && formData.value.ono) {
                 store.list.push({ ono: store.ono })
                 store.ono = formData.value.ono
               }
@@ -279,7 +279,7 @@
     }
     message.confirm({
       type: 'question',
-      message: `確定要送出雜支資料？`,
+      message: `確定要送出雜支單資料？`,
       onConfirm: () => {
         callSaveApi()
       }
