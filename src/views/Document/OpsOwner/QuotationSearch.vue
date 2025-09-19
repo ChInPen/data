@@ -49,9 +49,12 @@
   const handleSearch = (data: any[]) => {
     tbData.value = data
   }
+  const handleInit = (data: any[]) => {
+    if (data && data.length > 0) tbData.value = data
+  }
 
   onMounted(() => {
-    if (store.list && store.list.length > 0) {
+    if (store.action === 'search' && store.list && store.list.length > 0) {
       tbData.value = store.list as any[]
     }
   })
@@ -96,5 +99,5 @@
     </v-card-text>
   </v-card>
 
-  <Filter v-model="filterDS" @search="handleSearch" />
+  <Filter v-model="filterDS" @init="handleInit" @search="handleSearch" />
 </template>

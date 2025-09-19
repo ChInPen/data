@@ -270,6 +270,12 @@
     pickIKindEnter.value = true
     pickIKindRef.value?.open()
   }
+
+  //輸入數量時自動選擇該行
+  const handleSelected = (data) => {
+    const find = selected.value.find((x) => x === data.itemno)
+    if (!find) selected.value.push(data.itemno)
+  }
 </script>
 
 <template>
@@ -398,7 +404,12 @@
       item-value="itemno"
     >
       <template v-slot:item.ibompqty="{ scope }">
-        <c-input type="number" v-model="scope.ibompqty" :format="{ thousands: true }" />
+        <c-input
+          type="number"
+          v-model="scope.ibompqty"
+          :format="{ thousands: true }"
+          @change="handleSelected(scope)"
+        />
       </template>
     </c-data-table>
   </c-dialog>

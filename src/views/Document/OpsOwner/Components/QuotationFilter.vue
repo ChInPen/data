@@ -63,17 +63,17 @@
     }
   }
   const handleDialogClose = () => {
-    handleClear()
+    // handleClear() //關閉彈窗不需要清空條件
   }
 
   //起始動作
   onMounted(async () => {
     let data
-    if (!['search', 'goback'].includes(store.action)) {
+    if (!['search', 'goback', 'browse'].includes(store.action)) {
       data = await searchApi()
     }
     emit('init', data)
-    store.browse()
+    store.cancel()
   })
 
   //查詢業主彈窗

@@ -5,6 +5,7 @@
   import { useMiscExpenseStore } from '@/store/miscexpense'
   import { useRouter } from 'vue-router'
   import Filter from './Components/MiscExpenseFilter.vue'
+  import { numberFormat } from '@/utils/uformat'
 
   const store = useMiscExpenseStore()
   const router = useRouter()
@@ -31,7 +32,9 @@
     { key: 'qty', title: '數量' },
     { key: 'unit', title: '單位' },
     { key: 'price', title: '單價' },
-    { key: 'total1', title: '金額' }
+    { key: 'total1', title: '金額' },
+    { key: 'descrip', title: '說明' },
+    { key: 'desud1', title: '說明自定一' }
   ]
   const tableRef = ref()
   const goback = () => {
@@ -49,6 +52,9 @@
   const filterDS = ref(false)
   const handleSearch = (data: any[]) => {
     tbData.value = data
+  }
+  const handleInit = (data: any[]) => {
+    if (data && data.length > 0) tbData.value = data
   }
 
   onMounted(() => {
@@ -83,9 +89,19 @@
         hover
         selectable
         header-align="center"
-      />
+      >
+        <template v-slot:item.qty="{ scope }">
+          {{ numberFormat(scope.qty, { thousands: true }) }}
+        </template>
+        <template v-slot:item.price="{ scope }">
+          {{ numberFormat(scope.price, { thousands: true, minus: true }) }}
+        </template>
+        <template v-slot:item.total1="{ scope }">
+          {{ numberFormat(scope.total1, { thousands: true, minus: true }) }}
+        </template>
+      </c-data-table>
     </v-card-text>
   </v-card>
 
-  <Filter v-model="filterDS" @search="handleSearch" />
+  <Filter v-model="filterDS" @init="handleInit" @search="handleSearch" />
 </template>

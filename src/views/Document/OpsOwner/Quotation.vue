@@ -175,6 +175,20 @@
       }
     })
   }
+  //檢查鎖定
+  const checkExecApi = async (flag: 1 | 0) => {
+    const qno = formData.value.qno
+    const res = await callApi({
+      method: 'POST',
+      url: api.Sqte.Sqte_ExecChk,
+      params: { flag, qno }
+    })
+    if (res.status === 200) {
+      return res.data ?? ''
+    } else {
+      return 'error'
+    }
+  }
 
   //首筆/上一筆/下一筆/尾筆
   const onoChange = (type: 'first' | 'previous' | 'next' | 'last') => {
@@ -189,8 +203,23 @@
     store.create()
   }
   //編輯
-  const edit = () => {
-    store.edit()
+  const edit = async () => {
+    if (store.index1) {
+      const check = await checkExecApi(1)
+      if (check == '已有其他工作站修改中' || check == '單據已請款') {
+        message.alert({
+          type: 'error',
+          message: `${check}不可刪除,請確認`
+        })
+      } else if (check == '無此單據號碼') {
+        message.alert({
+          type: 'error',
+          message: check
+        })
+      } else if (check == '成功') {
+        store.edit()
+      }
+    }
   }
   //複製
   const copy = () => {
@@ -199,48 +228,72 @@
     store.copy()
   }
   //刪除
-  const del = () => {
+  const del = async () => {
     if (store.index1) {
-      message.confirm({
-        type: 'question',
-        message: `確定要刪除「${formData.value.qno}」報價單？`,
-        onConfirm: () => {
-          //刪除
-          callApi({
-            method: 'POST',
-            url: api.Sqte.Sqte_DEL,
-            params: { index1: store.index1 }
-          }).then((res) => {
-            if (res?.status === 200) {
-              const data = res?.data
-              if (data.success === true) {
-                message.alert({
-                  type: 'success',
-                  message: '刪除成功',
-                  autoClose: 2,
-                  onConfirm: () => {
-                    const val = store.index1 as string
-                    if (!store.isFirst) onoChange('previous')
-                    else if (!store.isLast) onoChange('next')
-                    store.delete(val)
-                  }
-                })
-              } else {
-                message.alert({
-                  type: 'error',
-                  message: `刪除失敗：${data.message}`
-                })
+      const check = await checkExecApi(1)
+      if (check == '已有其他工作站修改中' || check == '單據已請款') {
+        message.alert({
+          type: 'error',
+          message: `${check}不可刪除,請確認`
+        })
+      } else if (check == '無此單據號碼') {
+        message.alert({
+          type: 'error',
+          message: check
+        })
+        const val = store.index1 as string
+        if (!store.isFirst) onoChange('previous')
+        else if (!store.isLast) onoChange('next')
+        store.delete(val)
+      } else if (check == '成功') {
+        message.confirm({
+          type: 'question',
+          message: `確定要刪除「${formData.value.qno}」報價單？`,
+          onConfirm: () => {
+            //刪除
+            callApi({
+              method: 'POST',
+              url: api.Sqte.Sqte_DEL,
+              params: { index1: store.index1 }
+            }).then((res) => {
+              if (res?.status === 200) {
+                const data = res?.data
+                if (data.success === true) {
+                  message.alert({
+                    type: 'success',
+                    message: '刪除成功',
+                    autoClose: 2,
+                    onConfirm: () => {
+                      const val = store.index1 as string
+                      if (!store.isFirst) onoChange('previous')
+                      else if (!store.isLast) onoChange('next')
+                      store.delete(val)
+                    }
+                  })
+                } else {
+                  message.alert({
+                    type: 'error',
+                    message: `刪除失敗：${data.message}`
+                  })
+                  checkExecApi(0) //解除鎖定
+                }
               }
-            }
-          })
-        }
-      })
+            })
+          },
+          onCancel: () => {
+            checkExecApi(0) //解除鎖定
+          }
+        })
+      }
     }
   }
   //放棄
   const cancel = () => {
+    if (store.action === 'edit') {
+      checkExecApi(0) //解除鎖定
+    }
     getSingleData()
-    store.browse()
+    store.cancel()
   }
 
   //檢查欄位規則
@@ -751,10 +804,10 @@
   <c-bread>
     <template v-if="!store.isDetail">
       <div class="col-auto">
-        <c-button kind="submit" icon="fa-solid fa-floppy-disk" @click="handleSave">儲存</c-button>
+        <c-button kind="cancel" icon="mdi-close-circle" @click="cancel">放棄</c-button>
       </div>
       <div class="col-auto">
-        <c-button kind="cancel" icon="mdi-close-circle" @click="cancel">放棄</c-button>
+        <c-button kind="submit" icon="fa-solid fa-floppy-disk" @click="handleSave">儲存</c-button>
       </div>
     </template>
     <template v-else>
@@ -802,7 +855,7 @@
         <c-button kind="print" icon="fa-solid fa-print" @click="printOpen">列印</c-button>
       </div>
       <div class="col-auto">
-        <c-button kind="browse" icon="fa-solid fa-eye" @click="store.search(router)">瀏覽</c-button>
+        <c-button kind="browse" icon="fa-solid fa-eye" @click="store.browse(router)">瀏覽</c-button>
       </div>
       <div class="col-auto">
         <c-button kind="search" icon="fa-solid fa-magnifying-glass" @click="filterDS = true">

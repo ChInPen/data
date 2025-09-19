@@ -168,7 +168,7 @@ export const createDocStore = <K extends string>(options: {
   return defineStore(options.id, {
     state: () => ({
       [options.keyName]: '' as string,
-      action: 'detail' as 'edit' | 'create' | 'copy' | 'detail' | 'search' | 'goback',
+      action: 'detail' as 'edit' | 'create' | 'copy' | 'detail' | 'search' | 'goback' | 'browse',
       list: [] as { [options.keyName]: string; [key: string]: any }[]
     }),
     getters: {
@@ -214,8 +214,13 @@ export const createDocStore = <K extends string>(options: {
       copy() {
         this.action = 'copy'
       },
-      browse() {
+      cancel() {
         this.action = 'detail'
+      },
+      browse(router: Router) {
+        this[options.keyName] = '' as any
+        this.action = 'browse'
+        router.push(this.path2)
       },
       delete(value: string) {
         this.list = this.list.filter((x) => x[options.keyName] !== value)
