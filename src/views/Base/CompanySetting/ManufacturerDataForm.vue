@@ -223,15 +223,15 @@
   })
 
   //彈窗
-  const pcikAddrDS = ref(false)
+  const pickAddrDS = ref(false)
   const addrTarget = ref<'zip1' | 'zip2' | ''>('')
-  const pickAdderComp = () => {
+  const pickAddrComp = () => {
     addrTarget.value = 'zip1'
-    pcikAddrDS.value = true
+    pickAddrDS.value = true
   }
-  const pickAdderFact = () => {
+  const pickAddrFact = () => {
     addrTarget.value = 'zip2'
-    pcikAddrDS.value = true
+    pickAddrDS.value = true
   }
   const handlePickAddr = (data: any) => {
     if (addrTarget.value === 'zip1') {
@@ -502,9 +502,10 @@
                 v-model="formData.ziP1"
                 label="郵遞區號"
                 icon="fa-solid fa-location-dot"
+                :format="{ number: true }"
                 :disabled="store.isDetail"
                 :readonly="!store.isDetail"
-                @button="pickAdderComp"
+                @button="pickAddrComp"
                 :maxlength="6"
               />
             </v-col>
@@ -523,9 +524,10 @@
                 v-model="formData.ziP2"
                 label="郵遞區號"
                 icon="fa-solid fa-location-dot"
+                :format="{ number: true }"
                 :disabled="store.isDetail"
                 :readonly="!store.isDetail"
-                @button="pickAdderFact"
+                @button="pickAddrFact"
                 :maxlength="6"
               />
             </v-col>
@@ -726,6 +728,6 @@
     :m_user="formData.m_USER"
   />
 
-  <pick-addr v-model="pcikAddrDS" @pick="handlePickAddr" />
+  <pick-addr v-model="pickAddrDS" @pick="handlePickAddr" />
   <!-- <pickSKind ref="pickskindRef" @pick="pickskindStore.pick" /> -->
 </template>

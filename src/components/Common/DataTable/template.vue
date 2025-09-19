@@ -271,6 +271,7 @@
                 :name="`item.${col?.key ?? ''}`"
                 :scope="item"
                 :index="computIndex(item)"
+                :RowSelected="() => (selectable ? handleRowSelect(item) : null)"
               ></slot>
             </template>
           </td>

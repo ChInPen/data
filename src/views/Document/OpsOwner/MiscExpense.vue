@@ -117,6 +117,8 @@
         }
         formData.value.before_price = null
         if (typeof taxrate === 'number') taxRate.value = taxrate
+        formData.value.before_price = null
+        exesdetList.value = []
       }
     })
   }
@@ -184,12 +186,12 @@
   //放棄
   const cancel = () => {
     getSingleData()
-    store.browse()
+    store.cancel()
   }
 
   //檢查欄位規則
   const checkData = () => {
-    //必填:protno，date1
+    //必填:protno, date1
     const requiredFields = [
       { key: 'protno', label: '工程編號' },
       { key: 'date1', label: '雜支日期' }
@@ -226,16 +228,16 @@
       ono: formData.value.ono ?? ''
     }))
     //轉成form-data type
-    const fromdata = new FormData()
+    const formdata = new FormData()
     for (var key in item) {
       if (item.hasOwnProperty(key)) {
         // 過濾掉繼承屬性
-        fromdata.append(key, item[key])
+        formdata.append(key, item[key])
       }
     }
-    fromdata.append('Exesdet', JSON.stringify(exesdet))
+    formdata.append('Exesdet', JSON.stringify(exesdet))
 
-    return fromdata
+    return formdata
   }
   const callSaveApi = () => {
     // 新增和修改用同個api
@@ -245,16 +247,16 @@
       data: saveData()
     }).then((res: any) => {
       if (res?.status === 200) {
-        const data = res?.data
-        if (data === '') {
+        const { ono, msg } = res?.data
+        if (msg === '') {
           message.alert({
             type: 'success',
             message: '存檔成功',
             autoClose: 2,
             onConfirm: () => {
-              if (formData.value.ono) {
-                store.list.push({ ono: store.ono })
-                store.ono = formData.value.ono
+              if (store.action === 'create' || store.action === 'copy') {
+                store.list.push({ ono: ono })
+                store.ono = ono
               }
               cancel()
             }
@@ -262,7 +264,7 @@
         } else {
           message.alert({
             type: 'error',
-            message: `存檔失敗：${data}`
+            message: `存檔失敗：${msg ?? ''}`
           })
         }
       }
@@ -279,7 +281,7 @@
     }
     message.confirm({
       type: 'question',
-      message: `確定要送出雜支資料？`,
+      message: `確定要送出雜支單資料？`,
       onConfirm: () => {
         callSaveApi()
       }
@@ -496,10 +498,10 @@
   <c-bread>
     <template v-if="!store.isDetail">
       <div class="col-auto">
-        <c-button kind="submit" icon="fa-solid fa-floppy-disk" @click="handleSave">儲存</c-button>
+        <c-button kind="cancel" icon="mdi-close-circle" @click="cancel">放棄</c-button>
       </div>
       <div class="col-auto">
-        <c-button kind="cancel" icon="mdi-close-circle" @click="cancel">放棄</c-button>
+        <c-button kind="submit" icon="fa-solid fa-floppy-disk" @click="handleSave">儲存</c-button>
       </div>
     </template>
     <template v-else>
@@ -547,7 +549,7 @@
         <c-button kind="print" icon="fa-solid fa-print" @click="printOpen">列印</c-button>
       </div>
       <div class="col-auto">
-        <c-button kind="browse" icon="fa-solid fa-eye" @click="store.search(router)">瀏覽</c-button>
+        <c-button kind="browse" icon="fa-solid fa-eye" @click="store.browse(router)">瀏覽</c-button>
       </div>
       <div class="col-auto">
         <c-button kind="search" icon="fa-solid fa-magnifying-glass" @click="filterDS = true">
@@ -585,7 +587,7 @@
                 v-model="formData.ono"
                 label="雜支單號"
                 icon="fa-solid fa-file-lines"
-                :disabled="store.isDetail"
+                :disabled="store.keyDisabled"
                 :maxlength="14"
               />
             </v-col>

@@ -2,49 +2,45 @@
   import { ref, onMounted } from 'vue'
   import { cButton, cBread, cDataTable } from '@/components/Common' //共用元件
   import type { DataTableHeader } from 'vuetify'
-  import { useMiscExpenseStore } from '@/store/miscexpense'
+  import { useQuotationStore } from '@/store/quotation'
   import { useRouter } from 'vue-router'
-  import Filter from './Components/MiscExpenseFilter.vue'
+  import Filter from './Components/QuotationFilter.vue'
   import { numberFormat } from '@/utils/uformat'
 
-  const store = useMiscExpenseStore()
+  const store = useQuotationStore()
   const router = useRouter()
 
   type TableData = {
-    ono: string
+    index1: string
+    qno: string
     date1: string
-    protabbr: string
-    itemname: string
-    qty: number
-    unit: string
-    price: number
-    total1: number
-    descrip: string
-    desud1: string
+    custabbr: string
+    sum1: number
+    tax: number
+    amount: number
+    empname: string
+    [key: string]: any
   }
 
   const tbData = ref<TableData[]>([])
   const tbHeader: DataTableHeader[] = [
-    { key: 'ono', title: '雜支單號' },
-    { key: 'date1', title: '雜支日期' },
-    { key: 'protabbr', title: '工程簡稱' },
-    { key: 'itemname', title: '雜項名稱' },
-    { key: 'qty', title: '數量' },
-    { key: 'unit', title: '單位' },
-    { key: 'price', title: '單價' },
-    { key: 'total1', title: '金額' },
-    { key: 'descrip', title: '說明' },
-    { key: 'desud1', title: '說明自定一' }
+    { key: 'qno', title: '報價單號' },
+    { key: 'date1', title: '報價日期' },
+    { key: 'custabbr', title: '客戶簡稱' },
+    { key: 'sum1', title: '稅前合計' },
+    { key: 'tax', title: '營業稅額' },
+    { key: 'amount', title: '報價總額' },
+    { key: 'empname', title: '報價人員姓名' }
   ]
   const tableRef = ref()
   const goback = () => {
     const idx = tableRef.value?.selectIndex[0]
-    const onoList = tbData.value.map(({ ono }) => ({ ono }))
+    const index1List = tbData.value.map(({ index1 }) => ({ index1 }))
     if (typeof idx === 'number' && idx >= 0) {
-      const ono = tbData.value[idx].ono
-      store.goback(router, onoList, ono)
+      const index1 = tbData.value[idx].index1
+      store.goback(router, index1List, index1)
     } else {
-      store.goback(router, onoList)
+      store.goback(router, index1List)
     }
   }
 
@@ -58,7 +54,7 @@
   }
 
   onMounted(() => {
-    if (store.list && store.list.length > 0) {
+    if (store.action === 'search' && store.list && store.list.length > 0) {
       tbData.value = store.list as any[]
     }
   })
@@ -90,14 +86,14 @@
         selectable
         header-align="center"
       >
-        <template v-slot:item.qty="{ scope }">
-          {{ numberFormat(scope.qty, { thousands: true }) }}
+        <template v-slot:item.sum1="{ scope }">
+          {{ numberFormat(scope.sum1, { thousands: true }) }}
         </template>
-        <template v-slot:item.price="{ scope }">
-          {{ numberFormat(scope.price, { thousands: true, minus: true }) }}
+        <template v-slot:item.tax="{ scope }">
+          {{ numberFormat(scope.tax, { thousands: true }) }}
         </template>
-        <template v-slot:item.total1="{ scope }">
-          {{ numberFormat(scope.total1, { thousands: true, minus: true }) }}
+        <template v-slot:item.amount="{ scope }">
+          {{ numberFormat(scope.amount, { thousands: true }) }}
         </template>
       </c-data-table>
     </v-card-text>

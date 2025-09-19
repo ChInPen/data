@@ -60,7 +60,7 @@
     }
   }
   const handleDialogClose = () => {
-    handleClear()
+    // handleClear() //關閉彈窗不需要清空條件
   }
 
   //起始動作
@@ -70,7 +70,7 @@
       data = await searchApi()
     }
     emit('init', data)
-    store.browse()
+    store.cancel()
   })
 
   //查詢工程彈窗

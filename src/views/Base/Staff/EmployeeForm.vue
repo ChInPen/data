@@ -305,15 +305,15 @@
   })
 
   //彈窗
-  const pcikAddrDS = ref(false)
+  const pickAddrDS = ref(false)
   const addrTarget = ref<'zip1' | 'zip2' | ''>('')
-  const pickAdder1 = () => {
+  const pickAddr1 = () => {
     addrTarget.value = 'zip1'
-    pcikAddrDS.value = true
+    pickAddrDS.value = true
   }
-  const pickAdder2 = () => {
+  const pickAddr2 = () => {
     addrTarget.value = 'zip2'
-    pcikAddrDS.value = true
+    pickAddrDS.value = true
   }
   const handlePickAddr = (data: any) => {
     if (addrTarget.value === 'zip1') {
@@ -493,10 +493,10 @@
             v-model="formData.zip1"
             label="郵遞區號"
             icon="fa-solid fa-location-dot"
+            :format="{ number: true }"
             :disabled="store.isDetail"
             :readonly="!store.isDetail"
-            @button="pickAdder1"
-            :format="{ number: true }"
+            @button="pickAddr1"
             :maxlength="6"
           />
         </v-col>
@@ -514,10 +514,10 @@
             v-model="formData.zip2"
             label="郵遞區號"
             icon="fa-solid fa-location-dot"
+            :format="{ number: true }"
             :disabled="store.isDetail"
             :readonly="!store.isDetail"
-            @button="pickAdder2"
-            :format="{ number: true }"
+            @button="pickAddr2"
             :maxlength="6"
           />
         </v-col>
@@ -687,7 +687,7 @@
     :m_user="formData.m_user"
   />
 
-  <pick-addr v-model="pcikAddrDS" @pick="handlePickAddr" />
+  <pick-addr v-model="pickAddrDS" @pick="handlePickAddr" />
   <web-permissions v-model="webPerDs" v-model:data="webPerData" />
 </template>
 

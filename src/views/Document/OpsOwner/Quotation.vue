@@ -118,35 +118,40 @@
             }))
           }
           if (sqte_HeaderItem && Array.isArray(sqte_HeaderItem)) {
-            headItemList.value = [...sqte_HeaderItem].sort(
-              (a, b) => Number(a.headitemno) - Number(b.headitemno)
-            )
+            headItemList.value = sqte_HeaderItem
+              .map((x) => ({ ...x, headitemno1: x.headitemno1 ?? '' }))
+              .sort((a, b) => Number(a.headitemno) - Number(b.headitemno))
           }
           if (sqte_DetailItem && Array.isArray(sqte_DetailItem)) {
-            detItemList.value = sqte_DetailItem.map((item) => ({
-              ...item,
-              headitemno1:
-                Number(item.headitemno) == 0 ? '' : getHeadItemNo1(Number(item.headitemno))
-            }))
-            detItemList.value.sort(
-              (a, b) =>
-                Number(a.headitemno) - Number(b.headitemno) ||
-                Number(a.detitemno) - Number(b.detitemno)
-            )
+            detItemList.value = sqte_DetailItem
+              .map((item) => ({
+                ...item,
+                headitemno1:
+                  Number(item.headitemno) == 0 ? '' : getHeadItemNo1(Number(item.headitemno)),
+                detitemno1: item.detitemno1 ?? ''
+              }))
+              .sort(
+                (a, b) =>
+                  Number(a.headitemno) - Number(b.headitemno) ||
+                  Number(a.detitemno) - Number(b.detitemno)
+              )
           }
           if (sqte_SubSubItem && Array.isArray(sqte_SubSubItem)) {
-            secItemList.value = sqte_SubSubItem.map((item) => ({
-              ...item,
-              headitemno1:
-                Number(item.headitemno) == 0 ? '' : getHeadItemNo1(Number(item.headitemno)),
-              detitemno1: Number(item.detitemno) == 0 ? '' : getDetItemNo1(Number(item.detitemno))
-            }))
-            secItemList.value.sort(
-              (a, b) =>
-                Number(a.headitemno) - Number(b.headitemno) ||
-                Number(a.detitemno) - Number(b.detitemno) ||
-                Number(a.secitemno) - Number(b.secitemno)
-            )
+            secItemList.value = sqte_SubSubItem
+              .map((item) => ({
+                ...item,
+                headitemno1:
+                  Number(item.headitemno) == 0 ? '' : getHeadItemNo1(Number(item.headitemno)),
+                detitemno1:
+                  Number(item.detitemno) == 0 ? '' : getDetItemNo1(Number(item.detitemno)),
+                secitemno1: item.secitemno1 ?? ''
+              }))
+              .sort(
+                (a, b) =>
+                  Number(a.headitemno) - Number(b.headitemno) ||
+                  Number(a.detitemno) - Number(b.detitemno) ||
+                  Number(a.secitemno) - Number(b.secitemno)
+              )
           }
         }
       })
@@ -162,9 +167,27 @@
         const data = res.data
         if (data) {
           formData.value = { ...data }
+          sqtedetList.value = []
+          headItemList.value = []
+          detItemList.value = []
+          secItemList.value = []
         }
       }
     })
+  }
+  //檢查鎖定
+  const checkExecApi = async (flag: 1 | 0) => {
+    const qno = formData.value.qno
+    const res = await callApi({
+      method: 'POST',
+      url: api.Sqte.Sqte_ExecChk,
+      params: { flag, qno }
+    })
+    if (res.status === 200) {
+      return res.data ?? ''
+    } else {
+      return 'error'
+    }
   }
 
   //首筆/上一筆/下一筆/尾筆
@@ -180,8 +203,23 @@
     store.create()
   }
   //編輯
-  const edit = () => {
-    store.edit()
+  const edit = async () => {
+    if (store.index1) {
+      const check = await checkExecApi(1)
+      if (check == '已有其他工作站修改中' || check == '單據已請款') {
+        message.alert({
+          type: 'error',
+          message: `${check}不可刪除,請確認`
+        })
+      } else if (check == '無此單據號碼') {
+        message.alert({
+          type: 'error',
+          message: check
+        })
+      } else if (check == '成功') {
+        store.edit()
+      }
+    }
   }
   //複製
   const copy = () => {
@@ -190,48 +228,230 @@
     store.copy()
   }
   //刪除
-  const del = () => {
+  const del = async () => {
     if (store.index1) {
-      message.confirm({
-        type: 'question',
-        message: `確定要刪除「${formData.value.qno}」報價單？`,
-        onConfirm: () => {
-          //刪除
-          callApi({
-            method: 'POST',
-            url: api.Sqte.Sqte_DEL,
-            params: { index1: store.index1 }
-          }).then((res) => {
-            if (res?.status === 200) {
-              const data = res?.data
-              if (data.success === true) {
-                message.alert({
-                  type: 'success',
-                  message: '刪除成功',
-                  autoClose: 2,
-                  onConfirm: () => {
-                    const val = store.index1 as string
-                    if (!store.isFirst) onoChange('previous')
-                    else if (!store.isLast) onoChange('next')
-                    store.delete(val)
-                  }
-                })
-              } else {
-                message.alert({
-                  type: 'error',
-                  message: `刪除失敗：${data.message}`
-                })
+      const check = await checkExecApi(1)
+      if (check == '已有其他工作站修改中' || check == '單據已請款') {
+        message.alert({
+          type: 'error',
+          message: `${check}不可刪除,請確認`
+        })
+      } else if (check == '無此單據號碼') {
+        message.alert({
+          type: 'error',
+          message: check
+        })
+        const val = store.index1 as string
+        if (!store.isFirst) onoChange('previous')
+        else if (!store.isLast) onoChange('next')
+        store.delete(val)
+      } else if (check == '成功') {
+        message.confirm({
+          type: 'question',
+          message: `確定要刪除「${formData.value.qno}」報價單？`,
+          onConfirm: () => {
+            //刪除
+            callApi({
+              method: 'POST',
+              url: api.Sqte.Sqte_DEL,
+              params: { index1: store.index1 }
+            }).then((res) => {
+              if (res?.status === 200) {
+                const data = res?.data
+                if (data.success === true) {
+                  message.alert({
+                    type: 'success',
+                    message: '刪除成功',
+                    autoClose: 2,
+                    onConfirm: () => {
+                      const val = store.index1 as string
+                      if (!store.isFirst) onoChange('previous')
+                      else if (!store.isLast) onoChange('next')
+                      store.delete(val)
+                    }
+                  })
+                } else {
+                  message.alert({
+                    type: 'error',
+                    message: `刪除失敗：${data.message}`
+                  })
+                  checkExecApi(0) //解除鎖定
+                }
               }
-            }
-          })
-        }
-      })
+            })
+          },
+          onCancel: () => {
+            checkExecApi(0) //解除鎖定
+          }
+        })
+      }
     }
   }
   //放棄
   const cancel = () => {
+    if (store.action === 'edit') {
+      checkExecApi(0) //解除鎖定
+    }
     getSingleData()
-    store.browse()
+    store.cancel()
+  }
+
+  //檢查欄位規則
+  const checkData = () => {
+    //必填:qno, date1, protno, protname, custno, custabbr, taxkind
+    const requiredFields = [
+      { key: 'date1', label: '報價日期' },
+      { key: 'protname', label: '工程名稱' },
+      { key: 'custno', label: '業主編號' },
+      { key: 'custabbr', label: '業主簡稱' },
+      { key: 'taxkind', label: '營業稅' }
+    ]
+
+    if (!formData.value.protno && !formData.value.protname) {
+      requiredFields.splice(1, 0, { key: 'protno', label: '工程編號' })
+    }
+    if (store.action == 'edit') requiredFields.unshift({ key: 'qno', label: '報價單號' })
+
+    let missing = requiredFields
+      .filter((field) => !formData.value?.[field.key])
+      .map((field) => field.label)
+      .join('、')
+    if (missing) missing = `${missing}不可為空白`
+    return missing
+  }
+  //送出存檔
+  const saveData = () => {
+    //存檔需要的欄位
+    const create = { ...formData.value }
+    const _sqte = Object.fromEntries(
+      Object.keys(create ?? {}).map((key) => [key, create?.[key] ?? ''])
+    )
+    //數字欄位
+    _sqte.sum1 = formData.value?.sum1 ?? 0
+    _sqte.taxrate = formData.value?.taxrate ?? 5
+    _sqte.tax = formData.value?.tax ?? 0
+    _sqte.amount = formData.value?.amount ?? 0
+    _sqte.execflag = 0
+    _sqte.sqtememo1 = formData.value?.sqtememo1 ?? 0
+    _sqte.retain = 0
+    _sqte.remretain = formData.value?.remretain ?? 0
+    //建檔資料 (因為 renew 會給要傳)
+    _sqte.a_date1 = store.action === 'create' ? (formData.value?.a_date1 ?? '') : ''
+    _sqte.a_date2 = store.action === 'create' ? (formData.value?.a_date2 ?? '') : ''
+    _sqte.a_user = store.action === 'create' ? (formData.value?.a_user ?? '') : ''
+    _sqte.m_date1 = store.action === 'create' ? (formData.value?.m_date1 ?? '') : ''
+    _sqte.m_date2 = store.action === 'create' ? (formData.value?.m_date2 ?? '') : ''
+    _sqte.m_user = store.action === 'create' ? (formData.value?.m_user ?? '') : ''
+
+    //轉成form-data type
+    const formdata = new FormData()
+    for (const key in _sqte) {
+      if (_sqte.hasOwnProperty(key)) {
+        // 過濾掉繼承屬性
+        formdata.append(`_sqte.${key}`, _sqte[key])
+      }
+    }
+    //明細
+    sqtedetList.value.forEach((item, i) => {
+      for (const key in item) {
+        if (key !== 'listBom') {
+          formdata.append(`_sqtedet[${i}].${key}`, item[key])
+        } else {
+          const listBom = item['listBom'] as any[]
+          listBom.forEach((bom, j) => {
+            for (const bomkey in bom) {
+              formdata.append(`_sqtedet[${i}].listBom[${j}].${bomkey}`, bom[bomkey])
+            }
+          })
+        }
+      }
+    })
+    headItemList.value.forEach((item, i) => {
+      for (const key in item) {
+        formdata.append(`_HeaderItems[${i}].${key}`, item[key])
+      }
+    })
+    detItemList.value.forEach((item, i) => {
+      for (const key in item) {
+        formdata.append(`_DetailItem[${i}].${key}`, item[key])
+      }
+    })
+    secItemList.value.forEach((item, i) => {
+      for (const key in item) {
+        formdata.append(`_SubSubItem[${i}].${key}`, item[key])
+      }
+    })
+
+    return formdata
+  }
+  const callCreateApi = () => {
+    callApi({
+      method: 'POST',
+      url: api.Sqte.Sqte_Create,
+      data: saveData()
+    }).then((res: any) => {
+      if (res?.status === 200) {
+        const data = res?.data
+        if (data && data.success === true) {
+          message.alert({
+            type: 'success',
+            message: '存檔成功',
+            autoClose: 2,
+            onConfirm: () => {
+              const index1 = data.message
+              if (index1) {
+                store.list.push({ index1: index1 })
+                store.index1 = index1
+              }
+              cancel()
+            }
+          })
+        }
+      }
+    })
+  }
+  const callEditApi = () => {
+    callApi({
+      method: 'POST',
+      url: api.Sqte.Sqte_EDIT,
+      data: saveData()
+    }).then((res: any) => {
+      if (res?.status === 200) {
+        console.log(res)
+        const data = res?.data
+        if (data && data.success === true) {
+          message.alert({
+            type: 'success',
+            message: '存檔成功',
+            autoClose: 2,
+            onConfirm: () => {
+              cancel()
+            }
+          })
+        }
+      }
+    })
+  }
+  const handleSave = () => {
+    const check = checkData()
+    if (check) {
+      message.alert({
+        type: 'warning',
+        message: check
+      })
+      return
+    }
+    message.confirm({
+      type: 'question',
+      message: `確定要送出報價單資料？`,
+      onConfirm: () => {
+        if (store.action === 'edit') {
+          callEditApi()
+        } else {
+          callCreateApi()
+        }
+      }
+    })
   }
 
   //表身表格
@@ -563,6 +783,14 @@
     }
   }
 
+  //列印
+  const printDS = ref(false)
+  const printOpen = () => {
+    if (store.index1) {
+      printDS.value = true
+    }
+  }
+
   onMounted(() => {
     //抓下拉選單
     getTaxkindApi()
@@ -575,11 +803,11 @@
   <!--頂部 title & 按鈕區-->
   <c-bread>
     <template v-if="!store.isDetail">
-      <!-- <div class="col-auto">
-        <c-button kind="submit" icon="fa-solid fa-floppy-disk" @click="handleSave">儲存</c-button>
-      </div> -->
       <div class="col-auto">
         <c-button kind="cancel" icon="mdi-close-circle" @click="cancel">放棄</c-button>
+      </div>
+      <div class="col-auto">
+        <c-button kind="submit" icon="fa-solid fa-floppy-disk" @click="handleSave">儲存</c-button>
       </div>
     </template>
     <template v-else>
@@ -623,12 +851,12 @@
           尾筆
         </c-button>
       </div>
-      <!-- <div class="col-auto">
+      <div class="col-auto">
         <c-button kind="print" icon="fa-solid fa-print" @click="printOpen">列印</c-button>
       </div>
       <div class="col-auto">
-        <c-button kind="browse" icon="fa-solid fa-eye" @click="store.search(router)">瀏覽</c-button>
-      </div>-->
+        <c-button kind="browse" icon="fa-solid fa-eye" @click="store.browse(router)">瀏覽</c-button>
+      </div>
       <div class="col-auto">
         <c-button kind="search" icon="fa-solid fa-magnifying-glass" @click="filterDS = true">
           查詢
@@ -1191,6 +1419,7 @@
       { from: 'ibompqty', to: 'qty' },
       { from: 'stkunit', to: 'unit' },
       { from: 'stksalpc', to: 'price' },
+      { from: 'mkindno' },
       { from: 'mkindno1' }
     ]"
     :row="pickItemRow"

@@ -154,6 +154,35 @@
 <template>
   <!--列印 彈出視窗-->
   <c-dialog v-model="isOpen" title="列印" width="1025" @afterLeave="handlePrintClose">
+    <v-row dense justify="center" :align="'center'">
+      <v-col cols="auto">
+        <c-select
+          v-model="printForm.printType"
+          label="報表內容"
+          :items="[
+            { val: '內定報表' },
+            { val: '自定一', disabled: true },
+            { val: '自定二', disabled: true }
+          ]"
+          item-title="val"
+          item-value="val"
+          hide-search
+          width="240"
+        />
+      </v-col>
+      <v-col cols="auto">
+        <c-select
+          v-model="printForm.feetNo"
+          label="單行註腳"
+          :items="feetNoDDL.list"
+          :item-title="feetNoDDL.title"
+          :item-value="feetNoDDL.value"
+          hide-search
+          width="240"
+        />
+      </v-col>
+    </v-row>
+    <c-divider />
     <v-row dense :align="'center'">
       <!--業主編號起訖-->
       <v-col cols="auto">
@@ -193,6 +222,7 @@
             { column: 'ckindname', label: '業主類別' }
           ]"
           width="260"
+          clearable
         />
       </v-col>
       <v-col cols="auto" class="fs-2 text-center px-3">~</v-col>
@@ -208,6 +238,7 @@
             { column: 'ckindname', label: '業主類別' }
           ]"
           width="180"
+          clearable
         />
       </v-col>
       <v-responsive width="100%" />
@@ -217,12 +248,12 @@
           v-model="filter.tel"
           label="電話1"
           icon="fa-solid fa-phone-volume"
-          :maxlength="20"
+          :maxlength="16"
         />
       </v-col>
       <!--傳真機-->
       <v-col cols="12">
-        <c-input v-model="filter.fax" label="傳真機" icon="fa-solid fa-fax" :maxlength="20" />
+        <c-input v-model="filter.fax" label="傳真機" icon="fa-solid fa-fax" :maxlength="16" />
       </v-col>
       <!--業務人員起訖-->
       <v-col cols="auto">
@@ -264,6 +295,7 @@
           hide-search
           width="260"
           :menu-props="{ width: 400 }"
+          clearable
         />
       </v-col>
       <v-col cols="auto" class="fs-2 text-center px-3">~</v-col>
@@ -281,6 +313,7 @@
           hide-search
           width="180"
           :menu-props="{ width: 400 }"
+          clearable
         />
       </v-col>
       <v-responsive width="100%" />
@@ -324,43 +357,15 @@
         />
       </v-col>
     </v-row>
-    <c-divider />
-    <v-row dense justify="center" :align="'center'">
-      <v-col cols="auto">
-        <c-select
-          v-model="printForm.printType"
-          label="報表內容"
-          :items="[
-            { val: '內定報表' },
-            { val: '自定一', disabled: true },
-            { val: '自定二', disabled: true }
-          ]"
-          item-title="val"
-          item-value="val"
-          hide-search
-          width="240"
-        />
-      </v-col>
-      <v-col cols="auto">
-        <c-select
-          v-model="printForm.feetNo"
-          label="單行註腳"
-          :items="feetNoDDL.list"
-          :item-title="feetNoDDL.title"
-          :item-value="feetNoDDL.value"
-          hide-search
-          width="240"
-        />
-      </v-col>
-      <!-- <v-responsive width="100%"></v-responsive>
+    <!-- <v-row dense justify="center" :align="'center'">
       <v-col cols="auto" class="fs-5 fw-bold text-danger">
         ※起始編號空白表示從第一筆列印
         <br />
         ※終止編號空白表示列印至最後一筆
         <br />
         ※兩者皆空白表示全部列印
-      </v-col> -->
-    </v-row>
+      </v-col>
+    </v-row> -->
     <template v-slot:buttons>
       <v-row no-gutters justify="center">
         <v-col cols="auto mx-1">
