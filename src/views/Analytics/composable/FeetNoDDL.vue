@@ -68,11 +68,6 @@
     :density="dense ? 'compact' : undefined"
     :disabled="disabled"
     :hide-search="hideSearch"
-    class="sheet"
+    width="300px"
   />
 </template>
-<style scoped>
-  .sheet {
-    width: 240px;
-  }
-</style>

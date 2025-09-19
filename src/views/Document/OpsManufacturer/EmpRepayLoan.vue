@@ -4,11 +4,11 @@
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
   import { message } from '@/components/Message/service' //訊息窗元件
-  import { useEmpLoanStore } from '@/store/empLoan'
+  import { useEmpRepayLoanStore } from '@/store/empRepayLoan'
   import { useRouter } from 'vue-router'
   import print from '@/views/Base/Staff/Components/EmployeePrint.vue'
   import { searchEmp } from '@/components/SearchEmp'
-  const store = useEmpLoanStore()
+  const store = useEmpRepayLoanStore()
   const router = useRouter()
 
   //表格欄位
@@ -64,7 +64,7 @@
   const filterSearch = async () => {
     const res = await callApi({
       method: 'POST',
-      url: api.EmpLoan.Search,
+      url: api.EmpRepayLoan.Search,
       data: filter.value
     })
     if (res?.status === 200) {
@@ -96,7 +96,7 @@
         //刪除
         callApi({
           method: 'DELETE',
-          url: api.EmpLoan.Delete,
+          url: api.EmpRepayLoan.Delete,
           data: { bno: row.bno }
         }).then((res: any) => {
           if (res?.status === 200) {
@@ -120,7 +120,6 @@
   onMounted(() => {
     filterSearch()
   })
-  watch(() => ({ ...filter.value }), filterSearch)
   //列印
   const printDS = ref(false)
 
@@ -213,14 +212,14 @@
           <c-input
             type="date"
             v-model="filter.date1"
-            label="借支日期"
+            label="還款日期"
             icon="fa-solid fa-calendar-day"
           />
         </v-col>
         <v-col cols="auto">
           <c-input
             v-model="filter.bno"
-            label="借支單號"
+            label="還款單號"
             icon="fa-solid fa-file-lines"
             :maxlength="11"
           />
@@ -280,7 +279,7 @@
   >
     <template v-slot:head>
       <th class="th-sort">
-        借支日期
+        還款日期
         <button
           class="sort-btn"
           :aria-pressed="sort.key === 'date1'"
@@ -291,7 +290,7 @@
       </th>
 
       <th class="th-sort">
-        借支單號
+        還款單號
         <button class="sort-btn" :aria-pressed="sort.key === 'bno'" @click.stop="toggleSort('bno')">
           <i :class="sortIcon('bno')"></i>
         </button>
@@ -307,10 +306,10 @@
           <i :class="sortIcon('empname')"></i>
         </button>
       </th>
-      <th>借支金額</th>
+      <th>還款金額</th>
       <th>核可人員</th>
       <th>出納人員</th>
-      <th>借支原因</th>
+      <th>借支總金額</th>
       <th></th>
     </template>
     <template v-slot:body="{ scope }">
@@ -320,7 +319,7 @@
       <td>{{ scope.borrpr }}</td>
       <td>{{ scope.empokname }}</td>
       <td>{{ scope.empacname }}</td>
-      <td>{{ scope.descrip }}</td>
+      <td>{{ scope.borrprmon }}</td>
       <td>
         <v-row dense justify="end">
           <v-col cols="auto">

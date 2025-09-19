@@ -143,22 +143,20 @@
 
   <!-- 查詢表單 -->
 
-  <v-card color="#1b2b36" rounded="lg" class="mt-4 sqte-form" elevation="2">
-    <v-card-text class="pa-6">
+  <v-card color="#1b2b36" rounded="3">
+    <v-card-text>
       <!-- 日期區間 -->
-      <v-row align="center">
-        <v-col cols="auto">
-          <DateRange
-            v-model:from="formData.date1_s"
-            v-model:to="formData.date1_e"
-            labelFrom="開始日期"
-            labelTo="結束日期"
-            dense
-          />
-        </v-col>
+      <v-row :align="'center'">
+        <DateRange
+          v-model:from="formData.date1_s"
+          v-model:to="formData.date1_e"
+          labelFrom="開始日期"
+          labelTo="結束日期"
+          dense
+        />
       </v-row>
       <!-- 廠商區間 -->
-      <v-row align="center">
+      <v-row class="mt-2" :align="'center'">
         <v-col cols="auto">
           <SuppStart v-model="formData.suppno_s" :disabled="isMulti" />
         </v-col>
@@ -173,7 +171,7 @@
         </v-col>
       </v-row>
       <!-- 工程區間 -->
-      <v-row align="center">
+      <v-row class="mt-2" :align="'center'">
         <v-col cols="auto">
           <ProtStart v-model="formData.protno_s" />
         </v-col>
@@ -185,7 +183,7 @@
         </v-col>
       </v-row>
       <!-- 排序 -->
-      <v-row align="center">
+      <v-row class="mt-2" :align="'center'">
         <v-col cols="11">
           <v-row>
             <v-col cols="6" class="u-wch w-7ch">

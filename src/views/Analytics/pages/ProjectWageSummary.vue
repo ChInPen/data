@@ -124,34 +124,29 @@
 
   <!-- 查詢表單 -->
 
-  <v-card color="#1b2b36" rounded="lg" class="mt-4 sqte-form" elevation="2">
-    <v-card-text class="pa-6">
+  <v-card color="#1b2b36" rounded="3">
+    <v-card-text>
       <!-- 報表內容 -->
-      <v-row align="center">
-        <v-col cols="11">
-          <v-row>
-            <v-col cols="6" class="u-wch w-7ch">
-              <c-select
-                v-model="orderNoDDL.initial"
-                label="報表內容"
-                :items="orderNoDDL.list"
-                :item-title="orderNoDDL.title"
-                :item-value="orderNoDDL.value"
-                hide-search
-                class="sheet"
-              />
-            </v-col>
-          </v-row>
+      <v-row :align="'center'" dense>
+        <v-col cols="auto">
+          <c-select
+            v-model="orderNoDDL.initial"
+            label="報表內容"
+            :items="orderNoDDL.list"
+            :item-title="orderNoDDL.title"
+            :item-value="orderNoDDL.value"
+            hide-search
+            width="300"
+          />
         </v-col>
       </v-row>
+
       <!-- 日期區間 -->
-      <v-row align="center">
-        <v-col>
-          <DateRange v-model="indata.dates" dense />
-        </v-col>
+      <v-row class="mt-2" :align="'center'">
+        <DateRange v-model="indata.dates" dense />
       </v-row>
       <!-- 工程區塊 -->
-      <v-row align="center">
+      <v-row class="mt-2" :align="'center'">
         <v-col cols="auto">
           <ProtStart v-model="formData.protno" :disabled="isMulti" />
         </v-col>
@@ -160,7 +155,7 @@
         </v-col>
       </v-row>
       <!-- 註腳區塊 -->
-      <v-row align="center">
+      <v-row class="mt-2" :align="'center'">
         <v-col cols="auto">
           <FeetNoDDL
             v-model="formData.footNote"
@@ -174,8 +169,3 @@
     </v-card-text>
   </v-card>
 </template>
-<style scoped>
-  .sheet {
-    width: 250px;
-  }
-</style>

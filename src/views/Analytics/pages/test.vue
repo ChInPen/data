@@ -1,26 +1,37 @@
 <script setup lang="ts">
   import { ref, computed, watch } from 'vue'
-  import { cButton, cBread } from '@/components/Common'
+  import { cButton, cBread, cDivider, cSelect, cInput } from '@/components/Common'
   import { callApi } from '@/utils/uapi' // 呼叫api的方法
   import api from '@/api' // api清單
   import config from '@/config/config'
+  // 訊息
+  import { message } from '@/components/Message/service'
+  // 日期區間
   import DateRange from '@/views/Report/composable/DateRange.vue'
+  // 註腳
+  import FeetNoDDL from '@/views/Analytics/composable/FeetNoDDL.vue'
+  // 業主區間
   import CustStart from '@/views/Analytics/composable/Cust/CustStart.vue'
   import CustEnd from '@/views/Analytics/composable/Cust/CustEnd.vue'
   import CustMultiBut from '@/views/Analytics/composable/Cust/CustMultiBut.vue'
-  import ProtStart from '@/views/Analytics/composable/Prot/ProtStart.vue'
-  import ProtEnd from '@/views/Analytics/composable/Prot/ProtEnd.vue'
-  import ProtMultiBut from '@/views/Analytics/composable/Prot/ProtMultiBut.vue'
-  import FeetNoDDL from '@/views/Analytics/composable/FeetNoDDL.vue'
-  import ItemStart from '@/views/Analytics/composable/Item/ItemStart.vue'
-  import ItemEnd from '@/views/Analytics/composable/Item/ItemEnd.vue'
-  import ItemMultiBut from '@/views/Analytics/composable/Item/ItemMultiBut.vue'
+  // 廠商區間
   import SuppStart from '@/views/Analytics/composable/Supp/SuppStart.vue'
   import SuppEnd from '@/views/Analytics/composable/Supp/SuppEnd.vue'
   import SuppMultiBut from '@/views/Analytics/composable/Supp/SuppMultiBut.vue'
+  // 工料區間
+  import ItemStart from '@/views/Analytics/composable/Item/ItemStart.vue'
+  import ItemEnd from '@/views/Analytics/composable/Item/ItemEnd.vue'
+  import ItemMultiBut from '@/views/Analytics/composable/Item/ItemMultiBut.vue'
+  // 工程區間
+  import ProtStart from '@/views/Analytics/composable/Prot/ProtStart.vue'
+  import ProtEnd from '@/views/Analytics/composable/Prot/ProtEnd.vue'
+  import ProtMultiBut from '@/views/Analytics/composable/Prot/ProtMultiBut.vue'
+  // 人員區間
   import EmpStart from '@/views/Analytics/composable/Emp/EmpStart.vue'
   import EmpEnd from '@/views/Analytics/composable/Emp/EmpEnd.vue'
   import EmpMultiBut from '@/views/Analytics/composable/Emp/EmpMultiBut.vue'
+  // 發包估驗單號
+  import PurEmitStart from '@/views/Report/composable/PurEmitStart/PurEmitStart.vue'
   type SearchData = {
     custno: string
     custname: string
@@ -60,9 +71,18 @@
     compaddr: string
     [key: string]: any
   }
+  // 單別內容
+  const printTypeDDL = ref({
+    list: [
+      { value: '1', title: '全部' },
+      { value: '2', title: '採購' },
+      { value: '3', title: '發包' }
+    ],
+    value: 'value',
+    title: 'title'
+  })
 
   const formData = ref<Record<string, any>>({})
-  const model0 = ref('20') // 單選起
   const model = ref('') // 單選起
   const model2 = ref('') // 單選迄
   const model3 = ref({ begin: '', end: '' }) // 日期
@@ -79,6 +99,7 @@
   const model14 = ref('')
   const model15 = ref('')
   const model16 = ref<SearchData[]>([]) // 多選
+  const model17 = ref('')
 
   //判斷是否進入多選模式
   const isMulti = computed(() => (model4.value?.length ?? 0) > 0)
@@ -117,8 +138,15 @@
   // 呼叫API送出列印資料
   const loadingPrint = ref(false)
   const loadingExcel = ref(false)
-  const onSubmitPrint = async (t) => {
+  const onSubmitPrint = async (t: any) => {
     if (loadingPrint.value || loadingExcel.value) return
+    if (!formData.value.date1_e || !formData.value.date1_s) {
+      message.alert({
+        type: 'error',
+        message: '查詢日期不可為空！'
+      })
+      return
+    }
     if (t === 'Print') {
       loadingPrint.value = true
     } else {
@@ -162,12 +190,6 @@
       loadingExcel.value = false
     }
   }
-
-  // =================測試
-  const form = ref({ email: '', phone: '' })
-  const onSubmit = () => {
-    /* form 驗證與送出 */
-  }
 </script>
 
 <template>
@@ -205,18 +227,34 @@
     </v-row>
   </c-bread>
 
-  <v-card color="#1b2b36" rounded="lg" class="mt-4 sqte-form" elevation="2">
-    <v-card-text class="pa-6">
-      <DateRange
-        v-model="model3"
-        v-model:from="formData.date1_s"
-        v-model:to="formData.date1_e"
-        labelFrom="開始日期"
-        labelTo="結束日期"
-        dense
-      />
+  <v-card color="#1b2b36" rounded="3">
+    <v-card-text>
+      <!-- 報表類別 -->
+      <v-row :align="'center'" dense>
+        <v-col cols="auto">
+          <c-select
+            v-model="formData.printType"
+            label="報表內容"
+            :items="printTypeDDL.list"
+            :item-title="printTypeDDL.title"
+            :item-value="printTypeDDL.value"
+            hide-search
+            width="300"
+          />
+        </v-col>
+      </v-row>
+      <!-- 日期區間 -->
+      <v-row class="mt-2" :align="'center'">
+        <DateRange
+          v-model:from="model3.begin"
+          v-model:to="model3.end"
+          labelFrom="開始日期"
+          labelTo="結束日期"
+          dense
+        />
+      </v-row>
       <!-- 業主區間 -->
-      <v-row align="center">
+      <v-row class="mt-2" :align="'center'">
         <v-col cols="auto">
           <CustStart v-model="model" :disabled="isMulti" />
         </v-col>
@@ -231,7 +269,7 @@
         </v-col>
       </v-row>
       <!-- 工程區間 -->
-      <v-row align="center">
+      <v-row class="mt-2" :align="'center'">
         <v-col cols="auto">
           <ProtStart v-model="model5" :disabled="isMulti2" />
         </v-col>
@@ -246,7 +284,7 @@
         </v-col>
       </v-row>
       <!-- 工料區間 -->
-      <v-row align="center">
+      <v-row class="mt-2" :align="'center'">
         <v-col cols="auto">
           <ItemStart v-model="model8" :disabled="isMulti3" />
         </v-col>
@@ -261,7 +299,7 @@
         </v-col>
       </v-row>
       <!-- 廠商區間 -->
-      <v-row align="center">
+      <v-row class="mt-2" :align="'center'">
         <v-col cols="auto">
           <SuppStart v-model="model11" :disabled="isMulti4" />
         </v-col>
@@ -276,7 +314,7 @@
         </v-col>
       </v-row>
       <!-- 人員區間 -->
-      <v-row align="center">
+      <v-row class="mt-2" :align="'center'">
         <v-col cols="auto">
           <EmpStart v-model="model14" :disabled="isMulti5" />
         </v-col>
@@ -290,11 +328,24 @@
           <EmpMultiBut v-model="model16" />
         </v-col>
       </v-row>
+      <!-- 其他欄位 -->
+      <!-- 說明 -->
+      <v-row class="mt-2" :align="'center'">
+        <v-col cols="auto">
+          <c-input
+            v-model="formData.descrip"
+            label="說明"
+            density="compact"
+            :length-auto-width="false"
+            width="700"
+          />
+        </v-col>
+      </v-row>
       <!-- 註腳區間 -->
-      <v-row align="center">
+      <v-row class="mt-2" :align="'center'">
         <v-col cols="auto">
           <FeetNoDDL
-            v-model="model0"
+            v-model="formData.feetNo"
             label="單行註腳"
             :items="undefined"
             :dense="true"
@@ -302,38 +353,12 @@
           />
         </v-col>
       </v-row>
+      <!-- 發包估驗區間 -->
+      <v-row class="mt-2" :align="'center'">
+        <v-col cols="auto">
+          <PurEmitStart v-model="model17" />
+        </v-col>
+      </v-row>
     </v-card-text>
   </v-card>
-
-  <!-- ================測試=================== -->
-
-  <v-form ref="form" @submit.prevent="onSubmit">
-    <v-row>
-      <v-col cols="12" md="6">
-        <v-text-field
-          v-model="form.email"
-          label="Email"
-          type="email"
-          variant="outlined"
-          density="compact"
-          color="primary"
-          prepend-inner-icon="mdi-email"
-          clearable
-          :rules="[(v) => !!v || '必填', (v) => /.+@.+\..+/.test(v) || '格式不正確']"
-        />
-      </v-col>
-      <v-col cols="12" md="6">
-        <v-text-field
-          v-model="form.phone"
-          label="手機"
-          variant="outlined"
-          density="compact"
-          prepend-inner-icon="mdi-cellphone"
-          :rules="[(v) => !!v || '必填']"
-        />
-      </v-col>
-    </v-row>
-
-    <v-btn type="submit" color="primary">送出</v-btn>
-  </v-form>
 </template>

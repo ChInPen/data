@@ -154,34 +154,31 @@
       </v-col>
     </v-row>
   </c-bread>
-  <v-card color="#1b2b36" rounded="lg" class="mt-4 sqte-form" elevation="2">
-    <v-card-text class="pa-6">
+
+  <v-card color="#1b2b36" rounded="3">
+    <v-card-text>
       <!-- 報表類別 -->
-      <v-row align="center">
-        <v-col cols="11">
-          <v-row>
-            <v-col cols="6">
-              <c-select
-                v-model="reportData"
-                label="報表內容"
-                :items="printTypeDDL.list"
-                :item-title="printTypeDDL.title"
-                :item-value="printTypeDDL.value"
-                hide-search
-                class="sheet"
-              />
-            </v-col>
-          </v-row>
+
+      <v-row :align="'center'" dense>
+        <v-col cols="auto">
+          <c-select
+            v-model="reportData"
+            label="報表內容"
+            :items="printTypeDDL.list"
+            :item-title="printTypeDDL.title"
+            :item-value="printTypeDDL.value"
+            hide-search
+            width="300"
+          />
         </v-col>
       </v-row>
+
       <!-- 日期 -->
-      <v-row align="center">
-        <v-col cols="auto">
-          <DateRange v-model="formData.dates" dense />
-        </v-col>
+      <v-row class="mt-2" :align="'center'">
+        <DateRange v-model="formData.dates" dense />
       </v-row>
       <!-- 工程區塊 -->
-      <v-row align="center">
+      <v-row class="mt-2" :align="'center'">
         <v-col cols="auto">
           <ProtStart v-model="formData.protnos.begin" :disabled="isMulti" />
         </v-col>
@@ -196,7 +193,7 @@
         </v-col>
       </v-row>
       <!-- 只有明細表才出現 itemRange -->
-      <v-row align="center" v-if="isDetail">
+      <v-row class="mt-2" :align="'center'" v-if="isDetail">
         <v-col cols="auto">
           <ItemStart v-model="formDataDetail.itemnos.begin" :disabled="isMulti2" />
         </v-col>
@@ -211,7 +208,7 @@
         </v-col>
       </v-row>
       <!-- 註腳區塊 -->
-      <v-row align="center">
+      <v-row class="mt-2" :align="'center'">
         <v-col cols="auto">
           <FeetNoDDL
             v-model="formData.feetNo"
@@ -225,9 +222,3 @@
     </v-card-text>
   </v-card>
 </template>
-
-<style scoped>
-  .sheet {
-    width: 250px;
-  }
-</style>

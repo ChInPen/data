@@ -3,13 +3,49 @@
   import { cButton, cInput, cBread, cDivider } from '@/components/Common' //共用元件
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
-  import { useEmpLoanStore } from '@/store/empLoan'
+  import { useEmpRepayLoanStore } from '@/store/empRepayLoan'
   import { useRouter } from 'vue-router'
   import { message } from '@/components/Message/service'
   import { auditInfo } from '@/components/AuditInfo'
   import { searchEmp } from '@/components/SearchEmp'
-  const store = useEmpLoanStore()
+  const store = useEmpRepayLoanStore()
   const router = useRouter()
+  // 當天日期
+  const rocToday = (d = new Date()) => {
+    if (store.action === 'create' || store.action === 'copy') {
+      const y = d.getFullYear() - 1911
+      const m = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      return `${String(y).padStart(3, '0')}${m}${day}` // 例如 1140917
+    } else {
+      return ''
+    }
+  }
+  const formData = ref<Record<string, any>>({
+    bno: '',
+    date1: '',
+    empno: '',
+    empname: '',
+    borrpr: null,
+    borrprmon: null,
+    empokno: '',
+    empokname: '',
+    empacno: '',
+    empacname: '',
+    memo1: '',
+    embud1: '',
+    embud2: '',
+    a_date: rocToday(),
+    a_user: '', //這邊想要自動帶入建檔人員的名子，是要登入狀態的人
+    m_date: '',
+    m_user: '',
+    emmo1: '',
+    emmo2: '',
+    emmo3: 0,
+    execflag: 0,
+    acno: '',
+    ssno: ''
+  })
   // 頁面載入後執行
   onMounted(() => {
     getEmpApi()
@@ -21,10 +57,8 @@
     try {
       const res: any = await callApi({
         method: 'POST',
-        url: api.EmpLoan.SearchOen,
-        data: {
-          bno: bno
-        }
+        url: api.EmpRepayLoan.SearchOen,
+        data: { bno: bno }
       })
       console.log(res.data)
       formData.value = res.data
@@ -35,10 +69,9 @@
   }
   //取消&返回 按鈕
   const handleCancel = () => {
-    router.push({ path: '/menu/EmpLoan' })
+    router.push({ path: '/menu/EmpRepayLoan' })
   }
   //人員資料
-  const formData = ref<Record<string, any>>({})
   // 抓取員工所有資料
   const employeeDDL = ref<{ empno: string; empname: string }[]>([])
   const getEmpApi = async () => {
@@ -148,15 +181,14 @@
 
   // 必填欄位清單（想調整就改這個陣列）
   const REQUIRED_FIELDS = [
-    { key: 'date1', label: '借支日期' },
+    { key: 'date1', label: '還款日期' },
     { key: 'empno', label: '員工編號' },
     { key: 'empname', label: '員工名稱' },
-    { key: 'borrpr', label: '借支金額' },
-    { key: 'descrip', label: '借支原因' },
+    { key: 'borrpr', label: '還款金額' },
+    { key: 'empokno', label: '  核可人員編號' },
+    { key: 'empacname', label: '核可人員名稱' },
     { key: 'empacno', label: '出納人員編號' },
-    { key: 'empokname', label: '出納人員名稱' },
-    { key: 'empokno', label: '核可人員編號' },
-    { key: 'empacname', label: '核可人員名稱' }
+    { key: 'empokname', label: '出納人員名稱' }
   ] as const
 
   // 檢查必填 + 型別/格式
@@ -219,10 +251,12 @@
     }
     message.confirm({
       type: 'question',
-      message: '確定要送出借支資料？',
+      message: '確定要送出還款資料？',
       onConfirm: async () => {
         console.log('payload', JSON.stringify(formData.value, null, 2))
-        const apiUrl = store.action === 'edit' ? api.EmpLoan.UPDATE : api.EmpLoan.Add
+        if (formData.value.borrprmon === null) formData.value.borrprmon = 0
+        if (store.action === 'edit') formData.value.m_date = rocToday()
+        const apiUrl = store.action === 'edit' ? api.EmpRepayLoan.UPDATE : api.EmpRepayLoan.Add
         const method = store.action === 'edit' ? 'PUT' : 'POST'
         try {
           const res = await callApi({
@@ -265,7 +299,7 @@
         <v-col cols="auto" class="px-2">
           <c-input
             v-model="formData.date1"
-            label="借支日期"
+            label="還款日期"
             icon="fa-solid fa-calendar-day"
             :disabled="store.keyDisabled"
             :maxlength="10"
@@ -275,7 +309,7 @@
         <v-col cols="auto" class="px-2">
           <c-input
             v-model="formData.bno"
-            label="借支單號"
+            label="還款單號"
             icon="fa-solid fa-receipt"
             :maxlength="16"
             disabled
@@ -308,7 +342,7 @@
         <v-col cols="auto" class="px-2">
           <c-input
             v-model="borrprIO"
-            label="借支金額"
+            label="還款金額"
             icon="fa-solid fa-money-bill"
             :disabled="store.isDetail"
             :maxlength="12"
@@ -319,11 +353,11 @@
         </v-col>
         <v-col cols="auto" class="px-2">
           <c-input
-            v-model="formData.descrip"
-            label="借支原因"
+            v-model="formData.borrprmon"
+            label="借支總金額"
             icon="fa-solid fa-note-sticky"
-            :disabled="store.isDetail"
-            width="600"
+            disabled
+            :maxlength="12"
           />
         </v-col>
       </v-row>
@@ -389,7 +423,7 @@
         <v-col cols="auto" class="px-2">
           <c-input
             v-model="formData.embud1"
-            label="借支自訂一"
+            label="還款自定一"
             icon="fa-solid fa-pencil"
             :disabled="store.isDetail"
             width="500"
@@ -398,7 +432,7 @@
         <v-col cols="auto" class="px-2">
           <c-input
             v-model="formData.embud2"
-            label="借支自訂二"
+            label="還款自定二"
             icon="fa-solid fa-pencil"
             :disabled="store.isDetail"
             width="500"
@@ -411,9 +445,9 @@
   <audit-info
     class="mt-2"
     v-if="store.action === 'edit' || store.action === 'detail'"
-    :a_date="formData.a_date1"
+    :a_date="formData.a_date"
     :a_user="formData.a_user"
-    :m_date="formData.m_date1"
+    :m_date="formData.m_date"
     :m_user="formData.m_user"
   />
   <!-- 單選彈窗 -->

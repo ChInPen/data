@@ -91,23 +91,25 @@
       </v-col>
     </v-row>
   </c-bread>
-  <v-card color="#1b2b36" rounded="lg" class="mt-4 sqte-form" elevation="2">
-    <v-card-text class="pa-6">
+  <v-card color="#1b2b36" rounded="3">
+    <v-card-text>
       <!-- 日期 -->
-      <DateRange
-        v-model:from="formData.date1_s"
-        v-model:to="formData.date1_e"
-        labelFrom="開始日期"
-        labelTo="結束日期"
-        dense
-      />
-      <v-row align="center">
+      <v-row :align="'center'">
+        <DateRange
+          v-model:from="formData.date1_s"
+          v-model:to="formData.date1_e"
+          labelFrom="開始日期"
+          labelTo="結束日期"
+          dense
+        />
+      </v-row>
+      <v-row class="mt-2" :align="'center'">
         <v-col cols="auto">
           <ProtStart v-model="formData.protno" />
         </v-col>
       </v-row>
       <!-- 註腳區間 -->
-      <v-row align="center">
+      <v-row class="mt-2" :align="'center'">
         <v-col cols="auto">
           <FeetNoDDL
             v-model="formData.footNote"
@@ -121,9 +123,3 @@
     </v-card-text>
   </v-card>
 </template>
-
-<style scoped>
-  .sheet {
-    width: 300px;
-  }
-</style>

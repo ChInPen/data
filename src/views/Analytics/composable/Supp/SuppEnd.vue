@@ -20,20 +20,11 @@
   const ownerPickOpen = ref<any>(null)
   const formData = ref({ suppno: '' })
 
-  const alnumN = (v: string, n: number, toUpper = true) => {
-    const s = String(v ?? '')
-      .normalize('NFKC')
-      .replace(/[^0-9a-z]/gi, '')
-      .slice(0, n)
-    return toUpper ? s.toUpperCase() : s
-  }
-
   const ownerNoFromModel = computed({
     get: () => model.value,
     set: (val: string) => {
-      const parsed = alnumN(val, props.maxlength, props.alnumUpper)
-      model.value = parsed
-      formData.value.suppno = parsed
+      model.value = val
+      formData.value.suppno = val
     }
   })
 
@@ -52,7 +43,7 @@
   }
   const onPicked = (row: any) => {
     const val = String(row?.suppno ?? '').trim()
-    model.value = alnumN(val, props.maxlength, props.alnumUpper)
+    model.value = val
   }
 </script>
 

@@ -6,8 +6,8 @@
   import api from '@/api'
   import { message } from '@/components/Message/service'
   import type { PickSetting } from '@/store/create'
-  import { useSearchSupp } from '@/store/searchSupp'
-  const store = useSearchSupp()
+  import { usePickPurPord } from '@/store/searchPurPords'
+  const store = usePickPurPord()
   import type { SearchData } from './type'
 
   const model = defineModel({ default: false })
@@ -44,11 +44,11 @@
   // 查詢
   const formData = ref({
     dates: { begin: '', end: '' },
-    suppNOs: { begin: '', end: '', limiteds: [''] },
+    suppNOs: { begin: '', end: '', limiteds: [] },
     purPordOno: '',
-    protNOs: { begin: '', end: '', limiteds: [''] },
-    itemNOs: { begin: '', end: '', limiteds: [''] },
-    pagination: { start: 0, length: 100, draw: 1 },
+    protNOs: { begin: '', end: '', limiteds: [] },
+    itemNOs: { begin: '', end: '', limiteds: [] },
+    pagination: { start: 0, length: 1000000000, draw: 1 },
     descrip: ''
   })
   const handleSearch = async () => {
@@ -80,7 +80,7 @@
     try {
       const res = await callApi({
         method: 'POST',
-        url: api.PurPordBrow.Search,
+        url: api.PurPordBrowQurey.Search,
         data: payload
       })
 
@@ -114,13 +114,13 @@
     async (newVal) => {
       if (newVal) {
         storeSet()
+        console.log('[PickPurPords] isSearch=', store.isSearch, 'searchText=', store.searchText)
         if (store.isSearch) {
           // 如果沒輸入就 return
           if (!store.searchText || !store.searchText?.trim()) {
             handleDialogClose()
             return
           }
-
           filter.value.filter1 = store.searchText
           await handleSearch()
           if (tbData.value.length == 1) {

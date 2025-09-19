@@ -11,7 +11,8 @@
   import ItemStart from '@/views/Analytics/composable/Item/ItemStart.vue'
   import ItemEnd from '@/views/Analytics/composable/Item/ItemEnd.vue'
   import ItemMultiBut from '@/views/Analytics/composable/Item/ItemMultiBut.vue'
-
+  // 註腳
+  import FeetNoDDL from '@/views/Analytics/composable/FeetNoDDL.vue'
   const formData = ref({
     dates: {
       begin: '',
@@ -49,19 +50,6 @@
     ],
     value: 'valueOn',
     title: 'title'
-  })
-  // 表尾註腳
-  const feetNoDDL = ref({
-    list: [
-      { feetno: '01', feetname: '第一組' },
-      { feetno: '02', feetname: '第二組' },
-      { feetno: '03', feetname: '第三組' },
-      { feetno: '04', feetname: '第四組' },
-      { feetno: '05', feetname: '第五組' },
-      { feetno: '20', feetname: '不列印' }
-    ],
-    value: 'feetno',
-    title: 'feetname'
   })
 
   // 是否為明細表
@@ -182,34 +170,28 @@
       </v-col>
     </v-row>
   </c-bread>
-  <v-card color="#1b2b36" rounded="lg" class="mt-4 sqte-form" elevation="2">
-    <v-card-text class="pa-6">
+  <v-card color="#1b2b36" rounded="3">
+    <v-card-text>
       <!-- 報表類別 -->
-      <v-row align="center">
-        <v-col cols="11">
-          <v-row>
-            <v-col cols="6">
-              <c-select
-                v-model="reportData"
-                label="報表內容"
-                :items="printTypeDDL.list"
-                :item-title="printTypeDDL.title"
-                :item-value="printTypeDDL.value"
-                hide-search
-                class="sheet"
-              />
-            </v-col>
-          </v-row>
+      <v-row :align="'center'" dense>
+        <v-col cols="auto">
+          <c-select
+            v-model="reportData"
+            label="報表內容"
+            :items="printTypeDDL.list"
+            :item-title="printTypeDDL.title"
+            :item-value="printTypeDDL.value"
+            hide-search
+            width="300"
+          />
         </v-col>
       </v-row>
       <!-- 日期區間 -->
-      <v-row align="center">
-        <v-col>
-          <DateRange v-model="formData.dates" dense />
-        </v-col>
+      <v-row class="mt-2" :align="'center'">
+        <DateRange v-model="formData.dates" dense />
       </v-row>
       <!-- 工程區塊 -->
-      <v-row align="center">
+      <v-row class="mt-2" :align="'center'">
         <v-col cols="auto">
           <ProtStart v-model="formData.protno.value" :disabled="isMulti" />
         </v-col>
@@ -219,7 +201,7 @@
       </v-row>
       <!-- 只有明細表才出現 itemRange -->
       <!-- 工料區塊 -->
-      <v-row align="center" v-if="isDetail">
+      <v-row class="mt-2" :align="'center'" v-if="isDetail">
         <v-col cols="auto">
           <ItemStart v-model="formDataDetail.itemnos.begin" :disabled="isMulti2" />
         </v-col>
@@ -233,30 +215,18 @@
           <ItemMultiBut v-model="formDataDetail.itemnos.limiteds" />
         </v-col>
       </v-row>
-      <!-- 其他欄位 -->
-      <v-row align="center">
-        <v-col cols="11">
-          <v-row>
-            <v-col cols="6">
-              <c-select
-                v-model="formData.feetNo"
-                label="單行註腳"
-                :items="feetNoDDL.list"
-                :item-title="feetNoDDL.title"
-                :item-value="feetNoDDL.value"
-                hide-search
-                class="sheet"
-              />
-            </v-col>
-          </v-row>
+      <!-- 註腳區間 -->
+      <v-row class="mt-2" :align="'center'">
+        <v-col cols="auto">
+          <FeetNoDDL
+            v-model="formData.feetNo"
+            label="單行註腳"
+            :items="undefined"
+            :dense="true"
+            :hideSearch="true"
+          />
         </v-col>
       </v-row>
     </v-card-text>
   </v-card>
 </template>
-
-<style scoped>
-  .sheet {
-    width: 250px;
-  }
-</style>

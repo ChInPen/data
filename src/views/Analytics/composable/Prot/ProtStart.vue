@@ -20,19 +20,12 @@
   )
   const ownerPickOpen = ref<any>(null)
   const formData = ref({ protno_s: '' })
-  const alnumN = (v: string, n: number, toUpper = true) => {
-    const s = String(v ?? '')
-      .normalize('NFKC')
-      .replace(/[^0-9a-z]/gi, '')
-      .slice(0, n)
-    return toUpper ? s.toUpperCase() : s
-  }
+
   const ownerNoFromModel = computed({
     get: () => model.value,
     set: (val: string) => {
-      const parsed = alnumN(val, props.maxlength, props.alnumUpper)
-      model.value = parsed
-      formData.value.protno_s = parsed
+      model.value = val
+      formData.value.protno_s = val
     }
   })
   watch(
@@ -49,7 +42,7 @@
   }
   const onPicked = (row: any) => {
     const val = String(row?.protno ?? '').trim()
-    model.value = alnumN(val, props.maxlength, props.alnumUpper)
+    model.value = val
   }
 </script>
 

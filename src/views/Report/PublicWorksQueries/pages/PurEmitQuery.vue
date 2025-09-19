@@ -4,6 +4,8 @@
   import { callApi } from '@/utils/uapi' // 呼叫api的方法
   import api from '@/api' // api清單
   import config from '@/config/config'
+  import { usePickPurPord } from '@/store/searchPurPords'
+  const storePurPord = usePickPurPord()
   // 訊息
   import { message } from '@/components/Message/service'
   // 日期區間
@@ -22,6 +24,8 @@
   import ProtStart from '@/views/Analytics/composable/Prot/ProtStart.vue'
   import ProtEnd from '@/views/Analytics/composable/Prot/ProtEnd.vue'
   import ProtMultiBut from '@/views/Analytics/composable/Prot/ProtMultiBut.vue'
+  // 發包估驗單號
+  import PurEmitStart from '@/views/Report/composable/PurEmitStart/PurEmitStart.vue'
   // 表單/列印/EXCEL
   const formData = ref({
     dates: {
@@ -33,6 +37,7 @@
       end: '', // 廠商編號結束
       limiteds: [] as string[] // 廠商編號多選
     },
+    puremitOno: '', //發包估驗單號
     itemNOs: {
       begin: '', // 工料編號開始
       end: '', // 工料編號結束
@@ -45,23 +50,36 @@
     },
     pagination: {
       start: 0,
-      length: 1000000000,
+      length: 100000000,
       draw: 1
     },
-    descrip: '',
-    emitdetmo1: '',
-    feetNo: '05', // 表尾註腳編號
-    printType: '內定報表'
+    feetNo: '20', // 表尾註腳編號
+    printType: '內定報表' //內定報表
   })
   // 報表內容
   const printTypeDDL = ref({
     list: [
       { value: '內定報表', title: '內定報表' },
-      { value: '內定明細', title: '內定明細' }
+      { value: '內定報表二', title: '內定報表二' }
     ],
     value: 'value',
     title: 'title'
   })
+  // 採估單號
+  const purPordPickOpen = ref()
+  const selectPurPordOno = ref({ puremitOno: '' }) // 存單選拿到的值
+  const openPurPordPicker = () => {
+    storePurPord.set(selectPurPordOno, [{ from: 'ono', to: 'puremitOno' }], {
+      open: purPordPickOpen.value?.open
+    })
+    console.log(selectPurPordOno.value)
+  }
+  watch(
+    () => selectPurPordOno.value.puremitOno,
+    (val, old) => {
+      if (val !== old) formData.value.puremitOno = val
+    }
+  )
   //判斷是否進入多選模式
   const isMulti = computed(() => (formData.value.suppNOs.limiteds?.length ?? 0) > 0)
   const isMulti2 = computed(() => (formData.value.itemNOs.limiteds?.length ?? 0) > 0)
@@ -86,7 +104,6 @@
       formData.value.protNOs.end = ''
     }
   })
-
   // 呼叫API送出列印資料
   const loadingPrint = ref(false)
   const loadingExcel = ref(false)
@@ -104,7 +121,7 @@
     } else {
       loadingExcel.value = true
     }
-    const API = t === 'Print' ? api.OutsourcingQuery.Print : api.OutsourcingQuery.Excel
+    const API = t === 'Print' ? api.PurEmitQuery.Print : api.PurEmitQuery.Excel
     try {
       console.log(JSON.stringify(formData.value, null, 2))
       const res = await callApi({
@@ -180,6 +197,7 @@
   </c-bread>
 
   <!-- 查詢表單 -->
+
   <v-card color="#1b2b36" rounded="3">
     <v-card-text>
       <!-- 報表類別 -->
@@ -206,9 +224,7 @@
           dense
         />
       </v-row>
-
       <!-- 廠商區間 -->
-
       <v-row class="mt-2" :align="'center'">
         <v-col cols="auto">
           <SuppStart v-model="formData.suppNOs.begin" :disabled="isMulti" />
@@ -223,9 +239,14 @@
           <SuppMultiBut v-model="formData.suppNOs.limiteds" />
         </v-col>
       </v-row>
+      <!-- 發包估驗區間 -->
+      <v-row class="mt-2" :align="'center'">
+        <v-col cols="auto">
+          <PurEmitStart v-model="formData.puremitOno" />
+        </v-col>
+      </v-row>
 
       <!-- 工料區間 -->
-
       <v-row class="mt-2" :align="'center'">
         <v-col cols="auto">
           <ItemStart v-model="formData.itemNOs.begin" :disabled="isMulti2" />
@@ -242,7 +263,6 @@
       </v-row>
 
       <!-- 工程區間 -->
-
       <v-row class="mt-2" :align="'center'">
         <v-col cols="auto">
           <ProtStart v-model="formData.protNOs.begin" :disabled="isMulti3" />
@@ -257,33 +277,7 @@
           <ProtMultiBut v-model="formData.protNOs.limiteds" />
         </v-col>
       </v-row>
-      <!-- 其他欄位 -->
-      <!-- 說明 -->
-
-      <v-row class="mt-2" :align="'center'">
-        <v-col cols="auto">
-          <c-input
-            v-model="formData.descrip"
-            label="說明"
-            density="compact"
-            :length-auto-width="false"
-            width="700"
-          />
-        </v-col>
-      </v-row>
-      <v-row class="mt-2" :align="'center'">
-        <v-col cols="auto">
-          <c-input
-            v-model="formData.emitdetmo1"
-            label="發包自定一"
-            density="compact"
-            :length-auto-width="false"
-            width="700"
-          />
-        </v-col>
-      </v-row>
       <!-- 註腳區間 -->
-
       <v-row class="mt-2" :align="'center'">
         <v-col cols="auto">
           <FeetNoDDL
@@ -297,4 +291,7 @@
       </v-row>
     </v-card-text>
   </v-card>
+
+  <!-- 彈窗元件 -->
+  <search-pur-pords ref="purPordPickOpen" @pick="storePurPord.pick" />
 </template>

@@ -1,9 +1,16 @@
 <script lang="ts" setup>
   import { ref } from 'vue'
-  import { cButton, cInput, cBread, cSelect } from '@/components/Common' // 共用元件
+  import { cButton, cDivider, cBread, cSelect } from '@/components/Common' // 共用元件
   import { callApi } from '@/utils/uapi' // 呼叫api的方法
   import api from '@/api' // api清單
   import config from '@/config/config'
+  // 訊息
+  import { message } from '@/components/Message/service'
+  // 日期區間
+  import DateRange from '@/views/Report/composable/DateRange.vue'
+  // 註腳
+  import FeetNoDDL from '@/views/Analytics/composable/FeetNoDDL.vue'
+
   // 表單/列印/EXCEL
   const formData = ref({
     dates: {
@@ -13,20 +20,6 @@
     feetNo: '20', // 表尾註腳編號
     printType: '1' //內定報表
   })
-  // 表尾註腳
-  const feetNoDDL = ref({
-    list: [
-      { feetno: '01', feetname: '第一組' },
-      { feetno: '02', feetname: '第二組' },
-      { feetno: '03', feetname: '第三組' },
-      { feetno: '04', feetname: '第四組' },
-      { feetno: '05', feetname: '第五組' },
-      { feetno: '20', feetname: '不列印' }
-    ],
-    value: 'feetno',
-    title: 'feetname'
-  })
-
   // 報表內容
   const printTypeDDL = ref({
     list: [
@@ -39,18 +32,58 @@
   })
 
   // 呼叫API送出列印資料
-  const onSubmitPrint = async () => {
-    console.log(JSON.stringify(formData.value, null, 2))
-    const API = api.ApPaidByDateQuery.Print
-    const res = await callApi({
-      method: 'POST',
-      url: API,
-      data: formData.value
-    })
-    if (typeof res.data === 'string' && res.data.startsWith('PDF')) {
-      window.open(config.apiUri + '/' + res.data)
+  const loadingPrint = ref(false)
+  const loadingExcel = ref(false)
+  const onSubmitPrint = async (t: any) => {
+    if (loadingPrint.value || loadingExcel.value) return
+    if (!formData.value.dates.begin || !formData.value.dates.end) {
+      message.alert({
+        type: 'error',
+        message: '查詢日期不可為空！'
+      })
+      return
+    }
+    if (t === 'Print') {
+      loadingPrint.value = true
     } else {
-      console.warn('沒有取得檔名', res.data)
+      loadingExcel.value = true
+    }
+    const API = api.ApPaidByDateQuery.Print
+    try {
+      console.log(JSON.stringify(formData.value, null, 2))
+      const res = await callApi({
+        method: 'POST',
+        url: API,
+        data: formData.value,
+        // params: {
+        //   Print_Type: PrintType.value.PrintTypeRef
+        // },
+        timeout: 120000 // 2分鐘
+      })
+      console.log('print res:', res)
+      const path = typeof res === 'string' ? res : res?.data
+      if (t === 'Print') {
+        if (typeof path === 'string' && path.startsWith('PDF')) {
+          window.open(config.apiUri + '/' + path)
+        } else {
+          console.warn('沒有取得檔名', res)
+        }
+      } else {
+        if (typeof path === 'string' && path.startsWith('Excel')) {
+          window.open(config.apiUri + '/' + path)
+        } else {
+          console.warn('沒有取得檔名', res)
+        }
+      }
+    } catch (err) {
+      if (err.response) {
+        console.error('列印失敗:', err.response.status, err.response.data)
+      } else {
+        console.error('列印失敗:', err.message || err)
+      }
+    } finally {
+      loadingPrint.value = false
+      loadingExcel.value = false
     }
   }
 </script>
@@ -60,156 +93,62 @@
   <c-bread>
     <v-row justify="end" class="ma-0" dense>
       <v-col cols="auto">
-        <c-button kind="print" icon="fa-solid fa-print" @click="onSubmitPrint">列印</c-button>
+        <c-button
+          kind="print"
+          :icon="loadingPrint ? '' : 'fa-solid fa-print'"
+          @click="onSubmitPrint('Print')"
+          :disabled="loadingPrint"
+        >
+          <template v-if="loadingPrint">
+            <i class="fa-solid fa-spinner fa-spin me-2"></i>
+            列印中...
+          </template>
+          <template v-else>列印</template>
+        </c-button>
       </v-col>
     </v-row>
   </c-bread>
 
   <!-- 查詢表單 -->
 
-  <v-card color="#1b2b36" rounded="lg" class="mt-4 sqte-form" elevation="2">
-    <v-card-text class="pa-6">
+  <v-card color="#1b2b36" rounded="3">
+    <v-card-text>
       <!-- 報表類別 -->
-      <v-row align="center" class="mb-3" dense>
-        <v-col cols="11">
-          <v-row>
-            <v-col cols="6" class="u-wch w-20ch">
-              <c-select
-                v-model="formData.printType"
-                label="報表內容"
-                :items="printTypeDDL.list"
-                :item-title="printTypeDDL.title"
-                :item-value="printTypeDDL.value"
-                hide-search
-              />
-            </v-col>
-          </v-row>
+      <v-row :align="'center'" dense>
+        <v-col cols="auto">
+          <c-select
+            v-model="formData.printType"
+            label="報表類別"
+            :items="printTypeDDL.list"
+            :item-title="printTypeDDL.title"
+            :item-value="printTypeDDL.value"
+            hide-search
+            width="240"
+          />
         </v-col>
       </v-row>
-      <!-- 報價日期區間 -->
-      <v-row align="center" class="mb-3" dense>
-        <v-col cols="11">
-          <v-row align="center">
-            <v-col cols="auto">
-              <v-row>
-                <v-col cols="auto" class="u-wch w-7ch">
-                  <c-input
-                    type="date"
-                    v-model="formData.dates.begin"
-                    label="開始日期"
-                    density="compact"
-                  />
-                </v-col>
-              </v-row>
-            </v-col>
-            <v-col cols="1" class="text-center d-none d-md-block">
-              <span class="text-h5 text-grey-lighten-1 sep-1470">～</span>
-            </v-col>
-            <v-col cols="auto">
-              <v-row>
-                <v-col cols="auto" class="u-wch w-7ch">
-                  <c-input
-                    type="date"
-                    v-model="formData.dates.end"
-                    label="結束日期"
-                    density="compact"
-                  />
-                </v-col>
-              </v-row>
-            </v-col>
-          </v-row>
-        </v-col>
+      <!-- 日期區間 -->
+      <v-row class="mt-2" :align="'center'">
+        <DateRange
+          v-model:from="formData.dates.begin"
+          v-model:to="formData.dates.end"
+          labelFrom="開始日期"
+          labelTo="結束日期"
+          dense
+        />
       </v-row>
-      <!-- 其他欄位 -->
-      <v-row align="center" class="mb-3" dense>
-        <v-col cols="11">
-          <v-row>
-            <v-col cols="6" class="u-wch w-7ch">
-              <c-select
-                v-model="formData.feetNo"
-                label="單行註腳"
-                :items="feetNoDDL.list"
-                :item-title="feetNoDDL.title"
-                :item-value="feetNoDDL.value"
-                hide-search
-              />
-            </v-col>
-          </v-row>
+      <!-- 註腳區間 -->
+      <v-row class="mt-2" :align="'center'">
+        <v-col cols="auto">
+          <FeetNoDDL
+            v-model="formData.feetNo"
+            label="單行註腳"
+            :items="undefined"
+            :dense="true"
+            :hideSearch="true"
+          />
         </v-col>
       </v-row>
     </v-card-text>
   </v-card>
-
-  <!-- 彈窗元件 -->
 </template>
-<style scoped>
-  .u-wch {
-    width: var(--wch);
-    min-width: var(--wch);
-    max-width: var(--wch);
-    flex: 0 0 var(--wch);
-  }
-  .sqte-form {
-    --chpx: 16px;
-    --from-slot-w: calc(20 * var(--chpx));
-  }
-  .w-7ch {
-    --wch: calc(16 * var(--chpx));
-  }
-  .w-8ch {
-    --wch: calc(18 * var(--chpx));
-  }
-  .w-10ch {
-    --wch: calc(20 * var(--chpx));
-  }
-  .w-16ch {
-    --wch: calc(24 * var(--chpx));
-  }
-  .w-60ch {
-    --wch: calc(50 * var(--chpx));
-  }
-  .w-20ch {
-    --wch: calc(27 * var(--chpx));
-  }
-  /* 按鈕尺寸 */
-  .btn {
-    width: 150px;
-  }
-  /* ~的尺寸跟對齊 */
-  .sep-cell {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 24px;
-    padding-inline: 8px;
-  }
-
-  .sep {
-    line-height: 1;
-    display: inline-block;
-    font-size: 1.25rem;
-  }
-  .col4-min {
-    min-width: 432px;
-    flex: 1 1 432px;
-  }
-  .title-text {
-    width: 120px;
-  }
-  @media (max-width: 1469.98px) {
-    .stack-1470 {
-      flex: 0 0 100% !important;
-      max-width: 100% !important;
-    }
-    .sep-1470 {
-    }
-  }
-  @media (max-width: 1787.98px) {
-    .stack-1787 {
-      flex: 0 0 100% !important;
-      max-width: 100% !important;
-      width: 100% !important;
-      min-width: 0 !important;
-    }
-  }
-</style>
