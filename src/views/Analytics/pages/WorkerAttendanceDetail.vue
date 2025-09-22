@@ -128,36 +128,34 @@
       </v-col>
     </v-row>
   </c-bread>
-  <v-card color="#1b2b36" rounded="lg" class="mt-4 sqte-form" elevation="2">
-    <v-card-text class="pa-6">
+  <v-card color="#1b2b36" rounded="3">
+    <v-card-text>
       <!-- 報表類別 -->
-      <v-row align="center">
-        <v-col cols="11">
-          <v-row>
-            <v-col cols="6" class="u-wch w-20ch">
-              <c-select
-                v-model="formData.projectSelection"
-                label="報表內容"
-                :items="printType.list"
-                :item-title="printType.title"
-                :item-value="printType.value"
-                hide-search
-                class="sheet"
-              />
-            </v-col>
-          </v-row>
+      <v-row :align="'center'" dense>
+        <v-col cols="auto">
+          <c-select
+            v-model="formData.projectSelection"
+            label="報表內容"
+            :items="printType.list"
+            :item-title="printType.title"
+            :item-value="printType.value"
+            hide-search
+            width="300"
+          />
         </v-col>
       </v-row>
       <!-- 日期 -->
-      <DateRange
-        v-model:from="formData.date1_s"
-        v-model:to="formData.date1_e"
-        labelFrom="開始日期"
-        labelTo="結束日期"
-        dense
-      />
+      <v-row class="mt-2" :align="'center'">
+        <DateRange
+          v-model:from="formData.date1_s"
+          v-model:to="formData.date1_e"
+          labelFrom="開始日期"
+          labelTo="結束日期"
+          dense
+        />
+      </v-row>
       <!-- 人員區間 -->
-      <v-row align="center">
+      <v-row class="mt-2" :align="'center'">
         <v-col cols="auto">
           <EmpStart v-model="formData.empno_e" />
         </v-col>
@@ -172,7 +170,7 @@
         </v-col>
       </v-row>
       <!-- 註腳區間 -->
-      <v-row align="center">
+      <v-row class="mt-2" :align="'center'">
         <v-col cols="auto">
           <FeetNoDDL
             v-model="formData.footNote"
@@ -186,12 +184,3 @@
     </v-card-text>
   </v-card>
 </template>
-
-<style scoped>
-  .sheet {
-    width: 300px;
-  }
-  .fixed {
-    width: 343px;
-  }
-</style>

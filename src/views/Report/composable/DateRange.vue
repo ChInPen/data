@@ -83,35 +83,39 @@
 </script>
 
 <template>
-  <v-row align="center" v-bind="$attrs">
-    <v-col
-      cols="auto"
-      class="w-by-var"
-      :style="props.fromWidth ? { '--w': props.fromWidth } : null"
-    >
-      <c-input
-        type="date"
-        :label="labelFrom"
-        :density="dense ? 'compact' : undefined"
-        :disabled="disabled"
-        v-model="beginProxy"
-        class="pad"
-      />
-    </v-col>
-    <v-col cols="auto" class="text-center d-none d-md-block">
-      <span class="text-h5 text-grey-lighten-1">～</span>
-    </v-col>
-    <v-col cols="auto" class="w-by-var" :style="props.toWidth ? { '--w': props.toWidth } : null">
-      <c-input
-        type="date"
-        :label="labelTo"
-        :density="dense ? 'compact' : undefined"
-        :disabled="disabled"
-        v-model="endProxy"
-        class="pad-end"
-      />
-    </v-col>
-  </v-row>
+  <v-col cols="auto">
+    <v-row>
+      <v-col>
+        <c-input
+          type="date"
+          :label="labelFrom"
+          :density="dense ? 'compact' : undefined"
+          :disabled="disabled"
+          v-model="beginProxy"
+          class="pad"
+        />
+      </v-col>
+    </v-row>
+  </v-col>
+
+  <v-col cols="auto" class="text-center d-none d-md-block">
+    <span class="text-h5 text-grey-lighten-1">～</span>
+  </v-col>
+
+  <v-col cols="auto">
+    <v-row>
+      <v-col>
+        <c-input
+          type="date"
+          :label="labelTo"
+          :density="dense ? 'compact' : undefined"
+          :disabled="disabled"
+          v-model="endProxy"
+          class="pad-end"
+        />
+      </v-col>
+    </v-row>
+  </v-col>
 </template>
 
 <style scoped>

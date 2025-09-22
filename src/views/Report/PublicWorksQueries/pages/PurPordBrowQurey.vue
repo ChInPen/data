@@ -1,25 +1,30 @@
 <script lang="ts" setup>
   import { computed, ref, watch } from 'vue'
-  import { cButton, cInput, cBread, cSelect } from '@/components/Common' // 共用元件
-  import type { SearchData } from '../../shared/types/SearchDataType'
-  import { searchSupp } from '@/components/SearchSupp' // 廠商彈窗元件查詢
-  import { searchItem } from '@/components/SearchItem' // 工料彈窗元件查詢
-  import { searchProt } from '@/components/SearchProt' // 工程彈窗元件查詢
-  import { searchPurPords } from '@/components/SearchPurPord' // 工程彈窗元件查詢
-  import MultiItem from '../../../../components/MultiItem/MultiItem.vue' // 工料彈窗(多選)
-  import MultiProt from '../../../../components/MultiProt/MultiProt.vue' // 工程彈窗(多選)
-  import MultiSupp from '../../../../components/MultiSupp/MultiSupp.vue' // 廠商編號彈窗(多選)
+  import { cButton, cInput, cBread, cSelect, cDivider } from '@/components/Common' // 共用元件
   import { callApi } from '@/utils/uapi' // 呼叫api的方法
   import api from '@/api' // api清單
   import config from '@/config/config'
-  import { useSearchSupp } from '@/store/searchSupp'
-  const storeSupp = useSearchSupp()
-  import { useSearchItem } from '@/store/searchItem'
-  const storeItem = useSearchItem()
-  import { useSearchProt } from '@/store/searchProt'
-  const storeProt = useSearchProt()
-  import { useSearchPurPord } from '@/store/searchPurPords'
-  const storePurPord = useSearchPurPord()
+  import { PickPurPords } from '@/components/PickPurPord'
+  import { usePickPurPord } from '@/store/searchPurPords'
+  const storePurPord = usePickPurPord()
+  // 訊息
+  import { message } from '@/components/Message/service'
+  // 日期區間
+  import DateRange from '@/views/Report/composable/DateRange.vue'
+  // 註腳
+  import FeetNoDDL from '@/views/Analytics/composable/FeetNoDDL.vue'
+  // 廠商區間
+  import SuppStart from '@/views/Analytics/composable/Supp/SuppStart.vue'
+  import SuppEnd from '@/views/Analytics/composable/Supp/SuppEnd.vue'
+  import SuppMultiBut from '@/views/Analytics/composable/Supp/SuppMultiBut.vue'
+  // 工料區間
+  import ItemStart from '@/views/Analytics/composable/Item/ItemStart.vue'
+  import ItemEnd from '@/views/Analytics/composable/Item/ItemEnd.vue'
+  import ItemMultiBut from '@/views/Analytics/composable/Item/ItemMultiBut.vue'
+  // 工程區間
+  import ProtStart from '@/views/Analytics/composable/Prot/ProtStart.vue'
+  import ProtEnd from '@/views/Analytics/composable/Prot/ProtEnd.vue'
+  import ProtMultiBut from '@/views/Analytics/composable/Prot/ProtMultiBut.vue'
   // 表單/列印/EXCEL
   const formData = ref({
     dates: {
@@ -44,29 +49,15 @@
     },
     pagination: {
       start: 0,
-      length: 10,
+      length: 1000000000,
       draw: 1
     },
     descrip: '',
     feetNo: '20', // 表尾註腳編號
     printType: '內定報表' //內定報表
   })
-  // 表尾註腳
-  const feetNoDDL = ref({
-    list: [
-      { feetno: '01', feetname: '第一組' },
-      { feetno: '02', feetname: '第二組' },
-      { feetno: '03', feetname: '第三組' },
-      { feetno: '04', feetname: '第四組' },
-      { feetno: '05', feetname: '第五組' },
-      { feetno: '20', feetname: '不列印' }
-    ],
-    value: 'feetno',
-    title: 'feetname'
-  })
-
   // 報表內容
-  const printType = ref({
+  const printTypeDDL = ref({
     list: [
       { value: '內定報表', title: '內定報表' },
       { value: '內定表二', title: '內定表二' }
@@ -74,186 +65,94 @@
     value: 'value',
     title: 'title'
   })
-  // 廠商單選/多選控制
-  const suppPickOpen = ref() //控制單選視窗開關
-  const MultiSuppDs = ref(false) //控制多選視窗開關
-  const isMultiSupp = ref(false) //控制是否為多選狀態
-  const selectedSupp = ref<SearchData[]>([]) //控制多選
-  const selectedSuppOne = ref({ begin: '', end: '' }) //控制單選
-  const openSuppPicker = (t: 'from' | 'to') => {
-    const toKey = t === 'from' ? 'begin' : 'end'
-    storeSupp.set(selectedSuppOne, [{ from: 'suppno', to: toKey }], {
-      open: suppPickOpen.value?.open
-    })
-  }
-  watch(
-    [() => selectedSuppOne.value.begin, () => selectedSuppOne.value.end],
-    ([val1, val2], [old1, old2]) => {
-      if (val1 !== old1) formData.value.suppNOs.begin = val1
-      if (val2 !== old2) formData.value.suppNOs.end = val2
+
+  //判斷是否進入多選模式
+  const isMulti = computed(() => (formData.value.suppNOs.limiteds?.length ?? 0) > 0)
+  const isMulti2 = computed(() => (formData.value.itemNOs.limiteds?.length ?? 0) > 0)
+  const isMulti3 = computed(() => (formData.value.protNOs.limiteds?.length ?? 0) > 0)
+  //一旦進入多選就清空單選，避免送出兩種條件
+  watch(isMulti, (on) => {
+    if (on) {
+      formData.value.suppNOs.begin = ''
+      formData.value.suppNOs.end = ''
     }
-  )
-  const onMultiSuppPicks = (rows: any[]) => {
-    selectedSupp.value = rows
-    formData.value.suppNOs.limiteds = rows.map((r) => String(r.suppno).trim()).filter(Boolean)
-    isMultiSupp.value = formData.value.suppNOs.limiteds.length > 0
-    selectedSuppOne.value.begin = ''
-    selectedSuppOne.value.end = ''
-  }
+  })
+  watch(isMulti2, (on) => {
+    if (on) {
+      formData.value.itemNOs.begin = ''
+      formData.value.itemNOs.end = ''
+    }
+  })
+  watch(isMulti3, (on) => {
+    if (on) {
+      formData.value.protNOs.begin = ''
+      formData.value.protNOs.end = ''
+    }
+  })
   // 採估單號
-  const purPordPickOpen = ref()
-  const selectPurPordOno = ref({ purPordOno: '' }) // 存單選拿到的值
+  const purPordPickOpen = ref<any>(null)
   const openPurPordPicker = () => {
-    storePurPord.set(selectPurPordOno, [{ from: 'ono', to: 'purPordOno' }], {
+    storePurPord.set(formData, [{ from: 'ono', to: 'purPordOno' }], {
       open: purPordPickOpen.value?.open
     })
-    console.log(selectPurPordOno.value)
   }
-  watch(
-    () => selectPurPordOno.value.purPordOno,
-    (val, old) => {
-      if (val !== old) formData.value.purPordOno = val
-    }
-  )
-  // 工料單選/多選控制
-  const itemPickOpen = ref()
-  const MulitItemDs = ref(false)
-  const isMultiItem = ref(false)
-  const selectedItems = ref<SearchData[]>([]) // 額外增加一個，專門給彈窗用
-  const selectedItem = ref({ begin: '', end: '' }) // 存單選拿到的值
-  const openItemPicker = (t: 'from' | 'to') => {
-    const toKey = t === 'from' ? 'begin' : 'end'
-    storeItem.set(selectedItem, [{ from: 'itemno', to: toKey }], {
-      open: itemPickOpen.value.open
-    })
+  const onPicked = (row: any) => {
+    const val = String(row?.ono ?? '').trim()
+    formData.value.purPordOno = val
   }
-  watch(
-    [() => selectedItem.value.begin, () => selectedItem.value.end],
-    ([val1, val2], [old1, old2]) => {
-      if (val1 !== old1) formData.value.itemNOs.begin = val1
-      if (val2 !== old2) formData.value.itemNOs.end = val2
-    }
-  )
-  const onMulitItemPicks = (rows: any[]) => {
-    selectedItems.value = rows // 存完整物件，方便彈窗 preselected
-    formData.value.itemNOs.limiteds = rows.map((r) => String(r.itemno).trim()).filter(Boolean)
-    isMultiItem.value = formData.value.itemNOs.limiteds.length > 0
-    selectedItem.value.begin = ''
-    selectedItem.value.end = ''
-  }
-
-  // 工程單選/多選控制
-  const projectPickOpen = ref() //控制單選視窗開關
-  const MulitProtDs = ref(false) //控制多選視窗開關
-  const isMultiProt = ref(false) //控制是否為多選狀態
-  const selectedProt = ref<SearchData[]>([]) //控制多選
-  const selectedProtOne = ref({ begin: '', end: '' }) //控制單選
-  const openProjectPicked = (t: 'from' | 'to') => {
-    const toKey = t === 'from' ? 'begin' : 'end'
-    storeProt.set(selectedProtOne, [{ from: 'protno', to: toKey }], {
-      open: projectPickOpen.value?.open
-    })
-  }
-  watch(
-    [() => selectedProtOne.value.begin, () => selectedProtOne.value.end],
-    ([val1, val2], [old1, old2]) => {
-      if (val1 !== old1) formData.value.protNOs.begin = val1
-      if (val2 !== old2) formData.value.protNOs.end = val2
-    }
-  )
-  const onMulitProtPicks = (rows: any[]) => {
-    selectedProt.value = rows
-    formData.value.protNOs.limiteds = rows.map((r) => String(r.protno).trim()).filter(Boolean)
-    isMultiProt.value = formData.value.protNOs.limiteds.length > 0
-    selectedProtOne.value.begin = ''
-    selectedProtOne.value.end = ''
-  }
-
-  // 共用過濾：只留英數，截到指定長度
-  const alnumN = (v: string, n: number, toUpper = true) => {
-    const s = String(v ?? '')
-      .normalize('NFKC')
-      .replace(/[^0-9a-z]/gi, '')
-      .slice(0, n)
-    return toUpper ? s.toUpperCase() : s
-  }
-
-  // 廠商 8 碼
-  const suppNoFromModel = computed({
-    get: () => formData.value.suppNOs.begin,
-    set: (val) => {
-      formData.value.suppNOs.begin = alnumN(val, 8)
-    }
-  })
-  const suppNoToModel = computed({
-    get: () => formData.value.suppNOs.end,
-    set: (val) => {
-      formData.value.suppNOs.end = alnumN(val, 8)
-    }
-  })
-  const purPordOnoModel = computed({
-    get: () => formData.value.purPordOno,
-    set: (val) => {
-      formData.value.purPordOno = alnumN(val, 11)
-    }
-  })
-  // 工料 20 碼
-  const itemNoFromModel = computed({
-    get: () => formData.value.itemNOs.begin,
-    set: (val) => {
-      formData.value.itemNOs.begin = alnumN(val, 20)
-    }
-  })
-  const itemNoToModel = computed({
-    get: () => formData.value.itemNOs.end,
-    set: (val) => {
-      formData.value.itemNOs.end = alnumN(val, 20)
-    }
-  })
-
-  // 工程 16 碼
-  const projectNoFromModel = computed({
-    get: () => formData.value.protNOs.begin,
-    set: (val) => {
-      formData.value.protNOs.begin = alnumN(val, 16)
-    }
-  })
-  const projectNoToModel = computed({
-    get: () => formData.value.protNOs.end,
-    set: (val) => {
-      formData.value.protNOs.end = alnumN(val, 16)
-    }
-  })
-
   // 呼叫API送出列印資料
-  const onSubmitPrint = async (t) => {
-    console.log(JSON.stringify(formData.value, null, 2))
-
-    const API = t === 'Print' ? api.PurPordBrow.Print : api.PurPordBrow.Excel
-    const res = await callApi({
-      method: 'POST',
-      url: API,
-      data: formData.value
-    })
-    console.log(res)
-
+  const loadingPrint = ref(false)
+  const loadingExcel = ref(false)
+  const onSubmitPrint = async (t: any) => {
+    if (loadingPrint.value || loadingExcel.value) return
+    if (!formData.value.dates.begin || !formData.value.dates.end) {
+      message.alert({
+        type: 'error',
+        message: '查詢日期不可為空！'
+      })
+      return
+    }
     if (t === 'Print') {
-      if (typeof res.data === 'string' && res.data.startsWith('PDF')) {
-        window.open(config.apiUri + '/' + res.data)
-      } else {
-        console.warn('沒有取得檔名', res.data)
-      }
+      loadingPrint.value = true
     } else {
-      if (typeof res === 'string' && res.startsWith('Excel')) {
-        const a = document.createElement('a')
-        a.href = config.apiUri + '/' + res
-        a.download = decodeURIComponent(res.split('/').pop())
-        document.body.appendChild(a)
-        a.click()
-        a.remove()
+      loadingExcel.value = true
+    }
+    const API = t === 'Print' ? api.PurPordBrowQurey.Print : api.PurPordBrowQurey.Excel
+    try {
+      console.log(JSON.stringify(formData.value, null, 2))
+      const res = await callApi({
+        method: 'POST',
+        url: API,
+        data: formData.value,
+        // params: {
+        //   Print_Type: PrintType.value.PrintTypeRef
+        // },
+        timeout: 120000 // 2分鐘
+      })
+      console.log('print res:', res)
+      const path = typeof res === 'string' ? res : res?.data
+      if (t === 'Print') {
+        if (typeof path === 'string' && path.startsWith('PDF')) {
+          window.open(config.apiUri + '/' + path)
+        } else {
+          console.warn('沒有取得檔名', res)
+        }
       } else {
-        console.warn('沒有取得檔名', res)
+        if (typeof path === 'string' && path.startsWith('Excel')) {
+          window.open(config.apiUri + '/' + path)
+        } else {
+          console.warn('沒有取得檔名', res)
+        }
       }
+    } catch (err) {
+      if (err.response) {
+        console.error('列印失敗:', err.response.status, err.response.data)
+      } else {
+        console.error('列印失敗:', err.message || err)
+      }
+    } finally {
+      loadingPrint.value = false
+      loadingExcel.value = false
     }
   }
 </script>
@@ -263,13 +162,31 @@
   <c-bread>
     <v-row justify="end" class="ma-0" dense>
       <v-col cols="auto">
-        <c-button kind="print" icon="fa-solid fa-print" @click="onSubmitPrint('Print')">
-          列印
+        <c-button
+          kind="print"
+          :icon="loadingPrint ? '' : 'fa-solid fa-print'"
+          @click="onSubmitPrint('Print')"
+          :disabled="loadingPrint"
+        >
+          <template v-if="loadingPrint">
+            <i class="fa-solid fa-spinner fa-spin me-2"></i>
+            列印中...
+          </template>
+          <template v-else>列印</template>
         </c-button>
       </v-col>
       <v-col cols="auto">
-        <c-button kind="create" icon="fa-solid fa-file-excel" @click="onSubmitPrint('Excel')">
-          匯出Excel
+        <c-button
+          kind="create"
+          :icon="loadingExcel ? '' : 'fa-solid fa-file-excel'"
+          @click="onSubmitPrint('Excel')"
+          :disabled="loadingExcel"
+        >
+          <template v-if="loadingExcel">
+            <i class="fa-solid fa-spinner fa-spin me-2"></i>
+            匯出中...
+          </template>
+          <template v-else>匯出Excel</template>
         </c-button>
       </v-col>
     </v-row>
@@ -277,350 +194,118 @@
 
   <!-- 查詢表單 -->
 
-  <v-card color="#1b2b36" rounded="lg" class="mt-4 sqte-form" elevation="2">
-    <v-card-text class="pa-6">
+  <v-card color="#1b2b36" rounded="3">
+    <v-card-text>
       <!-- 報表類別 -->
-      <v-row align="center" class="mb-3" dense>
-        <v-col cols="11">
-          <v-row>
-            <v-col cols="6" class="u-wch w-20ch">
-              <c-select
-                v-model="formData.printType"
-                label="報表內容"
-                :items="printType.list"
-                :item-title="printType.title"
-                :item-value="printType.value"
-                hide-search
-              />
-            </v-col>
-          </v-row>
+      <v-row :align="'center'" dense>
+        <v-col cols="auto">
+          <c-select
+            v-model="formData.printType"
+            label="報表類別"
+            :items="printTypeDDL.list"
+            :item-title="printTypeDDL.title"
+            :item-value="printTypeDDL.value"
+            hide-search
+            width="240"
+          />
         </v-col>
       </v-row>
-      <!-- 報價日期區間 -->
-      <v-row align="center" class="mb-3" dense>
-        <v-col cols="11">
-          <v-row align="center">
-            <v-col md="3" class="col4-min">
-              <v-row>
-                <v-col cols="auto" class="u-wch w-7ch">
-                  <c-input
-                    type="date"
-                    v-model="formData.dates.begin"
-                    label="開始日期"
-                    density="compact"
-                  />
-                </v-col>
-              </v-row>
-            </v-col>
-            <v-col cols="1" class="text-center d-none d-md-block">
-              <span class="text-h5 text-grey-lighten-1 sep-1470">～</span>
-            </v-col>
-            <v-col cols="auto">
-              <v-row>
-                <v-col cols="auto" class="u-wch w-7ch">
-                  <c-input
-                    type="date"
-                    v-model="formData.dates.end"
-                    label="結束日期"
-                    density="compact"
-                  />
-                </v-col>
-              </v-row>
-            </v-col>
-          </v-row>
-        </v-col>
+      <!-- 日期區間 -->
+      <v-row class="mt-2" :align="'center'">
+        <DateRange
+          v-model:from="formData.dates.begin"
+          v-model:to="formData.dates.end"
+          labelFrom="開始日期"
+          labelTo="結束日期"
+          dense
+        />
       </v-row>
-      <!-- 廠商編號區間 -->
-      <v-row align="center" class="mb-3" dense>
-        <v-col cols="11">
-          <v-row align="center">
-            <v-col md="3" class="col4-min">
-              <v-row>
-                <v-col cols="auto" class="u-wch w-8ch">
-                  <c-input
-                    v-model="suppNoFromModel"
-                    label="廠商編號"
-                    :disabled="isMultiSupp"
-                    :maxlength="8"
-                    density="compact"
-                    @button="openSuppPicker('from')"
-                    :length-auto-width="false"
-                  />
-                </v-col>
-              </v-row>
-            </v-col>
-            <v-col cols="1" class="text-center d-none d-md-block">
-              <span class="text-h5 text-grey-lighten-1 sep-1470">～</span>
-            </v-col>
-            <v-col cols="auto">
-              <v-row>
-                <v-col cols="auto" class="u-wch w-8ch">
-                  <c-input
-                    v-model="suppNoToModel"
-                    label="廠商編號"
-                    :disabled="isMultiSupp"
-                    :maxlength="8"
-                    density="compact"
-                    @button="openSuppPicker('to')"
-                    :length-auto-width="false"
-                  />
-                </v-col>
-              </v-row>
-            </v-col>
-            <v-col cols="auto" class="stack-1470">
-              <div class="btn">
-                <c-button
-                  kind="search"
-                  icon="fa-solid fa-magnifying-glass"
-                  @click="MultiSuppDs = true"
-                >
-                  多選式
-                </c-button>
-              </div>
-            </v-col>
-          </v-row>
+      <!-- 廠商區間 -->
+      <v-row class="mt-2" :align="'center'">
+        <v-col cols="auto">
+          <SuppStart v-model="formData.suppNOs.begin" :disabled="isMulti" />
+        </v-col>
+        <v-col cols="auto" class="text-center d-none d-md-block">
+          <span class="text-h5 text-grey-lighten-1">～</span>
+        </v-col>
+        <v-col cols="auto">
+          <SuppEnd v-model="formData.suppNOs.end" :disabled="isMulti" />
+        </v-col>
+        <v-col cols="auto">
+          <SuppMultiBut v-model="formData.suppNOs.limiteds" />
         </v-col>
       </v-row>
       <!-- 採估單號區間 -->
-      <v-row align="center" class="mb-3" dense>
-        <v-col cols="11">
-          <v-row align="center">
-            <v-col md="3" class="col4-min">
-              <v-row>
-                <v-col cols="auto" class="u-wch w-10ch">
-                  <c-input
-                    v-model="purPordOnoModel"
-                    label="採估單號"
-                    :maxlength="11"
-                    density="compact"
-                    @button="openPurPordPicker()"
-                    :length-auto-width="false"
-                  />
-                </v-col>
-              </v-row>
-            </v-col>
-          </v-row>
-        </v-col>
-      </v-row>
-      <!-- 工料編號區間 -->
-      <v-row align="center" class="mb-3" dense>
-        <v-col cols="11">
-          <v-row align="center">
-            <v-col md="3" class="col4-min">
-              <v-row>
-                <v-col cols="auto" class="u-wch w-20ch">
-                  <c-input
-                    v-model="itemNoFromModel"
-                    label="工料編號"
-                    :disabled="isMultiItem"
-                    :maxlength="20"
-                    density="compact"
-                    @button="openItemPicker('from')"
-                    :length-auto-width="false"
-                  />
-                </v-col>
-              </v-row>
-            </v-col>
-            <v-col cols="1" class="text-center d-none d-md-block">
-              <span class="text-h5 text-grey-lighten-1 sep-1470">～</span>
-            </v-col>
-            <v-col cols="auto">
-              <v-row>
-                <v-col cols="auto" class="u-wch w-20ch">
-                  <c-input
-                    v-model="itemNoToModel"
-                    label="工料編號"
-                    :disabled="isMultiItem"
-                    :maxlength="20"
-                    density="compact"
-                    @button="openItemPicker('to')"
-                    :length-auto-width="false"
-                  />
-                </v-col>
-              </v-row>
-            </v-col>
-            <!-- <v-col cols="auto" class="stack-1470">
-              <div class="btn">
-                <c-button
-                  kind="search"
-                  icon="fa-solid fa-magnifying-glass"
-                  @click="MulitItemDs = true"
-                >
-                  多選式
-                </c-button>
-              </div>
-            </v-col> -->
-          </v-row>
+      <v-row class="mt-2" :align="'center'">
+        <v-col cols="auto">
+          <c-input
+            v-model="formData.purPordOno"
+            label="採估單號"
+            :maxlength="11"
+            density="compact"
+            @button="openPurPordPicker()"
+            :length-auto-width="false"
+            width="300"
+          />
         </v-col>
       </v-row>
 
-      <!-- 工程編號區間 -->
-      <v-row align="center" class="mb-3" dense>
-        <v-col cols="11">
-          <v-row align="center">
-            <v-col md="3" class="col4-min">
-              <v-row>
-                <v-col cols="auto" class="u-wch w-16ch">
-                  <c-input
-                    v-model="projectNoFromModel"
-                    label="工程編號"
-                    :maxlength="16"
-                    density="compact"
-                    :disabled="isMultiProt"
-                    @button="openProjectPicked('from')"
-                    :length-auto-width="false"
-                  />
-                </v-col>
-              </v-row>
-            </v-col>
-            <v-col cols="1" class="text-center d-none d-md-block">
-              <span class="text-h5 text-grey-lighten-1 sep-1470">～</span>
-            </v-col>
-            <v-col cols="auto">
-              <v-row>
-                <v-col cols="auto" class="u-wch w-16ch">
-                  <c-input
-                    v-model="projectNoToModel"
-                    label="工程編號"
-                    :maxlength="16"
-                    density="compact"
-                    :disabled="isMultiProt"
-                    @button="openProjectPicked('to')"
-                    :length-auto-width="false"
-                  />
-                </v-col>
-              </v-row>
-            </v-col>
-            <!-- <v-col cols="auto" class="stack-1470">
-              <div class="btn">
-                <c-button
-                  kind="search"
-                  icon="fa-solid fa-magnifying-glass"
-                  @click="MulitProtDs = true"
-                >
-                  多選式
-                </c-button>
-              </div>
-            </v-col> -->
-          </v-row>
+      <!-- 工料區間 -->
+      <v-row class="mt-2" :align="'center'">
+        <v-col cols="auto">
+          <ItemStart v-model="formData.itemNOs.begin" :disabled="isMulti2" />
+        </v-col>
+        <v-col cols="auto" class="text-center d-none d-md-block">
+          <span class="text-h5 text-grey-lighten-1">～</span>
+        </v-col>
+        <v-col cols="auto">
+          <ItemEnd v-model="formData.itemNOs.end" :disabled="isMulti2" />
+        </v-col>
+        <v-col cols="auto">
+          <ItemMultiBut v-model="formData.itemNOs.limiteds" />
+        </v-col>
+      </v-row>
+      <!-- 工程區間 -->
+      <v-row class="mt-2" :align="'center'">
+        <v-col cols="auto">
+          <ProtStart v-model="formData.protNOs.begin" :disabled="isMulti3" />
+        </v-col>
+        <v-col cols="auto" class="text-center d-none d-md-block">
+          <span class="text-h5 text-grey-lighten-1">～</span>
+        </v-col>
+        <v-col cols="auto">
+          <ProtEnd v-model="formData.protNOs.end" :disabled="isMulti3" />
+        </v-col>
+        <v-col cols="auto">
+          <ProtMultiBut v-model="formData.protNOs.limiteds" />
         </v-col>
       </v-row>
       <!-- 其他欄位 -->
-      <v-row align="center" class="mb-3" dense>
-        <!-- <v-col cols="auto" class="d-flex align-center">
-          <h5 class="text-white mb-0 font-weight-medium title-text">說 明</h5>
-        </v-col> -->
-        <v-col cols="11" class="u-wch w-60ch stack-1787">
+      <!-- 說明 -->
+      <v-row class="mt-2" :align="'center'">
+        <v-col cols="auto">
           <c-input
             v-model="formData.descrip"
             label="說明"
             density="compact"
             :length-auto-width="false"
+            width="700"
           />
         </v-col>
       </v-row>
-      <v-row align="center" class="mb-3" dense>
-        <v-col cols="11">
-          <v-row>
-            <v-col cols="6" class="u-wch w-7ch">
-              <c-select
-                v-model="formData.feetNo"
-                label="單行註腳"
-                :items="feetNoDDL.list"
-                :item-title="feetNoDDL.title"
-                :item-value="feetNoDDL.value"
-                hide-search
-              />
-            </v-col>
-          </v-row>
+      <!-- 註腳區間 -->
+      <v-row class="mt-2" :align="'center'">
+        <v-col cols="auto">
+          <FeetNoDDL
+            v-model="formData.feetNo"
+            label="單行註腳"
+            :items="undefined"
+            :dense="true"
+            :hideSearch="true"
+          />
         </v-col>
       </v-row>
     </v-card-text>
   </v-card>
-
-  <!-- 彈窗元件 -->
-  <search-pur-pords ref="purPordPickOpen" @pick="storePurPord.pick" />
-  <search-supp ref="suppPickOpen" @pick="storeSupp.pick" />
-  <search-item ref="itemPickOpen" @pick="storeItem.pick" />
-  <search-prot ref="projectPickOpen" @pick="storeProt.pick" />
-  <Multi-supp v-model="MultiSuppDs" @pick="onMultiSuppPicks" :preselected="selectedSupp" />
-  <!-- <Multi-item v-model="MulitItemDs" @pick="onMulitItemPicks" :preselected="selectedItems" /> -->
-  <!-- <Multi-prot v-model="MulitProtDs" @pick="onMulitProtPicks" :preselected="selectedProt" /> -->
+  <PickPurPords ref="purPordPickOpen" @pick="onPicked" />
 </template>
-<style scoped>
-  .u-wch {
-    width: var(--wch);
-    min-width: var(--wch);
-    max-width: var(--wch);
-    flex: 0 0 var(--wch);
-  }
-  .sqte-form {
-    --chpx: 16px;
-    --from-slot-w: calc(20 * var(--chpx));
-  }
-  .w-7ch {
-    --wch: calc(16 * var(--chpx));
-  }
-  .w-8ch {
-    --wch: calc(18 * var(--chpx));
-  }
-  .w-10ch {
-    --wch: calc(20 * var(--chpx));
-  }
-  .w-16ch {
-    --wch: calc(24 * var(--chpx));
-  }
-  .w-60ch {
-    --wch: calc(50 * var(--chpx));
-  }
-  .w-20ch {
-    --wch: calc(27 * var(--chpx));
-  }
-  /* 按鈕尺寸 */
-  .btn {
-    width: 150px;
-  }
-  /* ~的尺寸跟對齊 */
-  .sep-cell {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    /* 可選固定寬，對齊更穩（不想固定就拿掉下一行） */
-    min-width: 24px;
-    padding-inline: 8px;
-  }
-
-  .sep {
-    line-height: 1;
-    display: inline-block;
-    /* 想要大一點可調整大小 */
-    font-size: 1.25rem;
-  }
-  /* < md：最小 432px，空間夠可拉寬；不夠就換行 */
-  .col4-min {
-    min-width: 432px;
-    flex: 1 1 432px;
-  }
-  .title-text {
-    width: 120px;
-  }
-  @media (max-width: 1469.98px) {
-    .stack-1470 {
-      flex: 0 0 100% !important;
-      max-width: 100% !important;
-    }
-    .sep-1470 {
-    }
-  }
-  @media (max-width: 1787.98px) {
-    .stack-1787 {
-      flex: 0 0 100% !important;
-      max-width: 100% !important;
-      /* 下面三行是關鍵：覆蓋 u-wch 的 width/min/max，否則仍是固定 w-60ch */
-      width: 100% !important;
-      min-width: 0 !important;
-      /* 視需求：若想讓它可拉伸就用 none，若只想不小於行寬也可留 100% */
-      /* max-width: none !important;  */
-    }
-  }
-</style>

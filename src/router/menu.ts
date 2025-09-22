@@ -242,15 +242,26 @@ const menu: MenuEntry[] = [
             title: '員工借支作業',
             path: 'EmpLoan',
             name: 'B05員工借支作業系統',
-            component: () => import('@/views/Document/EmpBorrow/EmpLoan.vue')
+            component: () => import('@/views/Document/OpsManufacturer/EmpLoan.vue')
           },
           {
             title: '員工借支作業',
             path: 'EmpLoanForm',
-            component: () => import('@/views/Document/EmpBorrow/EmpLoanForm.vue'),
+            component: () => import('@/views/Document/OpsManufacturer/EmpLoanForm.vue'),
             meta: { from: ['/menu/EmpLoan'] }
+          },
+          {
+            title: '員工還款作業',
+            path: 'EmpRepayLoan',
+            name: '員工還款作業系統',
+            component: () => import('@/views/Document/OpsManufacturer/EmpRepayLoan.vue')
+          },
+          {
+            title: '員工還款作業',
+            path: 'EmpRepayLoanForm',
+            component: () => import('@/views/Document/OpsManufacturer/EmpRepayLoanForm.vue'),
+            meta: { from: ['/menu/EmpRepayLoan'] }
           }
-          // { title: '員工還款作業', path: '' },
           // { title: '領料作業', path: '' },
           // { title: '採購發票修改', path: '' }
         ]
@@ -340,10 +351,9 @@ const menu: MenuEntry[] = [
           },
           {
             title: '發包估驗查詢',
-            path: 'OutsourcingValuationQurey',
+            path: 'PurEmitQuery',
             name: '發包估驗查詢',
-            component: () =>
-              import('@/views/Report/PublicWorksQueries/pages/OutsourcingValuationQurey.vue')
+            component: () => import('@/views/Report/PublicWorksQueries/pages/PurEmitQuery.vue')
           },
           // { title: '應付總表', path: '' },
           // { title: '工作日誌', path: '' },

@@ -77,10 +77,11 @@
       </v-col>
     </v-row>
   </c-bread>
-  <v-card color="#1b2b36" rounded="lg" class="mt-4 sqte-form" elevation="2">
-    <v-card-text class="pa-6">
+
+  <v-card color="#1b2b36" rounded="3">
+    <v-card-text>
       <!-- 工料區塊 -->
-      <v-row align="center">
+      <v-row :align="'center'">
         <v-col cols="auto">
           <ItemStart v-model="fromDate.begin" :disabled="isMulti" />
         </v-col>
@@ -95,7 +96,7 @@
         </v-col>
       </v-row>
       <!-- 註腳區塊 -->
-      <v-row align="center">
+      <v-row class="mt-2" :align="'center'">
         <v-col cols="auto">
           <FeetNoDDL
             v-model="fromDate.feetNo"

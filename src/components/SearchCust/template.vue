@@ -40,6 +40,8 @@
     filter1: '',
     filter2: ''
   })
+  const tbData = ref<SearchData[]>([])
+
   const filterDDL = [
     { name: 'custno', label: '業主編號' },
     { name: 'custabbr', label: '業主簡稱' },
@@ -49,7 +51,6 @@
     { name: 'con', label: '聯 絡 人' },
     { name: 'boss', label: '負 責 人' }
   ]
-  const tbData = ref<SearchData[]>([])
 
   // 查詢
   const handleSearch = async () => {

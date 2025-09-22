@@ -200,39 +200,48 @@ export default {
     UPDATE: '/api/Emborr/Emborr_EDIT',
     Delete: '/api/Emborr/Emborr_DEL'
   },
+  // 員工還款作業
+  EmpRepayLoan: {
+    Search: '/api/Emporr/Emporr_List',
+    SearchOen: '/api/Emporr/Emporr_GetSingle',
+    Add: '/api/Emporr/Emporr_ADD',
+    UPDATE: '/api/Emporr/Emporr_EDIT',
+    Delete: '/api/Emporr/Emporr_DEL'
+  },
   // 報價作業查詢
-  SqteBrow: {
+  QuotationQuery: {
     Search: '/api/SqteBrow/SqteBrow_Search',
     Print: '/api/SqteBrow/SqteBrow_Print',
     Excel: '/api/SqteBrow/SqteBrow_Excel'
   },
   // 請款作業查詢
-  Billing: {
+  BillingQuery: {
     Search: '/api/Billbrow/Billbrow_Search',
     Print: '/api/Billbrow/Billbrow_Search_Print',
     Excel: '/api/Billbrow/Billbrow_Search_Excel'
   },
   // 採購作業查詢
-  PordBrow: {
+  PordBrowQuery: {
     Search: '/api/PordBrow/PordBrow_Search',
     Print: '/api/PordBrow/PordBrow_Print',
     Excel: '/api/PordBrow/PordBrow_Excel'
   },
   // 採購估驗查詢
-  PurPordBrow: {
+  PurPordBrowQurey: {
     Search: '/api/PurPordBrow/PurPordBrow_Search',
     Print: '/api/PurPordBrow/PurPordBrow_Print',
     Excel: '/api/PurPordBrow/PurPordBrow_Excel',
     List: '/api/Purpord/PurPordlist'
   },
   // 發包作業查詢
-  Outsourcing: {
+  OutsourcingQuery: {
     Search: '/api/EmitBrow/EmitBrow_Search',
     Print: '/api/EmitBrow/EmitBrow_Print',
     Excel: '/api/EmitBrow/EmitBrow_Excel'
   },
   // 發包估驗查詢
-  OutsourcingValuation: {
+  PurEmitQuery: {
+    Searchone: '/api/Puremit/Puremit_Search',
     Search: '/api/PuremitBrow/PuremitBrow_Search',
     Print: '/api/PuremitBrow/PuremitBrow_Print',
     Excel: '/api/PuremitBrow/PuremitBrow_Excel'

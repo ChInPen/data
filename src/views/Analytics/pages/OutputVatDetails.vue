@@ -43,6 +43,16 @@
     title: 'title'
   })
 
+  //判斷是否進入多選模式
+  const isMulti = computed(() => (formData.value.custno_list?.length ?? 0) > 0)
+
+  //一旦進入多選就清空單選，避免送出兩種條件
+  watch(isMulti, (on) => {
+    if (on) {
+      formData.value.custno_s = ''
+      formData.value.custno_e = ''
+    }
+  })
   // 呼叫API送出列印資料
   const loadingPrint = ref(false)
   const loadingExcel = ref(false)
@@ -95,16 +105,6 @@
       loadingExcel.value = false
     }
   }
-  //判斷是否進入多選模式
-  const isMulti = computed(() => (formData.value.custno_list?.length ?? 0) > 0)
-
-  //一旦進入多選就清空單選，避免送出兩種條件
-  watch(isMulti, (on) => {
-    if (on) {
-      formData.value.custno_s = ''
-      formData.value.custno_e = ''
-    }
-  })
 </script>
 
 <template>
@@ -144,40 +144,34 @@
 
   <!-- 查詢表單 -->
 
-  <v-card color="#1b2b36" rounded="lg" class="mt-4 sqte-form" elevation="2">
-    <v-card-text class="pa-6">
+  <v-card color="#1b2b36" rounded="3">
+    <v-card-text>
       <!-- 報表類別 -->
-      <v-row align="center">
-        <v-col cols="11">
-          <v-row>
-            <v-col cols="6" class="u-wch w-20ch">
-              <c-select
-                v-model="formData.report_type"
-                label="報表內容"
-                :items="printTypeDDL.list"
-                :item-title="printTypeDDL.title"
-                :item-value="printTypeDDL.value"
-                hide-search
-                class="sheet"
-              />
-            </v-col>
-          </v-row>
-        </v-col>
-      </v-row>
-      <!-- 日期區間 -->
-      <v-row align="center">
+      <v-row :align="'center'" dense>
         <v-col cols="auto">
-          <DateRange
-            v-model:from="formData.date1_s"
-            v-model:to="formData.date1_e"
-            labelFrom="開始日期"
-            labelTo="結束日期"
-            dense
+          <c-select
+            v-model="formData.report_type"
+            label="報表內容"
+            :items="printTypeDDL.list"
+            :item-title="printTypeDDL.title"
+            :item-value="printTypeDDL.value"
+            hide-search
+            width="300"
           />
         </v-col>
       </v-row>
+      <!-- 日期區間 -->
+      <v-row class="mt-2" :align="'center'">
+        <DateRange
+          v-model:from="formData.date1_s"
+          v-model:to="formData.date1_e"
+          labelFrom="開始日期"
+          labelTo="結束日期"
+          dense
+        />
+      </v-row>
       <!-- 業主區間 -->
-      <v-row align="center">
+      <v-row class="mt-2" :align="'center'">
         <v-col cols="auto">
           <CustStart v-model="formData.custno_s" :disabled="isMulti" />
         </v-col>
@@ -192,7 +186,7 @@
         </v-col>
       </v-row>
       <!-- 工程區間 -->
-      <v-row align="center">
+      <v-row class="mt-2" :align="'center'">
         <v-col cols="auto">
           <ProtStart v-model="formData.protno_s" />
         </v-col>
@@ -204,8 +198,8 @@
         </v-col>
       </v-row>
       <!-- 排序區間 -->
-      <v-row align="center">
-        <v-col cols="11">
+      <v-row class="mt-2" :align="'center'">
+        <v-col cols="auto">
           <v-row>
             <v-col cols="6" class="u-wch w-7ch">
               <c-select
@@ -215,7 +209,7 @@
                 :item-title="orderNoDDL.title"
                 :item-value="orderNoDDL.value"
                 hide-search
-                class="sheet"
+                width="300"
               />
             </v-col>
           </v-row>
@@ -224,8 +218,3 @@
     </v-card-text>
   </v-card>
 </template>
-<style scoped>
-  .sheet {
-    width: 250px;
-  }
-</style>

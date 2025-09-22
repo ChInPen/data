@@ -1,32 +1,28 @@
 <script lang="ts" setup>
   import { ref, watch, nextTick } from 'vue'
   import type { PropType } from 'vue'
-  import { cInput, cSelect, cDialog, cButton, cTable } from '@/components/Common'
+  import { cInput, cDialog, cButton, cTable } from '@/components/Common'
   import { callApi } from '@/utils/uapi'
   import api from '@/api'
   import { message } from '@/components/Message/service'
   import type { PickSetting } from '@/store/create'
-  import { useSearchItem } from '@/store/searchItem'
-  const store = useSearchItem()
+  import { usePickPurEmit } from '@/store/pickPurEmit'
+  const store = usePickPurEmit()
   import type { SearchData } from './type'
 
   const model = defineModel({ default: false })
-  const formData = defineModel('form')
+  const formData2 = defineModel('form')
   const isEnter = defineModel('keyenter', { default: false })
   const props = defineProps({
     setting: Array as PropType<PickSetting<SearchData>[]>,
     row: Number,
-    searchText: String,
-    mkindno: {
-      type: Array<String | Number>,
-      default: []
-    }
+    searchText: String
   })
   const emits = defineEmits(['pick'])
 
   // store 變數設置
   const storeSet = () => {
-    if (formData.value) store.target.value = formData
+    if (formData2.value) store.target.value = formData2
     if (props.setting && props.setting.length > 0) store.pickSetting = [...props.setting]
     if (typeof props.row === 'number' && props.row >= 0) store.target.row = props.row
     if (isEnter.value) {
@@ -39,71 +35,52 @@
   const isOpen = ref(false)
 
   const filter = ref({
-    type1: 'itemno',
-    type2: 'itemname',
+    type1: 'ono',
+    type2: 'suppno',
     filter1: '',
     filter2: ''
   })
-  const filterDDL = [
-    { name: 'itemno', label: '工料編號' },
-    { name: 'itemname', label: '工料名稱' },
-    { name: 'ikindno', label: '類別編號' },
-    { name: 'ikindname', label: '類別名稱' },
-    { name: 'stkpurpc', label: '進        價' },
-    { name: 'stksalpc', label: '售        價' }
-  ]
   const tbData = ref<SearchData[]>([])
-
   // 查詢
+  const formData = ref({
+    ono: '',
+    suppno: ''
+  })
   const handleSearch = async () => {
-    if (filter.value.type1 == filter.value.type2) {
-      message.alert({
-        type: 'warning',
-        message: '查詢條件不可相同'
-      })
-      return
+    // 查詢前先清空表格
+    tbData.value = []
+    const payload = { ...formData.value }
+    if (filter.value.filter1) {
+      payload.ono = filter.value.filter1
+    } else {
+      payload.ono = ''
     }
-    const obj: Record<string, any> = {
-      itemno: '',
-      ikindno: '',
-      itemname: '',
-      mkindno: '',
-      ikindname: '',
-      stkpurpc: null,
-      stksalpc: null
+    if (filter.value.filter2) {
+      payload.suppno = filter.value.filter2
+    } else {
+      payload.suppno = ''
     }
-    obj[filter.value.type1] = ['stkpurpc', 'stksalpc'].includes(filter.value.type1)
-      ? Number(filter.value.filter1)
-      : (filter.value.filter1 ?? '')
-    obj[filter.value.type2] = ['stkpurpc', 'stksalpc'].includes(filter.value.type2)
-      ? Number(filter.value.filter2)
-      : (filter.value.filter2 ?? '')
+    console.log('payload', payload)
 
-    if (props.mkindno && props.mkindno.length > 0) {
-      //用 v-bind:mkindno 控制要查的類別
-      obj.mkindno = props.mkindno.join(',')
-    }
-    console.log('obj', obj)
-    await callApi({
-      method: 'POST',
-      url: api.Item.Item_List,
-      data: obj
-    }).then((res: any) => {
+    try {
+      const res = await callApi({
+        method: 'POST',
+        url: api.PurEmitQuery.Searchone,
+        data: payload
+      })
       if (res?.status === 200) {
-        const { _Lists } = res?.data ?? []
-        if (_Lists && Array.isArray(_Lists)) {
-          const list = _Lists as SearchData[]
-          list.sort((x, y) => x.itemno.localeCompare(y.itemno))
-          tbData.value = list
-        }
+        tbData.value = res?.data ?? []
       }
-    })
+    } catch (err) {
+      console.error('❌ 查詢失敗:', err)
+    }
   }
+
   // 清空查詢條件
   const handleClear = () => {
     filter.value = {
-      type1: 'itemno',
-      type2: 'itemname',
+      type1: 'ono',
+      type2: 'suppno',
       filter1: '',
       filter2: ''
     }
@@ -121,13 +98,13 @@
     async (newVal) => {
       if (newVal) {
         storeSet()
+        console.log('[PickPurPords] isSearch=', store.isSearch, 'searchText=', store.searchText)
         if (store.isSearch) {
           // 如果沒輸入就 return
           if (!store.searchText || !store.searchText?.trim()) {
             handleDialogClose()
             return
           }
-
           filter.value.filter1 = store.searchText
           await handleSearch()
           if (tbData.value.length == 1) {
@@ -166,7 +143,7 @@
   <c-dialog v-model="isOpen" width="1100" @afterLeave="handleDialogClose" title-divider>
     <template v-slot:title>
       <v-row dense :align="'center'">
-        <v-col>選擇工料</v-col>
+        <v-col>選擇單號</v-col>
         <v-col cols="auto">
           <c-button kind="cancel" icon="mdi-close-circle" @click="isOpen = false">關閉</c-button>
         </v-col>
@@ -177,31 +154,21 @@
         <v-row dense>
           <v-col>
             <v-row dense>
-              <v-col cols="3">
-                <c-select
-                  v-model="filter.type1"
-                  :items="filterDDL"
-                  item-title="label"
-                  item-value="name"
-                  hide-search
-                />
-              </v-col>
               <v-col>
-                <c-input v-model="filter.filter1" icon="fa-solid fa-magnifying-glass" />
+                <c-input
+                  v-model="filter.filter1"
+                  label="發估單號"
+                  icon="fa-solid fa-magnifying-glass"
+                />
               </v-col>
             </v-row>
             <v-row dense class="mt-2">
-              <v-col cols="3">
-                <c-select
-                  v-model="filter.type2"
-                  :items="filterDDL"
-                  item-title="label"
-                  item-value="name"
-                  hide-search
-                />
-              </v-col>
               <v-col>
-                <c-input v-model="filter.filter2" icon="fa-solid fa-magnifying-glass" />
+                <c-input
+                  v-model="filter.filter2"
+                  label="廠商編號"
+                  icon="fa-solid fa-magnifying-glass"
+                />
               </v-col>
             </v-row>
           </v-col>
@@ -228,15 +195,23 @@
       hover
     >
       <template v-slot:head>
-        <th class="text-center">工料編號</th>
-        <th class="text-center">工料名稱</th>
-        <th class="text-center">工料分類</th>
+        <th class="text-center">發包估驗單號</th>
+        <th class="text-center">發包估驗日期</th>
+        <th class="text-center">廠商編號</th>
+        <th class="text-center">廠商簡稱</th>
+        <th class="text-center">營業稅</th>
+        <th class="text-center">發包總額</th>
+        <th class="text-center">發包人員</th>
         <th></th>
       </template>
       <template v-slot:body="{ scope }">
-        <td class="text-center">{{ scope.itemno }}</td>
-        <td class="text-center">{{ scope.itemname }}</td>
-        <td class="text-center">{{ scope.mkindname }}</td>
+        <td class="text-center">{{ scope.ono }}</td>
+        <td class="text-center">{{ scope.date1 }}</td>
+        <td class="text-center">{{ scope.suppno }}</td>
+        <td class="text-center">{{ scope.suppabbr }}</td>
+        <td class="text-center">{{ scope.taxkindc }}</td>
+        <td class="text-center">{{ scope.amount }}</td>
+        <td class="text-center">{{ scope.empname }}</td>
         <td>
           <v-row dense justify="center">
             <v-col cols="auto">
