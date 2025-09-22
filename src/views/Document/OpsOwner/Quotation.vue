@@ -23,6 +23,7 @@
   import { useRouter } from 'vue-router'
   import { auditInfo } from '@/components/AuditInfo'
   import Filter from './Components/QuotationFilter.vue'
+  import Print from './Components/QuotationPrint.vue'
   import { searchCust } from '@/components/SearchCust'
   import { searchProt } from '@/components/SearchProt'
   import { pickPayterm } from '@/components/PickPayterm'
@@ -209,7 +210,7 @@
       if (check == '已有其他工作站修改中' || check == '單據已請款') {
         message.alert({
           type: 'error',
-          message: `${check}不可刪除,請確認`
+          message: `${check}不可修改,請確認`
         })
       } else if (check == '無此單據號碼') {
         message.alert({
@@ -1466,6 +1467,7 @@
     :itemno="protTradeItemno"
     :protno="protTradeProtno"
   />
+  <Print v-model="printDS" :no="`${formData.qno}`" />
 </template>
 
 <style scoped>

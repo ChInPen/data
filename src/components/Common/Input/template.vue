@@ -139,8 +139,14 @@
       return 70 + 12 + padding + icon + label + btn + clear
     }
     if (props.lengthAutoWidth && props.maxlength) {
-      const len = maxLength.value
-      return len * word + 12 + padding + icon + label + password + btn + clear
+      let len = maxLength.value
+      if (!(props.type === 'number' && props.format?.thousands)) {
+        return len * word + 12 + padding + icon + label + password + btn + clear
+      } else {
+        const thousandMark = len - props.maxlength
+        len = props.maxlength
+        return len * word + thousandMark * 6 + 12 + padding + icon + label + password + btn + clear
+      }
     } else {
       return undefined
     }

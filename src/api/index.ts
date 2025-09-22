@@ -165,7 +165,8 @@ export default {
   Phr: {
     UnitBrow: 'api/Phr/UnitBrow',
     PaytermsBrow: 'api/Phr/PaytermsBrow',
-    HavedateBrow: 'api/Phr/HavedateBrow'
+    HavedateBrow: 'api/Phr/HavedateBrow',
+    Comptitle: 'api/Phr/list_Comptitle'
   },
   //Upload: {
   //    UploadImage: 'api/Upload/UploadImage',

@@ -15,7 +15,8 @@ export const numeric = {
       } else if (DIGITS.includes(c)) {
         temps.push(c) //數字 0-9 都保留
         if (!hasDigit) hasDigit = true
-      } else if (hasDigit && !hasDot && c === '.') {
+      } else if (hasDigit && !hasDot && c === '.' && index < chars.length - 1) {
+        // console.log('dot', c)
         temps.push(c) //只保留一次小數點
         hasDot = true
       }
@@ -58,9 +59,9 @@ export const numeric = {
     const splitDot = str.split('.')
     if (splitDot.length === 1) return str
     if (n > 0 && splitDot[1].length > n) {
-      splitDot[1] = splitDot[1].substring(0, n - 1)
+      splitDot[1] = splitDot[1].substring(0, n)
     }
-    return splitDot[0] + splitDot[1]
+    return splitDot[0] + '.' + splitDot[1]
   }
 }
 

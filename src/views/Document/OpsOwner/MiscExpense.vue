@@ -243,7 +243,7 @@
     // 新增和修改用同個api
     callApi({
       method: 'POST',
-      url: api.Exes.Exes_Save,
+      url: api.Exes.Exes_Save + '?Action_Param=' + (store.action === 'edit' ? 'UPD' : 'ADD'),
       data: saveData()
     }).then((res: any) => {
       if (res?.status === 200) {
@@ -784,16 +784,16 @@
         header-align="center"
       >
         <template v-slot:head>
-          <th width="80">序號</th>
-          <th width="478">雜項編號</th>
-          <th width="380">雜項名稱</th>
-          <th width="402">工程編號</th>
-          <th width="362">工程簡稱</th>
-          <th width="222">數量</th>
+          <th width="68">序號</th>
+          <th width="200">雜項編號</th>
+          <th width="200">雜項名稱</th>
+          <th width="200">工程編號</th>
+          <th width="200">工程簡稱</th>
+          <th width="150">數量</th>
           <th width="152">單位</th>
-          <th width="222">單價</th>
-          <th width="233">稅額</th>
-          <th width="281">金額</th>
+          <th width="150">單價</th>
+          <th width="150">稅額</th>
+          <th width="200">金額</th>
           <th width="200">類別</th>
           <th width="259">發票號碼</th>
           <th width="629">說明</th>
@@ -806,6 +806,7 @@
               v-model="scope.itemno"
               :disabled="store.isDetail"
               :maxlength="20"
+              :length-auto-width="false"
               condensed
               @button="exesdetPickItem(index)"
               @keyEnter="detSearchItemEnter(index, scope.itemno)"
@@ -825,21 +826,29 @@
               v-model="scope.protno"
               :disabled="store.isDetail"
               :maxlength="16"
+              :length-auto-width="false"
               condensed
               @button="detSearchProtOpen(index, scope.protno)"
               @keyEnter="detSearchProtEnter(index, scope.protno)"
             />
           </td>
           <td>
-            <c-input v-model="scope.protabbr" :disabled="true" :maxlength="16" condensed />
+            <c-input
+              v-model="scope.protabbr"
+              :disabled="true"
+              :maxlength="16"
+              :length-auto-width="false"
+              condensed
+            />
           </td>
           <td>
             <c-input
               type="number"
               v-model="scope.qty"
               :disabled="store.isDetail"
-              :format="{ thousands: true }"
-              :maxlength="11"
+              :format="{ thousands: true, decimal: true, decAfterN: 3 }"
+              :maxlength="12"
+              :length-auto-width="false"
               @change="countSingleTotal(scope)"
             />
           </td>
@@ -860,7 +869,8 @@
               v-model="scope.price"
               :disabled="store.isDetail"
               :format="{ thousands: true }"
-              :maxlength="11"
+              :maxlength="12"
+              :length-auto-width="false"
               @change="countSingleTotal(scope)"
             />
           </td>
@@ -871,6 +881,7 @@
               :disabled="store.isDetail"
               :format="{ thousands: true }"
               :maxlength="12"
+              :length-auto-width="false"
               @change="countSingleTotal(scope, true)"
             />
           </td>
@@ -881,6 +892,7 @@
               :disabled="true"
               :format="{ thousands: true }"
               :maxlength="15"
+              :length-auto-width="false"
             />
           </td>
           <td>

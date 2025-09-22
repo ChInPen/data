@@ -45,6 +45,7 @@
       default: 'auto'
     }
   })
+  const emit = defineEmits(['rowselect'])
   //分頁屬性
   const currentPage = ref(1)
   const page = ref<string>(props.pageSize)
@@ -68,6 +69,7 @@
   const selectRows = ref<any[]>([])
   //行被選中時根據是否多選判斷如何加入
   const handleRowSelect = (data: any) => {
+    emit('rowselect', data)
     if (!props.multiSelect) selectRows.value = []
     if (!selectRows.value.includes(data)) selectRows.value.push(data)
   }
