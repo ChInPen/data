@@ -3,7 +3,7 @@
   import { cButton, cInput, cSelect, cDataTable, cDialog } from '@/components/Common' //共用元件
   import type { DataTableHeader } from 'vuetify'
   import { message } from '@/components/Message/service' //訊息窗元件
-  import { getHeadItemNo1, getDetItemNo1, getSecItemNo1 } from '@/utils/ucommon' //數字轉中文
+  import { getHeadItemNo1, getDetItemNo1, getSecItemNo1 } from '@/utils/uheaddetsec' //數字轉中文
 
   defineProps({
     disabled: Boolean,

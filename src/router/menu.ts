@@ -198,7 +198,18 @@ const menu: MenuEntry[] = [
             component: () => import('@/views/Document/OpsOwner/QuotationSearch.vue'),
             meta: { from: ['/menu/Quotation'] }
           },
-          // { title: '報價請款作業', path: '' },
+          {
+            title: '報價請款作業',
+            path: 'QuotationInv',
+            name: '報價請款作業',
+            component: () => import('@/views/Document/OpsOwner/QuotationInv.vue')
+          },
+          {
+            title: '報價請款作業',
+            path: 'QuotationInvSearch',
+            component: () => import('@/views/Document/OpsOwner/QuotationInvSearch.vue'),
+            meta: { from: ['/menu/QuotationInv'] }
+          },
           // { title: '工程請款明細', path: '' },
           // { title: '工程請款作業', path: '' },
           // { title: '應收工程款沖銷', path: '' },

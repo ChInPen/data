@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-  import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+  import { ref, onMounted, computed } from 'vue'
   import {
     cButton,
     cInput,
@@ -14,12 +14,12 @@
   import { message } from '@/components/Message/service' //訊息窗元件
   import { GenerateRec, deepClone } from '@/utils/ucommon'
   import { HDSno1, HDSsort } from '@/utils/uheaddetsec'
-  import { useQuotationStore } from '@/store/quotation'
+  import { getMKindno1 } from '@/utils/utransno1'
+  import { useQuotationInvStore } from '@/store/quotationinv'
   import { useRouter } from 'vue-router'
   import { auditInfo } from '@/components/AuditInfo'
-  import Filter from './Components/QuotationFilter.vue'
+  import Filter from './Components/QuotationInvFilter.vue'
   import Print from './Components/QuotationPrint.vue'
-  import { searchCust } from '@/components/SearchCust'
   import { searchProt } from '@/components/SearchProt'
   import { pickPayterm } from '@/components/PickPayterm'
   import { pickHavedate } from '@/components/PickHavedate'
@@ -28,10 +28,9 @@
   import { pickItem } from '@/components/PickItem'
   import { boms } from '@/components/Boms'
   import { projectType } from '@/components/ProjectType'
-  import protTrade from './Components/QuotationProtTrade.vue'
   import { searchItem } from '@/components/SearchItem'
 
-  const store = useQuotationStore()
+  const store = useQuotationInvStore()
   const router = useRouter()
   const formData = ref<Record<string, any>>({})
   const tabpage = ref('normal') //頁籤
@@ -39,7 +38,6 @@
   //下拉選單
   const taxkindDDL = ref<{ taxkind: string; taxkindc: string }[]>([])
   const empDDL = ref<{ empno: string; empname: string }[]>([])
-  const unitDDL = ref<{ content1: string }[]>([])
   //抓營業稅下拉選單資料
   const getTaxkindApi = async () => {
     callApi({
@@ -69,53 +67,32 @@
       }
     })
   }
-  //抓單位下拉選單資料
-  const getUnitApi = async () => {
-    callApi({
-      method: 'POST',
-      url: api.Phr.UnitBrow,
-      params: { indexValue: '' }
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const data = res?.data
-        if (data && Array.isArray(data)) {
-          unitDDL.value = data
-        }
-      }
-    })
-  }
 
   //抓單筆資料
   const getSingleData = () => {
-    if (store.index1) {
+    if (store.ono) {
       callApi({
         method: 'POST',
-        url: api.Sqte.Sqte_Data,
-        data: { index1: store.index1 }
+        url: api.Bill2.Bill2_Data,
+        data: { ono: store.ono }
       }).then((res) => {
         if (res.status === 200) {
-          const {
-            sqte_one,
-            sqtedet_chinesenum_list,
-            sqte_HeaderItem,
-            sqte_DetailItem,
-            sqte_SubSubItem
-          } = res.data
-
-          if (sqte_one) {
-            formData.value = { ...sqte_one }
+          const { header_one, body_list, bill2_HeaderItem, bill2_DetailItem, bill2_SubSubItem } =
+            res.data
+          if (header_one) {
+            formData.value = { ...header_one }
           }
-          if (sqtedet_chinesenum_list && Array.isArray(sqtedet_chinesenum_list)) {
-            sqtedetList.value = HDSno1(sqtedet_chinesenum_list, 'sec')
+          if (body_list && Array.isArray(body_list)) {
+            billdetList.value = HDSno1(body_list, 'sec')
           }
-          if (sqte_HeaderItem && Array.isArray(sqte_HeaderItem)) {
-            headItemList.value = HDSsort(HDSno1(sqte_HeaderItem, 'head'), 'head')
+          if (bill2_HeaderItem && Array.isArray(bill2_HeaderItem)) {
+            headItemList.value = HDSsort(HDSno1(bill2_HeaderItem, 'head'), 'head')
           }
-          if (sqte_DetailItem && Array.isArray(sqte_DetailItem)) {
-            detItemList.value = HDSsort(HDSno1(sqte_DetailItem, 'det'), 'det')
+          if (bill2_DetailItem && Array.isArray(bill2_DetailItem)) {
+            detItemList.value = HDSsort(HDSno1(bill2_DetailItem, 'det'), 'det')
           }
-          if (sqte_SubSubItem && Array.isArray(sqte_SubSubItem)) {
-            secItemList.value = HDSsort(HDSno1(sqte_SubSubItem, 'sec'), 'sec')
+          if (bill2_SubSubItem && Array.isArray(bill2_SubSubItem)) {
+            secItemList.value = HDSsort(HDSno1(bill2_SubSubItem, 'sec'), 'sec')
           }
         }
       })
@@ -131,7 +108,7 @@
         const data = res.data
         if (data) {
           formData.value = { ...data }
-          sqtedetList.value = []
+          billdetList.value = []
           headItemList.value = []
           detItemList.value = []
           secItemList.value = []
@@ -139,13 +116,7 @@
       }
     })
   }
-  /*
-  檢查鎖定
-  在編輯或刪除前先檢查當前單據是否有其他人再編輯中
-  或單據狀態是不可再被異動的
-  flag為1代表要鎖定:當我們要做編輯和刪除前，檢查後會順便鎖定
-  flag為0代表要解鎖:當我們取消刪除或取消編輯要記得解鎖
-  */
+  //檢查鎖定
   const checkExecApi = async (flag: 1 | 0) => {
     const qno = formData.value.qno
     const res = await callApi({
@@ -161,8 +132,6 @@
   }
 
   //首筆/上一筆/下一筆/尾筆
-  //store 已經寫好對應的 function，直接用 store 做 首筆、上一筆、下一筆、尾筆的切換
-  //切換只有切換單號，所以記得還是要呼叫取得單筆資料的 api (我是用getSingleData())
   const onoChange = (type: 'first' | 'previous' | 'next' | 'last') => {
     if (['first', 'previous', 'next', 'last'].includes(type)) {
       store?.[type]?.()
@@ -170,42 +139,30 @@
     }
   }
   //新增
-  //呼叫 renew 的 api，並且用 store.create() 改變狀態
   const create = () => {
     getRenewData()
     store.create()
   }
   //編輯
-  //編輯前先用 checkExecApi 檢查能不能編輯，flag 要設為 1
   const edit = async () => {
-    if (store.index1) {
-      const check = await checkExecApi(1)
-      if (check == '已有其他工作站修改中' || check == '單據已請款') {
-        message.alert({
-          type: 'error',
-          message: `${check}不可修改,請確認`
-        })
-      } else if (check == '無此單據號碼') {
-        message.alert({
-          type: 'error',
-          message: check
-        })
-      } else if (check == '成功') {
-        store.edit()
-      }
+    if (store.ono) {
+      // const check = await checkExecApi(1)
+      // if (check == '已有其他工作站修改中' || check == '單據已請款') {
+      //   message.alert({
+      //     type: 'error',
+      //     message: `${check}不可修改,請確認`
+      //   })
+      // } else if (check == '無此單據號碼') {
+      //   message.alert({
+      //     type: 'error',
+      //     message: check
+      //   })
+      // } else if (check == '成功') {
+      store.edit()
+      // }
     }
   }
-  //複製
-  //要將 key 值清空
-  const copy = () => {
-    formData.value.qno = ''
-    formData.value.index1 = ''
-    store.copy()
-  }
   //刪除
-  //刪除前先用 checkExecApi 檢查能不能刪除，flag 要設為 1
-  //檢查後如果能刪除，彈出 message 窗詢再度確認要不要刪除
-  //如果使用者取消刪除，要再用 checkExecApi 取消鎖定(flag 要設為 0)
   const del = async () => {
     if (store.index1) {
       const check = await checkExecApi(1)
@@ -266,7 +223,6 @@
     }
   }
   //放棄
-  //如果是從編輯狀態按下放棄，要用 checkExecApi 取消鎖定(flag 要設為 0)
   const cancel = () => {
     if (store.action === 'edit') {
       checkExecApi(0) //解除鎖定
@@ -331,20 +287,20 @@
       }
     }
     //明細
-    sqtedetList.value.forEach((item, i) => {
-      for (const key in item) {
-        if (key !== 'listBom') {
-          formdata.append(`_sqtedet[${i}].${key}`, item[key])
-        } else {
-          const listBom = item['listBom'] as any[]
-          listBom.forEach((bom, j) => {
-            for (const bomkey in bom) {
-              formdata.append(`_sqtedet[${i}].listBom[${j}].${bomkey}`, bom[bomkey])
-            }
-          })
-        }
-      }
-    })
+    // sqtedetList.value.forEach((item, i) => {
+    //   for (const key in item) {
+    //     if (key !== 'listBom') {
+    //       formdata.append(`_sqtedet[${i}].${key}`, item[key])
+    //     } else {
+    //       const listBom = item['listBom'] as any[]
+    //       listBom.forEach((bom, j) => {
+    //         for (const bomkey in bom) {
+    //           formdata.append(`_sqtedet[${i}].listBom[${j}].${bomkey}`, bom[bomkey])
+    //         }
+    //       })
+    //     }
+    //   }
+    // })
     headItemList.value.forEach((item, i) => {
       for (const key in item) {
         formdata.append(`_HeaderItems[${i}].${key}`, item[key])
@@ -434,31 +390,20 @@
   }
 
   //表身表格
-  const sqtedetList = ref<(typeof sqtedetEmpty)[]>([])
-  const sqtedetTable = ref()
-  const sqtedetEmpty = {
+  const billdetList = ref<(typeof billdetEmpty)[]>([])
+  const billdetEmpty = {
     listBom: [],
-    sysname1: '',
+    ono: '',
     rec1: '',
-    headitemno: '',
-    headitemno1: '',
-    headitem: '',
-    detitemno: '',
-    detitemno1: '',
-    detitem: '',
-    secitemno: '',
-    secitemno1: '',
-    secitem: '',
     itemno: '',
     itemname: '',
     qty: 0,
     unit: '',
     price: 0,
     taxprice: 0,
-    ntotal1: 0,
     total1: 0,
+    ntotal1: 0,
     mkindno: '',
-    mkindno1: '',
     descrip: '',
     pjt1: '',
     pjt2: '',
@@ -470,95 +415,95 @@
     pjt8: '',
     pjt9: '',
     pjt10: '',
-    sqtedetud1: '',
-    sqtedetud2: '',
-    sqtedetud3: 0,
-    sqtedetud: '',
-    delidate1: null,
-    delidate2: null
+    phase: '',
+    details: '',
+    bdate1: '',
+    billfiud1: '',
+    sysname1: '',
+    billdetmo1: '',
+    billdetmo2: '',
+    billdetmo3: 0,
+    rec1_sys: '',
+    headitem: '',
+    detitem: '',
+    secitem: '',
+    headitemno: '',
+    detitemno: '',
+    secitemno: '',
+    headitemno1: '',
+    detitemno1: '',
+    secitemno1: ''
   }
-  //表身表格-新增
-  const sqtedetAdd = () => {
-    pickItemRow.value = undefined
-    pickItemMode.value = 'add'
-    pickItemDS.value = true
-  }
-  //表身表格-插入
-  const sqtedetIns = () => {
-    const selectIndex = sqtedetTable.value?.selectIndex?.[0]
-    if (typeof selectIndex === 'number' && selectIndex >= 0) {
-      sqtedetList.value.splice(selectIndex, 0, { ...sqtedetEmpty })
-    }
-    GenerateRec(sqtedetList.value, 'rec1', 4)
-  }
+  const billdetTable = ref()
+  // const sqtedetList = ref<(typeof sqtedetEmpty)[]>([])
+  // const sqtedetTable = ref()
+  // const sqtedetEmpty = {
+  //   listBom: [],
+  //   sysname1: '',
+  //   rec1: '',
+  //   headitemno: '',
+  //   headitemno1: '',
+  //   headitem: '',
+  //   detitemno: '',
+  //   detitemno1: '',
+  //   detitem: '',
+  //   secitemno: '',
+  //   secitemno1: '',
+  //   secitem: '',
+  //   itemno: '',
+  //   itemname: '',
+  //   qty: 0,
+  //   unit: '',
+  //   price: 0,
+  //   taxprice: 0,
+  //   ntotal1: 0,
+  //   total1: 0,
+  //   mkindno: '',
+  //   mkindno1: '',
+  //   descrip: '',
+  //   pjt1: '',
+  //   pjt2: '',
+  //   pjt3: '',
+  //   pjt4: '',
+  //   pjt5: '',
+  //   pjt6: '',
+  //   pjt7: '',
+  //   pjt8: '',
+  //   pjt9: '',
+  //   pjt10: '',
+  //   sqtedetud1: '',
+  //   sqtedetud2: '',
+  //   sqtedetud3: 0,
+  //   sqtedetud: '',
+  //   delidate1: null,
+  //   delidate2: null
+  // }
   //表身表格-刪除
-  const sqtedetDel = () => {
-    const selectIndex = sqtedetTable.value?.selectIndex?.[0]
+  const billdetDel = () => {
+    const selectIndex = billdetTable.value?.selectIndex?.[0]
     if (typeof selectIndex === 'number' && selectIndex >= 0) {
-      sqtedetList.value.splice(selectIndex, 1)
+      billdetList.value.splice(selectIndex, 1)
     }
-    GenerateRec(sqtedetList.value, 'rec1', 4)
+    GenerateRec(billdetList.value)
     countSum()
   }
   //表身表格-單價分析
-  const sqtedetBom = () => {
-    const selectIndex = sqtedetTable.value?.selectIndex?.[0]
-    if (typeof selectIndex === 'number' && selectIndex >= 0) {
-      const bom = sqtedetList.value[selectIndex].listBom
-      if (Array.isArray(bom)) {
-        selectBomsList.value = deepClone(bom)
-      }
-      bomsDS.value = true
-    }
+  const billdetBom = () => {
+    // const selectIndex = sqtedetTable.value?.selectIndex?.[0]
+    // if (typeof selectIndex === 'number' && selectIndex >= 0) {
+    //   const bom = sqtedetList.value[selectIndex].listBom
+    //   if (Array.isArray(bom)) {
+    //     selectBomsList.value = deepClone(bom)
+    //   }
+    //   bomsDS.value = true
+    // }
   }
   //表身表格-規格說明
-  const sqtedetProType = () => {
-    const selectIndex = sqtedetTable.value?.selectIndex?.[0]
-    if (typeof selectIndex === 'number' && selectIndex >= 0) {
-      pjtDS.value = true
-    }
-  }
-  //表身表格-工料 button
-  const sqtedetPickItem = (row: number) => {
-    if (typeof row === 'number' && row >= 0) {
-      pickItemRow.value = row
-      pickItemMode.value = 'insert'
-      pickItemDS.value = true
-    }
-  }
-  //表身表格-查詢工料彈窗
-  const searcItemDS = ref(false)
-  const detKeyenterItem = ref(false)
-  const detSearchItemRow = ref()
-  const detSearchItemText = ref('')
-  const detSearchItemEnter = (row: number, text: string) => {
-    detSearchItemRow.value = row
-    detSearchItemText.value = text
-    detKeyenterItem.value = true
-    searcItemDS.value = true
-  }
-  //表身表格-工程交易彈窗
-  const protTradeDS = ref(false)
-  const protTradeTitle = ref('該工程交易')
-  const protTradeItemno = ref('')
-  const protTradeProtno = ref('')
-  const protTradeCurrent = () => {
-    const selectIndex = sqtedetTable.value?.selectIndex?.[0]
-    if (typeof selectIndex === 'number' && selectIndex >= 0) {
-      protTradeTitle.value = '該工程交易'
-      protTradeItemno.value = sqtedetList.value[selectIndex].itemno
-      protTradeProtno.value = formData.value.protno
-      protTradeDS.value = true
-    }
-  }
-  const protTradeAll = () => {
-    const selectIndex = sqtedetTable.value?.selectIndex?.[0]
-    if (typeof selectIndex === 'number' && selectIndex >= 0) {
-      protTradeTitle.value = '所有工程交易'
-      protTradeItemno.value = sqtedetList.value[selectIndex].itemno
-      protTradeProtno.value = ''
-      protTradeDS.value = true
-    }
+  const billdetProType = () => {
+    // const selectIndex = sqtedetTable.value?.selectIndex?.[0]
+    // if (typeof selectIndex === 'number' && selectIndex >= 0) {
+    //   pjtDS.value = true
+    // }
   }
 
   //勾選工料彈窗
@@ -566,7 +511,7 @@
   const pickItemRow = ref()
   const pickItemMode = ref()
   const sqtedetItemPick = () => {
-    sqtedetList.value.sort((a: any, b: any) => {
+    billdetList.value.sort((a: any, b: any) => {
       const trans = (val: any) => (Number.isNaN(val) ? 0 : Number(val))
       return (
         trans(a.headitemno) - trans(b.headitemno) ||
@@ -574,7 +519,7 @@
         trans(a.secitemno) - trans(b.secitemno)
       )
     })
-    GenerateRec(sqtedetList.value, 'rec1', 4)
+    GenerateRec(billdetList.value)
     countTotal()
   }
 
@@ -586,7 +531,7 @@
   const secItemList = ref<iSecItem[]>([])
 
   //算 稅額 & 金額
-  const taxRule = (det: typeof sqtedetEmpty, isTotal: boolean = false) => {
+  const taxRule = (det: typeof billdetEmpty, isTotal: boolean = false) => {
     const taxrate = (formData.value.taxrate ?? 5) * 0.01
     const taxkind = formData.value.taxkind
     const qty = Number(det.qty) || 0
@@ -619,89 +564,62 @@
     }
   }
   const countTotal = () => {
-    sqtedetList.value.forEach((det) => {
-      taxRule(det)
-    })
-    countSum()
+    // sqtedetList.value.forEach((det) => {
+    //   taxRule(det)
+    // })
+    // countSum()
   }
-  const countSingleTotal = (det: typeof sqtedetEmpty, isTotal: boolean = false) => {
+  const countSingleTotal = (det: typeof billdetEmpty, isTotal: boolean = false) => {
     taxRule(det, isTotal)
     countSum()
   }
   // 算 稅前合計、營業稅額、報價總額
   const countSum = (useTax?: number) => {
-    const taxrate = (formData.value.taxrate ?? 5) * 0.01
-    const taxkind = formData.value.taxkind
-    let sum1 = 0,
-      tax = 0,
-      amount = 0
-    if (taxkind === '1') {
-      //稅前合計
-      sum1 = sqtedetList.value.reduce((sum, item) => sum + Number(item.total1), 0)
-      //營業稅額
-      tax = useTax || Math.round(sum1 * taxrate)
-      //報價總額
-      amount = Number(sum1) + Number(tax)
-    } else if (taxkind === '2') {
-      //報價總額
-      amount = sqtedetList.value.reduce(
-        (sum, item) => sum + Number(item.qty) * Number(item.price),
-        0
-      )
-      //營業稅額
-      tax = useTax || Math.round((amount / (1 + taxrate)) * taxrate)
-      //稅前合計
-      sum1 = Number(amount) - Number(tax)
-    } else if (['3', '4', '5'].includes(taxkind)) {
-      //稅前合計
-      sum1 = sqtedetList.value.reduce((sum, item) => sum + Number(item.total1), 0)
-      //營業稅額
-      tax = useTax || 0
-      //報價總額
-      amount = Number(sum1) + Number(tax)
-    }
-    formData.value = { ...formData.value, sum1, tax, amount }
+    // const taxrate = (formData.value.taxrate ?? 5) * 0.01
+    // const taxkind = formData.value.taxkind
+    // let sum1 = 0,
+    //   tax = 0,
+    //   amount = 0
+    // if (taxkind === '1') {
+    //   //稅前合計
+    //   sum1 = sqtedetList.value.reduce((sum, item) => sum + Number(item.total1), 0)
+    //   //營業稅額
+    //   tax = useTax || Math.round(sum1 * taxrate)
+    //   //報價總額
+    //   amount = Number(sum1) + Number(tax)
+    // } else if (taxkind === '2') {
+    //   //報價總額
+    //   amount = sqtedetList.value.reduce(
+    //     (sum, item) => sum + Number(item.qty) * Number(item.price),
+    //     0
+    //   )
+    //   //營業稅額
+    //   tax = useTax || Math.round((amount / (1 + taxrate)) * taxrate)
+    //   //稅前合計
+    //   sum1 = Number(amount) - Number(tax)
+    // } else if (['3', '4', '5'].includes(taxkind)) {
+    //   //稅前合計
+    //   sum1 = sqtedetList.value.reduce((sum, item) => sum + Number(item.total1), 0)
+    //   //營業稅額
+    //   tax = useTax || 0
+    //   //報價總額
+    //   amount = Number(sum1) + Number(tax)
+    // }
+    // formData.value = { ...formData.value, sum1, tax, amount }
   }
 
   //查詢條件
-  const filterDS = ref(false) //彈窗開關
-  /*
-  @init="initSearch" 觸發時機是查詢條件彈窗的 onMounted()
-  因為我把 查詢api 的 function 放在查詢條件彈窗的 component
-  參數 data 是資料陣列，但有可能是 undefined，所以還是要先判斷再使用
-  */
+  const filterDS = ref(false)
   const initSearch = (data) => {
     if (Array.isArray(data)) {
-      store.init(data.map(({ index1 }) => ({ index1 })))
+      store.init(data.map(({ ono }) => ({ ono })))
     }
-    if (store.index1) getSingleData()
+    if (store.ono) getSingleData()
   }
-  /*
-  @search="handleSearch" 觸發時機是查詢條件彈窗按下查詢按鈕時
-  參數 data 是資料陣列，並且已經檢查完不會是undefined，可以直接使用
-  store.search() 可以把資料交給store，跳轉到瀏覽頁面去做顯示
-  */
   const handleSearch = (data) => {
     store.search(router, data)
   }
 
-  //查詢業主彈窗
-  const searchCustDS = ref(false)
-  const searchCustIsEnter = ref(false)
-  const searchCustOpen = () => {
-    searchCustDS.value = true
-  }
-  const searchCustKeyEnter = () => {
-    searchCustIsEnter.value = true
-    searchCustDS.value = true
-  }
-  const searchCustPick = (data) => {
-    if (data.taxkindno && data.taxkindc) {
-      formData.value.taxkind = data.taxkindno
-      formData.value.taxkindc = data.taxkindc
-      countTotal()
-    }
-  }
   //查詢工程彈窗
   const searchProtDS = ref(false)
   const searchProtIsEnter = ref(false)
@@ -722,8 +640,6 @@
 
   //選擇付款條件彈窗
   const pickPaytermDS = ref(false)
-  //選擇有限期限彈窗
-  const pickHavedateDS = ref(false)
   //選擇說明彈窗
   const pickMemoDS = ref(false)
 
@@ -742,36 +658,36 @@
   }
   const selectBomsList = ref<(typeof emptyBoms)[]>([])
   const handleBomsSave = (data: any[], _total: number) => {
-    const selectIndex = sqtedetTable.value?.selectIndex?.[0]
-    if (typeof selectIndex === 'number' && selectIndex >= 0) {
-      sqtedetList.value[selectIndex].listBom = [...data]
-    }
+    // const selectIndex = sqtedetTable.value?.selectIndex?.[0]
+    // if (typeof selectIndex === 'number' && selectIndex >= 0) {
+    //   sqtedetList.value[selectIndex].listBom = [...data]
+    // }
   }
   //規格說明彈窗
   const pjtDS = ref(false)
   const pjtItems = computed(() => {
-    const selectIndex = sqtedetTable.value?.selectIndex?.[0]
-    if (typeof selectIndex === 'number' && selectIndex >= 0) {
-      const { pjt1, pjt2, pjt3, pjt4, pjt5, pjt6, pjt7, pjt8, pjt9, pjt10 } =
-        sqtedetList.value[selectIndex]
-      return { pjt1, pjt2, pjt3, pjt4, pjt5, pjt6, pjt7, pjt8, pjt9, pjt10 }
-    }
-    return {}
+    // const selectIndex = sqtedetTable.value?.selectIndex?.[0]
+    // if (typeof selectIndex === 'number' && selectIndex >= 0) {
+    //   const { pjt1, pjt2, pjt3, pjt4, pjt5, pjt6, pjt7, pjt8, pjt9, pjt10 } =
+    //     sqtedetList.value[selectIndex]
+    //   return { pjt1, pjt2, pjt3, pjt4, pjt5, pjt6, pjt7, pjt8, pjt9, pjt10 }
+    // }
+    // return {}
   })
   const handlePJTsave = (data: iPJT) => {
-    const selectIndex = sqtedetTable.value?.selectIndex?.[0]
-    if (typeof selectIndex === 'number' && selectIndex >= 0) {
-      sqtedetList.value[selectIndex].pjt1 = data.pjt1
-      sqtedetList.value[selectIndex].pjt2 = data.pjt2
-      sqtedetList.value[selectIndex].pjt3 = data.pjt3
-      sqtedetList.value[selectIndex].pjt4 = data.pjt4
-      sqtedetList.value[selectIndex].pjt5 = data.pjt5
-      sqtedetList.value[selectIndex].pjt6 = data.pjt6
-      sqtedetList.value[selectIndex].pjt7 = data.pjt7
-      sqtedetList.value[selectIndex].pjt8 = data.pjt8
-      sqtedetList.value[selectIndex].pjt9 = data.pjt9
-      sqtedetList.value[selectIndex].pjt10 = data.pjt10
-    }
+    // const selectIndex = sqtedetTable.value?.selectIndex?.[0]
+    // if (typeof selectIndex === 'number' && selectIndex >= 0) {
+    //   sqtedetList.value[selectIndex].pjt1 = data.pjt1
+    //   sqtedetList.value[selectIndex].pjt2 = data.pjt2
+    //   sqtedetList.value[selectIndex].pjt3 = data.pjt3
+    //   sqtedetList.value[selectIndex].pjt4 = data.pjt4
+    //   sqtedetList.value[selectIndex].pjt5 = data.pjt5
+    //   sqtedetList.value[selectIndex].pjt6 = data.pjt6
+    //   sqtedetList.value[selectIndex].pjt7 = data.pjt7
+    //   sqtedetList.value[selectIndex].pjt8 = data.pjt8
+    //   sqtedetList.value[selectIndex].pjt9 = data.pjt9
+    //   sqtedetList.value[selectIndex].pjt10 = data.pjt10
+    // }
   }
 
   //列印
@@ -782,39 +698,10 @@
     }
   }
 
-  /*
-  要關閉頁面或重整前
-  判斷如果正在編輯狀態，先阻擋離開動作
-  詢問使用者是否確認離開
-  如果還是選擇離開會去觸發unload事件
-  */
-  const handleBeforeUnload = (e) => {
-    if (store.action === 'edit') {
-      e.preventDefault() // 現代瀏覽器其實可省略
-      e.returnValue = '' // 這行是必要的
-      return '' // 某些瀏覽器仍需 return 字串
-    }
-  }
-  const handleUnload = () => {
-    //目前無法成功(無法放入token)
-    // const qno = formData.value.qno
-    // if (store.action === 'edit' && qno) {
-    //   //解除鎖定
-    //   const url = api.Sqte.Sqte_ExecChk + `?flag=0&qno=${qno}`
-    //   navigator.sendBeacon(url)
-    // }
-  }
   onMounted(() => {
     //抓下拉選單
     getTaxkindApi()
     getEmpApi()
-    getUnitApi()
-
-    window.addEventListener('beforeunload', handleBeforeUnload)
-    window.addEventListener('unload', handleUnload)
-  })
-  onBeforeUnmount(() => {
-    window.removeEventListener('beforeunload', handleBeforeUnload)
   })
 </script>
 
@@ -882,9 +769,6 @@
         </c-button>
       </div>
       <div class="col-auto">
-        <c-button kind="copy" icon="fa-solid fa-copy" @click="copy">複製</c-button>
-      </div>
-      <div class="col-auto">
         <c-button kind="delete" icon="fa-solid fa-trash" @click="del">刪除</c-button>
       </div>
       <div class="col-auto">
@@ -902,8 +786,8 @@
       <v-row dense class="mt-2" :align="'center'">
         <v-col cols="auto" class="px-2">
           <c-input
-            v-model="formData.qno"
-            label="報價單號"
+            v-model="formData.ono"
+            label="請款單號"
             icon="fa-solid fa-file-lines"
             :disabled="store.keyDisabled"
             :maxlength="14"
@@ -913,21 +797,50 @@
           <c-input
             type="date"
             v-model="formData.date1"
-            label="報價日期"
+            label="請款日期"
             :is-required="true"
             :disabled="store.isDetail"
           />
         </v-col>
         <v-col cols="auto" class="px-2">
           <c-input
-            v-model="formData.custno"
-            label="業主編號"
+            type="date"
+            v-model="formData.adate1"
+            label="帳款日期"
             :is-required="true"
-            :disabled="store.isDetail || Boolean(formData.protno)"
+            :disabled="store.isDetail"
+          />
+        </v-col>
+        <v-col cols="auto" class="px-2">
+          <c-input
+            v-model="formData.qno"
+            label="報價單號"
+            icon="fa-solid fa-file-lines"
+            :disabled="store.isDetail"
+            :maxlength="14"
+          />
+        </v-col>
+        <v-responsive width="100%" />
+        <v-col cols="auto" class="px-2">
+          <c-input
+            v-model="formData.protno"
+            label="工程編號"
+            :is-required="true"
+            :disabled="store.isDetail"
             :format="{ number: true, english: true }"
-            :maxlength="10"
-            @button="searchCustOpen"
-            @keyEnter="searchCustKeyEnter"
+            :maxlength="16"
+            @button="searchProtOpen"
+            @keyEnter="searchProtKeyEnter"
+          />
+        </v-col>
+        <v-col cols="auto" class="px-2">
+          <c-input
+            v-model="formData.protabbr"
+            label="工程簡稱"
+            icon="fa-solid fa-helmet-safety"
+            :disabled="true"
+            :maxlength="16"
+            condensed
           />
         </v-col>
         <v-col cols="auto" class="px-2">
@@ -942,79 +855,20 @@
         <v-responsive width="100%" />
         <v-col cols="auto" class="px-2">
           <c-input
-            v-model="formData.protno"
-            label="工程編號"
-            icon="fa-solid fa-helmet-safety"
+            type="date"
+            v-model="formData.ecdate"
+            label="預結帳日"
+            icon="fa-solid fa-calendar-day"
             :disabled="store.isDetail"
-            :format="{ number: true, english: true }"
-            :maxlength="16"
-            @button="searchProtOpen"
-            @keyEnter="searchProtKeyEnter"
           />
         </v-col>
         <v-col cols="auto" class="px-2">
           <c-input
-            v-model="formData.protname"
-            label="工程名稱"
-            :is-required="true"
-            :disabled="store.isDetail || Boolean(formData.protno)"
-            :maxlength="50"
-            condensed
-          />
-        </v-col>
-        <v-responsive width="100%" />
-        <v-col cols="auto" class="px-2">
-          <c-input
-            type="number"
-            v-model="formData.sum1"
-            label="稅前合計"
-            icon="fa-solid fa-dollar-sign"
-            :disabled="true"
-            :format="{ thousands: true }"
-            :maxlength="12"
-          />
-        </v-col>
-        <v-col cols="auto" class="px-2">
-          <c-select
-            v-model="formData.taxkind"
-            v-model:title="formData.taxkindc"
-            label="營業稅"
-            :is-required="true"
-            :items="taxkindDDL"
-            item-title="taxkindc"
-            item-value="taxkind"
-            :item-columns="[
-              { column: 'taxkind', label: '編號' },
-              { column: 'taxkindc', label: '名稱' }
-            ]"
-            also-show-value
-            hide-search
+            type="date"
+            v-model="formData.etdate"
+            label="預收款日"
+            icon="fa-solid fa-calendar-day"
             :disabled="store.isDetail"
-            width="258"
-            @update:model-value="countTotal"
-          />
-        </v-col>
-        <v-col cols="auto" class="px-2">
-          <c-input
-            type="number"
-            v-model="formData.tax"
-            label="營業稅額"
-            icon="fa-solid fa-dollar-sign"
-            :disabled="store.isDetail"
-            :format="{ thousands: true }"
-            :maxlength="12"
-            @change="countSum(formData.tax)"
-          />
-        </v-col>
-        <v-col cols="auto" class="px-2">
-          <c-input
-            type="number"
-            v-model="formData.amount"
-            label="報價總額"
-            icon="fa-solid fa-dollar-sign"
-            :disabled="true"
-            :format="{ thousands: true }"
-            :maxlength="12"
           />
         </v-col>
       </v-row>
@@ -1035,48 +889,26 @@
         <v-tabs-window-item value="det">
           <v-row dense>
             <v-col cols="auto" v-if="!store.isDetail">
-              <c-button kind="create" icon="mdi-plus-circle" @click="sqtedetAdd">新增</c-button>
-            </v-col>
-            <v-col cols="auto" v-if="!store.isDetail">
-              <c-button kind="insert" icon="mdi-arrow-down-circle" @click="sqtedetIns">
-                插入
-              </c-button>
-            </v-col>
-            <v-col cols="auto" v-if="!store.isDetail">
-              <c-button kind="delete" icon="fa-solid fa-trash" @click="sqtedetDel">刪除</c-button>
+              <c-button kind="delete" icon="fa-solid fa-trash" @click="billdetDel">刪除</c-button>
             </v-col>
             <v-col cols="auto">
-              <c-button kind="boms" icon="fa-solid fa-search-dollar" @click="sqtedetBom">
+              <c-button kind="boms" icon="fa-solid fa-search-dollar" @click="billdetBom">
                 單價分析
               </c-button>
             </v-col>
             <v-col cols="auto">
-              <c-button kind="protype" icon="fa-solid fa-clipboard-list" @click="sqtedetProType">
+              <c-button kind="protype" icon="fa-solid fa-clipboard-list" @click="billdetProType">
                 規格說明
               </c-button>
             </v-col>
             <v-col cols="auto">
               <c-button kind="photo" icon="fa-solid fa-images">看圖</c-button>
             </v-col>
-            <v-col cols="auto">
-              <c-button
-                kind="trade"
-                icon="fa-solid fa-file-invoice-dollar"
-                @click="protTradeCurrent"
-              >
-                該工程交易
-              </c-button>
-            </v-col>
-            <v-col cols="auto">
-              <c-button kind="trade" icon="fa-solid fa-file-invoice-dollar" @click="protTradeAll">
-                所有工程交易
-              </c-button>
-            </v-col>
           </v-row>
           <c-table
             class="mt-2"
-            ref="sqtedetTable"
-            v-model="sqtedetList"
+            ref="billdetTable"
+            v-model="billdetList"
             striped="even"
             hover
             selectable
@@ -1092,11 +924,12 @@
               <th>數量</th>
               <th>單位</th>
               <th>單價</th>
-              <th>稅前售價</th>
+              <th>稅前進價</th>
               <th>稅前金額</th>
+              <th>請款金額</th>
               <th>說明</th>
               <th>類別</th>
-              <th>報價自定一</th>
+              <th>明細自定一</th>
             </template>
             <template v-slot:body="{ scope, index }">
               <td>
@@ -1112,14 +945,7 @@
                 <div class="text-center nowrap">{{ scope.secitemno1 }}</div>
               </td>
               <td>
-                <c-input
-                  v-model="scope.itemno"
-                  :disabled="store.isDetail"
-                  @button="sqtedetPickItem(index)"
-                  @keyEnter="detSearchItemEnter(index, scope.itemno)"
-                  :maxlength="20"
-                  condensed
-                />
+                <c-input v-model="scope.itemno" :disabled="true" :maxlength="20" condensed />
               </td>
               <td>
                 <c-input
@@ -1142,24 +968,14 @@
                 />
               </td>
               <td>
-                <c-select
-                  v-model="scope.unit"
-                  :items="unitDDL"
-                  item-title="content1"
-                  item-value="content1"
-                  hide-search
-                  :disabled="store.isDetail"
-                  clearable
-                  width="140"
-                />
+                <c-input v-model="scope.unit" :disabled="true" :maxlength="2" />
               </td>
               <td>
                 <c-input
                   type="number"
                   v-model="scope.price"
-                  :disabled="store.isDetail"
+                  :disabled="true"
                   :format="{ thousands: true }"
-                  @change="countSingleTotal(scope)"
                   :maxlength="10"
                 />
               </td>
@@ -1176,28 +992,36 @@
                 <c-input
                   type="number"
                   v-model="scope.total1"
-                  :disabled="store.isDetail"
+                  :disabled="true"
                   :format="{ thousands: true }"
-                  @change="countSingleTotal(scope, true)"
                   :maxlength="12"
+                />
+              </td>
+              <td>
+                <c-input
+                  type="number"
+                  v-model="scope.ntotal1"
+                  :disabled="true"
+                  :format="{ thousands: true }"
+                  :maxlength="8"
                 />
               </td>
               <td>
                 <c-input
                   v-model="scope.descrip"
                   :disabled="store.isDetail"
-                  :maxlength="20"
+                  :maxlength="40"
                   condensed
                 />
               </td>
               <td>
-                <div class="text-center w-mkindno1">{{ scope.mkindno1 }}</div>
+                <div class="text-center w-mkindno1">{{ getMKindno1(scope.mkindno) }}</div>
               </td>
               <td>
                 <c-input
-                  v-model="scope.sqtedetud1"
+                  v-model="scope.billfiud1"
                   :disabled="store.isDetail"
-                  :maxlength="20"
+                  :maxlength="40"
                   condensed
                 />
               </td>
@@ -1208,40 +1032,9 @@
           <v-row dense>
             <v-col cols="auto" class="px-2">
               <c-input
-                v-model="formData.con1"
-                label="聯絡人"
-                icon="fa-solid fa-user"
-                :disabled="store.isDetail"
-                :maxlength="10"
-              />
-            </v-col>
-            <v-col cols="auto" class="px-2">
-              <c-input
-                type="date"
-                v-model="formData.rdate1"
-                label="到期日"
-                icon="fa-solid fa-calendar-day"
-                :disabled="store.isDetail"
-              />
-            </v-col>
-            <v-col class="px-2">
-              <c-input
-                v-model="formData.payment1"
-                label="付款條件"
-                icon="fa-solid fa-money-check-alt"
-                :disabled="store.isDetail"
-                :maxlength="50"
-                :length-auto-width="false"
-                condensed
-                @button="pickPaytermDS = true"
-              />
-            </v-col>
-            <v-responsive width="100%" />
-            <v-col cols="auto" class="px-2">
-              <c-input
                 type="number"
-                v-model="formData.remretain"
-                label="保留款餘額"
+                v-model="formData.sum1"
+                label="請款合計"
                 icon="fa-solid fa-dollar-sign"
                 :disabled="true"
                 :format="{ thousands: true }"
@@ -1250,80 +1043,140 @@
             </v-col>
             <v-col cols="auto" class="px-2">
               <c-input
-                v-model="formData.sqno"
-                label="估算單號"
-                icon="fa-solid fa-file-lines"
+                type="number"
+                v-model="formData.bsrcvpay"
+                label="已收金額"
+                icon="fa-solid fa-dollar-sign"
                 :disabled="true"
-                :maxlength="16"
+                :format="{ thousands: true }"
+                :maxlength="12"
               />
             </v-col>
             <v-col cols="auto" class="px-2">
               <c-input
-                v-model="formData.valdate"
-                label="有限期限"
-                icon="fa-solid fa-calendar-day"
+                v-model="formData.invono"
+                label="發票號碼"
+                icon="fa-solid fa-file-invoice-dollar"
+                :format="{ number: true, english: true }"
                 :disabled="store.isDetail"
-                :maxlength="30"
-                condensed
-                @button="pickHavedateDS = true"
+                :maxlength="10"
               />
             </v-col>
             <v-responsive width="100%" />
             <v-col cols="auto" class="px-2">
-              <c-select-input
-                front="select"
-                v-model="formData.empno"
-                v-model:title="formData.empname"
-                label="報價人員"
-                icon="fa-solid fa-user"
-                :items="empDDL"
-                item-title="empname"
-                item-value="empno"
+              <c-select
+                v-model="formData.taxkind"
+                v-model:title="formData.taxkindc"
+                label="營業稅"
+                :is-required="true"
+                :items="taxkindDDL"
+                item-title="taxkindc"
+                item-value="taxkind"
                 :item-columns="[
-                  { column: 'empno', label: '人員編號' },
-                  { column: 'empname', label: '人員名稱' }
+                  { column: 'taxkind', label: '編號' },
+                  { column: 'taxkindc', label: '名稱' }
                 ]"
+                also-show-value
+                hide-search
                 :disabled="store.isDetail"
-                width="366"
-                :input-maxlength="16"
-                condensed
+                width="258"
+                @update:model-value="countTotal"
+              />
+            </v-col>
+            <v-col cols="auto" class="px-2">
+              <c-input
+                type="number"
+                v-model="formData.bsarpay"
+                label="應收金額"
+                icon="fa-solid fa-dollar-sign"
+                :disabled="true"
+                :format="{ thousands: true }"
+                :maxlength="12"
+              />
+            </v-col>
+            <v-col cols="auto" class="px-2">
+              <c-input
+                v-model="formData.uniform"
+                label="統一編號"
+                icon="fa-solid fa-barcode"
+                :format="{ number: true }"
+                :disabled="store.isDetail"
+                :maxlength="10"
+              />
+            </v-col>
+            <v-responsive width="100%" />
+            <v-col cols="auto" class="px-2">
+              <c-input
+                type="number"
+                v-model="formData.tax"
+                label="營業稅額"
+                icon="fa-solid fa-dollar-sign"
+                :disabled="store.isDetail"
+                :format="{ thousands: true }"
+                :maxlength="12"
+                @change="countSum(formData.tax)"
+              />
+            </v-col>
+            <v-col cols="auto" class="px-2">
+              <c-input
+                type="number"
+                v-model="formData.retain"
+                label="保留款"
+                icon="fa-solid fa-dollar-sign"
+                :disabled="store.isDetail"
+                :format="{ thousands: true }"
+                :maxlength="12"
               />
             </v-col>
             <v-col class="px-2">
               <c-input
-                v-model="formData.memo1"
-                label="說明"
-                icon="fa-solid fa-pen"
+                v-model="formData.invotitle"
+                label="發票抬頭"
+                icon="fa-solid fa-file-invoice-dollar"
                 :disabled="store.isDetail"
-                :maxlength="68"
+                :maxlength="50"
                 :length-auto-width="false"
                 condensed
-                @button="pickMemoDS = true"
               />
             </v-col>
-            <v-col cols="12" class="px-2">
+            <v-responsive width="100%" />
+            <v-col cols="auto" class="px-2">
               <c-input
-                v-model="formData.protaddr"
-                label="工程地址"
-                icon="fa-solid fa-location-dot"
-                :disabled="store.isDetail"
-                :maxlength="60"
-                condensed
+                type="number"
+                v-model="formData.amount"
+                label="請款總計"
+                icon="fa-solid fa-dollar-sign"
+                :disabled="true"
+                :format="{ thousands: true }"
+                :maxlength="12"
               />
             </v-col>
-            <v-col cols="12" class="px-2">
-              <c-textarea
-                v-model="formData.memo"
-                label="備註1"
-                icon="fa-solid fa-pencil"
+            <v-col cols="auto" class="px-2">
+              <c-input
+                type="number"
+                v-model="formData.bretain"
+                label="已收保留款"
+                icon="fa-solid fa-dollar-sign"
+                :disabled="true"
+                :format="{ thousands: true }"
+                :maxlength="12"
+              />
+            </v-col>
+            <v-col cols="auto" class="px-2">
+              <c-input
+                type="date"
+                v-model="formData.expdatE1"
+                label="保留到期日"
+                icon="fa-solid fa-calendar-day"
                 :disabled="store.isDetail"
               />
             </v-col>
-            <v-col cols="12" class="px-2">
-              <c-textarea
-                v-model="formData.memo2"
-                label="備註2"
-                icon="fa-solid fa-pencil"
+            <v-col cols="auto" class="px-2">
+              <c-input
+                type="date"
+                v-model="formData.idate1"
+                label="發票日期"
+                icon="fa-solid fa-calendar-day"
                 :disabled="store.isDetail"
               />
             </v-col>
@@ -1333,24 +1186,46 @@
           <v-row dense>
             <v-col cols="auto" class="px-2">
               <c-input
-                type="number"
-                v-model="formData.sqtememo1"
-                label="報價自定二"
+                v-model="formData.billud1"
+                label="請款自定一"
                 icon="fa-solid fa-pencil"
                 :disabled="store.isDetail"
-                :format="{ thousands: true }"
-                :maxlength="12"
+                :maxlength="20"
+                condensed
               />
             </v-col>
             <v-col class="px-2">
               <c-input
-                v-model="formData.sqtememo2"
-                label="報價自定三"
+                v-model="formData.billud2"
+                label="請款自定二"
                 icon="fa-solid fa-pencil"
                 :disabled="store.isDetail"
-                :maxlength="68"
-                :length-auto-width="false"
+                :maxlength="30"
                 condensed
+              />
+            </v-col>
+            <v-responsive width="100%" />
+            <v-col class="px-2">
+              <c-input
+                v-model="formData.payment1"
+                label="付款條件"
+                icon="fa-solid fa-money-check-alt"
+                :disabled="store.isDetail"
+                :maxlength="40"
+                condensed
+                @button="pickPaytermDS = true"
+              />
+            </v-col>
+            <v-responsive width="100%" />
+            <v-col class="px-2">
+              <c-input
+                v-model="formData.memo1"
+                label="備註"
+                icon="fa-solid fa-pen"
+                :disabled="store.isDetail"
+                :maxlength="50"
+                condensed
+                @button="pickMemoDS = true"
               />
             </v-col>
             <v-responsive width="100%" />
@@ -1382,26 +1257,11 @@
   />
 
   <Filter v-model="filterDS" @init="initSearch" @search="handleSearch" />
-  <search-cust
-    v-model="searchCustDS"
-    v-model:form="formData"
-    v-model:keyenter="searchCustIsEnter"
-    :setting="[{ from: 'custno' }, { from: 'custabbr' }, { from: 'con', to: 'con1' }]"
-    :search-text="formData.custno"
-    @pick="searchCustPick"
-  />
   <search-prot
     v-model="searchProtDS"
     v-model:form="formData"
     v-model:keyenter="searchProtIsEnter"
-    :setting="[
-      { from: 'protno' },
-      { from: 'protname' },
-      { from: 'protabbr' },
-      { from: 'protaddr' },
-      { from: 'custno' },
-      { from: 'custabbr' }
-    ]"
+    :setting="[{ from: 'protno' }, { from: 'protabbr' }, { from: 'custno' }, { from: 'custabbr' }]"
     :search-text="formData.protno"
     @pick="searchProtPick"
   />
@@ -1410,17 +1270,12 @@
     v-model:form="formData"
     :setting="[{ from: 'content1', to: 'payment1' }]"
   />
-  <pick-havedate
-    v-model="pickHavedateDS"
-    v-model:form="formData"
-    :setting="[{ from: 'content1', to: 'valdate' }]"
-  />
   <pick-memo
     v-model="pickMemoDS"
     v-model:form="formData"
     :setting="[{ from: 'content1', to: 'memo1' }]"
   />
-  <pickItem
+  <!-- <pickItem
     v-model="pickItemDS"
     v-model:form="sqtedetList"
     :setting="[
@@ -1450,7 +1305,7 @@
     :headlist="headItemList"
     :detlist="detItemList"
     :seclist="secItemList"
-  />
+  /> -->
   <boms
     v-model="bomsDS"
     :items="selectBomsList"
@@ -1458,39 +1313,18 @@
     @save="handleBomsSave"
     :disabled="store.isDetail"
   />
-  <project-type
+  <!-- <project-type
     v-model="pjtDS"
     :items="pjtItems"
     @save="handlePJTsave"
     :disabled="store.isDetail"
-  />
-  <search-item
-    v-model="searcItemDS"
-    v-model:form="sqtedetList"
-    v-model:keyenter="detKeyenterItem"
-    :setting="[
-      { from: 'itemno' },
-      { from: 'itemname' },
-      { from: 'stkunit', to: 'unit' },
-      { from: 'stksalpc', to: 'price' },
-      { from: 'mkindname', to: 'mkindno1' }
-    ]"
-    :row="detSearchItemRow"
-    :search-text="detSearchItemText"
-    @pick="sqtedetItemPick"
-  />
-  <prot-trade
-    v-model="protTradeDS"
-    :title="protTradeTitle"
-    :itemno="protTradeItemno"
-    :protno="protTradeProtno"
-  />
+  /> -->
   <Print v-model="printDS" :no="`${formData.qno}`" />
 </template>
 
 <style scoped>
   .w-rec {
-    width: 68px;
+    width: 60px;
   }
   .w-mkindno1 {
     width: 60px;
