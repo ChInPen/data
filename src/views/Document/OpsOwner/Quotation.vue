@@ -639,7 +639,7 @@
       //稅前合計
       sum1 = sqtedetList.value.reduce((sum, item) => sum + Number(item.total1), 0)
       //營業稅額
-      tax = useTax || Math.round(sum1 * taxrate)
+      tax = useTax ?? Math.round(sum1 * taxrate)
       //報價總額
       amount = Number(sum1) + Number(tax)
     } else if (taxkind === '2') {
@@ -649,9 +649,14 @@
         0
       )
       //營業稅額
-      tax = useTax || Math.round((amount / (1 + taxrate)) * taxrate)
+      tax = Math.round((amount / (1 + taxrate)) * taxrate)
       //稅前合計
       sum1 = Number(amount) - Number(tax)
+      //如果有參數 useTax，將 稅前合計加上 useTax 再回填 報價總額
+      if (typeof useTax === 'number') {
+        tax = useTax
+        amount = sum1 + tax
+      }
     } else if (['3', '4', '5'].includes(taxkind)) {
       //稅前合計
       sum1 = sqtedetList.value.reduce((sum, item) => sum + Number(item.total1), 0)

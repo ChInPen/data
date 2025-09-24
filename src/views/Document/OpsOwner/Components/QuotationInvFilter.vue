@@ -62,7 +62,7 @@
   //起始動作
   onMounted(async () => {
     let data
-    if (!['search', 'goback', 'browse'].includes(store.action)) {
+    if (!['search', 'goback'].includes(store.action)) {
       data = await searchApi()
     }
     emit('init', data)

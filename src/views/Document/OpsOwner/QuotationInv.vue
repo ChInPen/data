@@ -1,14 +1,6 @@
 <script lang="ts" setup>
   import { ref, onMounted, computed } from 'vue'
-  import {
-    cButton,
-    cInput,
-    cSelect,
-    cTable,
-    cBread,
-    cSelectInput,
-    cTextarea
-  } from '@/components/Common' //共用元件
+  import { cButton, cInput, cSelect, cTable, cBread } from '@/components/Common' //共用元件
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
   import { message } from '@/components/Message/service' //訊息窗元件
@@ -22,9 +14,9 @@
   import Print from './Components/QuotationPrint.vue'
   import { searchProt } from '@/components/SearchProt'
   import { pickPayterm } from '@/components/PickPayterm'
-  import { pickHavedate } from '@/components/PickHavedate'
   import { pickMemo } from '@/components/PickMemo'
   import { hdsItem } from '@/components/HdsItem'
+  import { pickQuoitem } from '@/components/PickQuoitem'
   import { pickItem } from '@/components/PickItem'
   import { boms } from '@/components/Boms'
   import { projectType } from '@/components/ProjectType'
@@ -435,49 +427,6 @@
     secitemno1: ''
   }
   const billdetTable = ref()
-  // const sqtedetList = ref<(typeof sqtedetEmpty)[]>([])
-  // const sqtedetTable = ref()
-  // const sqtedetEmpty = {
-  //   listBom: [],
-  //   sysname1: '',
-  //   rec1: '',
-  //   headitemno: '',
-  //   headitemno1: '',
-  //   headitem: '',
-  //   detitemno: '',
-  //   detitemno1: '',
-  //   detitem: '',
-  //   secitemno: '',
-  //   secitemno1: '',
-  //   secitem: '',
-  //   itemno: '',
-  //   itemname: '',
-  //   qty: 0,
-  //   unit: '',
-  //   price: 0,
-  //   taxprice: 0,
-  //   ntotal1: 0,
-  //   total1: 0,
-  //   mkindno: '',
-  //   mkindno1: '',
-  //   descrip: '',
-  //   pjt1: '',
-  //   pjt2: '',
-  //   pjt3: '',
-  //   pjt4: '',
-  //   pjt5: '',
-  //   pjt6: '',
-  //   pjt7: '',
-  //   pjt8: '',
-  //   pjt9: '',
-  //   pjt10: '',
-  //   sqtedetud1: '',
-  //   sqtedetud2: '',
-  //   sqtedetud3: 0,
-  //   sqtedetud: '',
-  //   delidate1: null,
-  //   delidate2: null
-  // }
   //表身表格-刪除
   const billdetDel = () => {
     const selectIndex = billdetTable.value?.selectIndex?.[0]
@@ -489,24 +438,24 @@
   }
   //表身表格-單價分析
   const billdetBom = () => {
-    // const selectIndex = sqtedetTable.value?.selectIndex?.[0]
-    // if (typeof selectIndex === 'number' && selectIndex >= 0) {
-    //   const bom = sqtedetList.value[selectIndex].listBom
-    //   if (Array.isArray(bom)) {
-    //     selectBomsList.value = deepClone(bom)
-    //   }
-    //   bomsDS.value = true
-    // }
+    const selectIndex = billdetTable.value?.selectIndex?.[0]
+    if (typeof selectIndex === 'number' && selectIndex >= 0) {
+      const bom = billdetList.value[selectIndex].listBom
+      if (Array.isArray(bom)) {
+        selectBomsList.value = deepClone(bom)
+      }
+      bomsDS.value = true
+    }
   }
   //表身表格-規格說明
   const billdetProType = () => {
-    // const selectIndex = sqtedetTable.value?.selectIndex?.[0]
-    // if (typeof selectIndex === 'number' && selectIndex >= 0) {
-    //   pjtDS.value = true
-    // }
+    const selectIndex = billdetTable.value?.selectIndex?.[0]
+    if (typeof selectIndex === 'number' && selectIndex >= 0) {
+      pjtDS.value = true
+    }
   }
 
-  //勾選工料彈窗
+  //勾選報價工料彈窗
   const pickItemDS = ref(false)
   const pickItemRow = ref()
   const pickItemMode = ref()
@@ -531,81 +480,75 @@
   const secItemList = ref<iSecItem[]>([])
 
   //算 稅額 & 金額
-  const taxRule = (det: typeof billdetEmpty, isTotal: boolean = false) => {
+  const taxRule = (det: typeof billdetEmpty) => {
     const taxrate = (formData.value.taxrate ?? 5) * 0.01
     const taxkind = formData.value.taxkind
     const qty = Number(det.qty) || 0
     const price = Number(det.price) || 0
-    const total1 = Number(det.total1) || 0
     if (['1', '3', '4', '5'].includes(taxkind)) {
-      if (!isTotal) {
-        //稅前售價
-        det.taxprice = price
-        //稅前金額
-        det.total1 = qty * price
-      } else {
-        //稅前售價
-        det.taxprice = Math.round(total1 / qty)
-        //單價
-        det.price = det.taxprice
-      }
+      //稅前進價
+      det.taxprice = price
+      //稅前金額
+      det.total1 = qty * price
+      //請款金額
+      det.ntotal1 = det.total1
     } else if (taxkind === '2') {
-      if (!isTotal) {
-        //稅前售價
-        det.taxprice = Math.round(price / (1 + taxrate))
-        //稅前金額
-        det.total1 = Math.round((price / (1 + taxrate)) * qty)
-      } else {
-        //稅前售價
-        det.taxprice = Math.round(total1 / qty)
-        //單價
-        det.price = Math.round((total1 / qty) * (1 + taxrate))
-      }
+      //稅前進價
+      det.taxprice = price
+      //稅前金額
+      det.total1 = Math.round((price / (1 + taxrate)) * qty)
+      //請款金額
+      det.ntotal1 = det.total1
     }
   }
   const countTotal = () => {
-    // sqtedetList.value.forEach((det) => {
-    //   taxRule(det)
-    // })
-    // countSum()
+    billdetList.value.forEach((det) => {
+      taxRule(det)
+    })
+    countSum()
   }
-  const countSingleTotal = (det: typeof billdetEmpty, isTotal: boolean = false) => {
-    taxRule(det, isTotal)
+  const countSingleTotal = (det: typeof billdetEmpty) => {
+    taxRule(det)
     countSum()
   }
   // 算 稅前合計、營業稅額、報價總額
   const countSum = (useTax?: number) => {
-    // const taxrate = (formData.value.taxrate ?? 5) * 0.01
-    // const taxkind = formData.value.taxkind
-    // let sum1 = 0,
-    //   tax = 0,
-    //   amount = 0
-    // if (taxkind === '1') {
-    //   //稅前合計
-    //   sum1 = sqtedetList.value.reduce((sum, item) => sum + Number(item.total1), 0)
-    //   //營業稅額
-    //   tax = useTax || Math.round(sum1 * taxrate)
-    //   //報價總額
-    //   amount = Number(sum1) + Number(tax)
-    // } else if (taxkind === '2') {
-    //   //報價總額
-    //   amount = sqtedetList.value.reduce(
-    //     (sum, item) => sum + Number(item.qty) * Number(item.price),
-    //     0
-    //   )
-    //   //營業稅額
-    //   tax = useTax || Math.round((amount / (1 + taxrate)) * taxrate)
-    //   //稅前合計
-    //   sum1 = Number(amount) - Number(tax)
-    // } else if (['3', '4', '5'].includes(taxkind)) {
-    //   //稅前合計
-    //   sum1 = sqtedetList.value.reduce((sum, item) => sum + Number(item.total1), 0)
-    //   //營業稅額
-    //   tax = useTax || 0
-    //   //報價總額
-    //   amount = Number(sum1) + Number(tax)
-    // }
-    // formData.value = { ...formData.value, sum1, tax, amount }
+    const taxrate = (formData.value.taxrate ?? 5) * 0.01
+    const taxkind = formData.value.taxkind
+    let sum1 = 0,
+      tax = 0,
+      amount = 0
+    if (taxkind === '1') {
+      //稅前合計
+      sum1 = billdetList.value.reduce((sum, item) => sum + Number(item.total1), 0)
+      //營業稅額
+      tax = useTax ?? Math.round(sum1 * taxrate)
+      //報價總額
+      amount = Number(sum1) + Number(tax)
+    } else if (taxkind === '2') {
+      //報價總額
+      amount = billdetList.value.reduce(
+        (sum, item) => sum + Number(item.qty) * Number(item.price),
+        0
+      )
+      //營業稅額
+      tax = Math.round((amount / (1 + taxrate)) * taxrate)
+      //稅前合計
+      sum1 = Number(amount) - Number(tax)
+      //如果有參數 useTax，將 稅前合計加上 useTax 再回填 報價總額
+      if (typeof useTax === 'number') {
+        tax = useTax
+        amount = sum1 + tax
+      }
+    } else if (['3', '4', '5'].includes(taxkind)) {
+      //稅前合計
+      sum1 = billdetList.value.reduce((sum, item) => sum + Number(item.total1), 0)
+      //營業稅額
+      tax = useTax || 0
+      //報價總額
+      amount = Number(sum1) + Number(tax)
+    }
+    formData.value = { ...formData.value, sum1, tax, amount }
   }
 
   //查詢條件
@@ -666,28 +609,28 @@
   //規格說明彈窗
   const pjtDS = ref(false)
   const pjtItems = computed(() => {
-    // const selectIndex = sqtedetTable.value?.selectIndex?.[0]
-    // if (typeof selectIndex === 'number' && selectIndex >= 0) {
-    //   const { pjt1, pjt2, pjt3, pjt4, pjt5, pjt6, pjt7, pjt8, pjt9, pjt10 } =
-    //     sqtedetList.value[selectIndex]
-    //   return { pjt1, pjt2, pjt3, pjt4, pjt5, pjt6, pjt7, pjt8, pjt9, pjt10 }
-    // }
-    // return {}
+    const selectIndex = billdetTable.value?.selectIndex?.[0]
+    if (typeof selectIndex === 'number' && selectIndex >= 0) {
+      const { pjt1, pjt2, pjt3, pjt4, pjt5, pjt6, pjt7, pjt8, pjt9, pjt10 } =
+        billdetList.value[selectIndex]
+      return { pjt1, pjt2, pjt3, pjt4, pjt5, pjt6, pjt7, pjt8, pjt9, pjt10 }
+    }
+    return {}
   })
   const handlePJTsave = (data: iPJT) => {
-    // const selectIndex = sqtedetTable.value?.selectIndex?.[0]
-    // if (typeof selectIndex === 'number' && selectIndex >= 0) {
-    //   sqtedetList.value[selectIndex].pjt1 = data.pjt1
-    //   sqtedetList.value[selectIndex].pjt2 = data.pjt2
-    //   sqtedetList.value[selectIndex].pjt3 = data.pjt3
-    //   sqtedetList.value[selectIndex].pjt4 = data.pjt4
-    //   sqtedetList.value[selectIndex].pjt5 = data.pjt5
-    //   sqtedetList.value[selectIndex].pjt6 = data.pjt6
-    //   sqtedetList.value[selectIndex].pjt7 = data.pjt7
-    //   sqtedetList.value[selectIndex].pjt8 = data.pjt8
-    //   sqtedetList.value[selectIndex].pjt9 = data.pjt9
-    //   sqtedetList.value[selectIndex].pjt10 = data.pjt10
-    // }
+    const selectIndex = billdetTable.value?.selectIndex?.[0]
+    if (typeof selectIndex === 'number' && selectIndex >= 0) {
+      billdetList.value[selectIndex].pjt1 = data.pjt1
+      billdetList.value[selectIndex].pjt2 = data.pjt2
+      billdetList.value[selectIndex].pjt3 = data.pjt3
+      billdetList.value[selectIndex].pjt4 = data.pjt4
+      billdetList.value[selectIndex].pjt5 = data.pjt5
+      billdetList.value[selectIndex].pjt6 = data.pjt6
+      billdetList.value[selectIndex].pjt7 = data.pjt7
+      billdetList.value[selectIndex].pjt8 = data.pjt8
+      billdetList.value[selectIndex].pjt9 = data.pjt9
+      billdetList.value[selectIndex].pjt10 = data.pjt10
+    }
   }
 
   //列印
@@ -818,6 +761,7 @@
             icon="fa-solid fa-file-lines"
             :disabled="store.isDetail"
             :maxlength="14"
+            @button="pickItemDS = true"
           />
         </v-col>
         <v-responsive width="100%" />
@@ -1001,7 +945,7 @@
                 <c-input
                   type="number"
                   v-model="scope.ntotal1"
-                  :disabled="true"
+                  :disabled="store.isDetail"
                   :format="{ thousands: true }"
                   :maxlength="8"
                 />
@@ -1275,6 +1219,7 @@
     v-model:form="formData"
     :setting="[{ from: 'content1', to: 'memo1' }]"
   />
+  <pick-quoitem v-model="pickItemDS" />
   <!-- <pickItem
     v-model="pickItemDS"
     v-model:form="sqtedetList"
@@ -1313,12 +1258,12 @@
     @save="handleBomsSave"
     :disabled="store.isDetail"
   />
-  <!-- <project-type
+  <project-type
     v-model="pjtDS"
     :items="pjtItems"
     @save="handlePJTsave"
     :disabled="store.isDetail"
-  /> -->
+  />
   <Print v-model="printDS" :no="`${formData.qno}`" />
 </template>
 
