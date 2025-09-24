@@ -17,7 +17,8 @@
   import { useRouter } from 'vue-router'
   import { auditInfo } from '@/components/AuditInfo'
   import type { DataTableHeader } from 'vuetify'
-  import { GenerateRec, deepClone, getHeadItemNo1, getDetItemNo1 } from '@/utils/ucommon'
+  import { GenerateRec, deepClone } from '@/utils/ucommon'
+  import { HDSno1, HDSsort } from '@/utils/uheaddetsec'
   import { projectType } from '@/components/ProjectType'
   import { pickIKind } from '@/components/PickIKind'
   import { usePickIKind } from '@/store/pickIKind'
@@ -279,33 +280,13 @@
       if (res?.status == 200) {
         const { headitems, detitems, secitems } = res?.data ?? {}
         if (headitems && Array.isArray(headitems)) {
-          headItemList.value = headitems
-          headItemList.value.sort((a, b) => Number(a.headitemno) - Number(b.headitemno))
+          headItemList.value = HDSsort(HDSno1(headitems, 'head'), 'head')
         }
         if (detitems && Array.isArray(detitems)) {
-          detItemList.value = detitems.map((item) => ({
-            ...item,
-            headitemno1: Number(item.headitemno) == 0 ? '' : getHeadItemNo1(Number(item.headitemno))
-          }))
-          detItemList.value.sort(
-            (a, b) =>
-              Number(a.headitemno) - Number(b.headitemno) ||
-              Number(a.detitemno) - Number(b.detitemno)
-          )
+          detItemList.value = HDSsort(HDSno1(detitems, 'det'), 'det')
         }
         if (secitems && Array.isArray(secitems)) {
-          secItemList.value = secitems.map((item) => ({
-            ...item,
-            headitemno1:
-              Number(item.headitemno) == 0 ? '' : getHeadItemNo1(Number(item.headitemno)),
-            detitemno1: Number(item.detitemno) == 0 ? '' : getDetItemNo1(Number(item.detitemno))
-          }))
-          secItemList.value.sort(
-            (a, b) =>
-              Number(a.headitemno) - Number(b.headitemno) ||
-              Number(a.detitemno) - Number(b.detitemno) ||
-              Number(a.secitemno) - Number(b.secitemno)
-          )
+          secItemList.value = HDSsort(HDSno1(secitems, 'sec'), 'sec')
         }
       }
     })

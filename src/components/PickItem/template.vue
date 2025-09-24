@@ -13,6 +13,7 @@
   import type { DataTableHeader } from 'vuetify'
   import { callApi } from '@/utils/uapi'
   import api from '@/api'
+  import { getMKindno1 } from '@/utils/utransno1'
   import type { PickSetting } from '@/store/create'
   import { usePickItem } from '@/store/pickItem'
   const store = usePickItem()
@@ -212,18 +213,7 @@
     checkList = checkList.map((x) => ({
       ...x,
       ...filterHDS.value,
-      mkindno1:
-        x.mkindno == '1'
-          ? '材料'
-          : x.mkindno == '2'
-            ? '工資'
-            : x.mkindno == '3'
-              ? '費用'
-              : x.mkindno == '4'
-                ? '外包'
-                : x.mkindno == '6'
-                  ? '雜支'
-                  : ''
+      mkindno1: getMKindno1(x.mkindno)
     }))
     store.pick(checkList)
     emits('pick', checkList)

@@ -54,7 +54,7 @@
   }
 
   onMounted(() => {
-    if (store.action === 'search' && store.list && store.list.length > 0) {
+    if (store.list && store.list.length > 0) {
       tbData.value = store.list as any[]
     }
   })
