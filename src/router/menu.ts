@@ -64,9 +64,14 @@ const menu: MenuEntry[] = [
             path: 'MaterialDataForm',
             component: () => import('@/views/Base/WorkSetting/MaterialDataForm.vue'),
             meta: { from: ['/menu/MaterialData'] }
-          }
+          },
           // { title: '採購合約', path: '' },
-          // { title: '零用金存入', path: '' },
+          {
+            title: '零用金存入',
+            path: 'PettyCashDeposit',
+            name: '零用金存入',
+            component: () => import('@/views/Base/WorkSetting/PettyCashDeposit.vue')
+          }
           // { title: '完工日期批次異動', path: '' }
         ]
       },

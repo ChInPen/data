@@ -12,6 +12,8 @@
       type: Array as PropType<string[]>,
       default: ['10', '25', '50', '100', '全部']
     },
+    columns: { type: Number, required: false },
+    showNoData: { type: Boolean, default: false },
     showIndex: {
       type: Boolean,
       default: false
@@ -157,6 +159,7 @@
     },
     handleRowSelect
   })
+  const bodyColspan = computed(() => (props.showIndex ? 1 : 0) + (props.columns ?? 1))
 </script>
 
 <template>
@@ -177,17 +180,25 @@
       </thead>
 
       <tbody v-if="$slots.body">
-        <tr
-          v-for="(item, index) in tbDataShow"
-          :key="`tb-row-${index}`"
-          @click="selectable ? handleRowSelect(index) : null"
-          :class="selectIndexs.includes(index) ? 'tr-selected' : ''"
-        >
-          <td v-show="showIndex" class="text-center">
-            {{ model.findIndex((x) => x === item) + 1 || '' }}
+        <!-- 無資料-->
+        <tr v-if="showNoData && tbDataShow.length === 0">
+          <td :colspan="bodyColspan">
+            <slot name="no-data"></slot>
           </td>
-          <slot name="body" :scope="item" :index="model.findIndex((x) => x === item)"></slot>
         </tr>
+        <template v-else-if="$slots.body && tbDataShow.length > 0">
+          <tr
+            v-for="(item, index) in tbDataShow"
+            :key="`tb-row-${index}`"
+            @click="selectable ? handleRowSelect(index) : null"
+            :class="selectIndexs.includes(index) ? 'tr-selected' : ''"
+          >
+            <td v-show="showIndex" class="text-center">
+              {{ model.findIndex((x) => x === item) + 1 || '' }}
+            </td>
+            <slot name="body" :scope="item" :index="model.findIndex((x) => x === item)"></slot>
+          </tr>
+        </template>
       </tbody>
 
       <tfoot v-if="$slots.foot">

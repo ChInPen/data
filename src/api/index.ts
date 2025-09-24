@@ -337,5 +337,11 @@ export default {
   //工地工人出勤表
   SiteWorkerAttendance: {
     Print: '/api/WorkerAttendance/WorkerAttendance_Print'
+  },
+  //零用金存入
+  PettyCashDeposit: {
+    Search: '/api/Pecash/Pecashlist',
+    Save: '/api/Pecash/Pecash_Save',
+    Data: '/api/Pecash/Pecash_Data'
   }
 }
