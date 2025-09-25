@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-  import { ref, onMounted } from 'vue'
+  import { ref } from 'vue'
   import { cButton, cBread, cDataTable } from '@/components/Common' //共用元件
   import type { DataTableHeader } from 'vuetify'
   import { useQuotationStore } from '@/store/quotation'
@@ -33,6 +33,11 @@
     { key: 'empname', title: '報價人員姓名' }
   ]
   const tableRef = ref()
+  /*
+  返回表單頁的按鈕
+  將查詢出來的清單傳進 store
+  如果有點選一筆資料，將該筆單據 key值 也傳入
+  */
   const goback = () => {
     const idx = tableRef.value?.selectIndex[0]
     const index1List = tbData.value.map(({ index1 }) => ({ index1 }))
@@ -46,18 +51,21 @@
 
   //查詢條件
   const filterDS = ref(false)
+  /*
+  @search="handleSearch" 觸發時機是查詢條件彈窗按下查詢按鈕時
+  參數 data 是查詢結果
+  */
   const handleSearch = (data: any[]) => {
     tbData.value = data
   }
+  /*
+  @init="handleInit" 觸發時機是查詢條件彈窗的 onMounted()
+  如果是透過 瀏覽按鈕 進入查詢頁，會主動查詢一次，回傳清單 data
+  如果是透過 表單頁查詢條件 進入查詢頁，會回傳查詢條件查詢後的清單 data
+  */
   const handleInit = (data: any[]) => {
     if (data && data.length > 0) tbData.value = data
   }
-
-  onMounted(() => {
-    if (store.list && store.list.length > 0) {
-      tbData.value = store.list as any[]
-    }
-  })
 </script>
 
 <template>
@@ -99,5 +107,5 @@
     </v-card-text>
   </v-card>
 
-  <Filter v-model="filterDS" @init="handleInit" @search="handleSearch" />
+  <Filter v-model="filterDS" mode="search" @init="handleInit" @search="handleSearch" />
 </template>

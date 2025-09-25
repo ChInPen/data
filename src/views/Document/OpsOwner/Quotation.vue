@@ -10,6 +10,7 @@
     cTextarea
   } from '@/components/Common' //共用元件
   import api from '@/api' //api路徑設定檔
+  import { getTaxkindDDL, getEmpDDL, getUnitDDL } from '@/api/ddl'
   import { callApi } from '@/utils/uapi' //呼叫api的方法
   import { message } from '@/components/Message/service' //訊息窗元件
   import { GenerateRec, deepClone } from '@/utils/ucommon'
@@ -31,61 +32,24 @@
   import protTrade from './Components/QuotationProtTrade.vue'
   import { searchItem } from '@/components/SearchItem'
 
+  // store 控制狀態，包含:
+  // 1.當前單據單號
+  // 2.單據清單(可供上一筆/下一筆切換)
+  // 3.新增/編輯/複製 等狀態
+  // 4.查詢條件(由 Filter 元件取得後傳進 store，再跳轉至查詢頁使用)
   const store = useQuotationStore()
   const router = useRouter()
+  // 表頭資料
   const formData = ref<Record<string, any>>({})
-  const tabpage = ref('normal') //頁籤
+  // 頁籤
+  const tabpage = ref('normal')
 
-  //下拉選單
+  // 下拉選單
   const taxkindDDL = ref<{ taxkind: string; taxkindc: string }[]>([])
   const empDDL = ref<{ empno: string; empname: string }[]>([])
   const unitDDL = ref<{ content1: string }[]>([])
-  //抓營業稅下拉選單資料
-  const getTaxkindApi = async () => {
-    callApi({
-      method: 'POST',
-      url: api.Taxkind.Taxkind_List,
-      params: { indexValue: '' }
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const data = res?.data as any[] | undefined
-        if (data && Array.isArray(data)) {
-          taxkindDDL.value = data
-        }
-      }
-    })
-  }
-  //抓報價人員下拉選單資料
-  const getEmpApi = async () => {
-    callApi({
-      method: 'POST',
-      url: api.Emp.Emp_ListSimple
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const data = res?.data as any[] | undefined
-        if (data && Array.isArray(data)) {
-          empDDL.value = data.map(({ empno, empname }) => ({ empno, empname }))
-        }
-      }
-    })
-  }
-  //抓單位下拉選單資料
-  const getUnitApi = async () => {
-    callApi({
-      method: 'POST',
-      url: api.Phr.UnitBrow,
-      params: { indexValue: '' }
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const data = res?.data
-        if (data && Array.isArray(data)) {
-          unitDDL.value = data
-        }
-      }
-    })
-  }
 
-  //抓單筆資料
+  // 取得單據 表頭 & 表身 資料 api
   const getSingleData = () => {
     if (store.index1) {
       callApi({
@@ -121,7 +85,7 @@
       })
     }
   }
-  //Renew
+  // 新增時取得預設值資料 api
   const getRenewData = () => {
     callApi({
       method: 'POST',
@@ -673,21 +637,19 @@
   /*
   @init="initSearch" 觸發時機是查詢條件彈窗的 onMounted()
   因為我把 查詢api 的 function 放在查詢條件彈窗的 component
-  參數 data 是資料陣列，但有可能是 undefined，所以還是要先判斷再使用
+  查詢條件彈窗的 component 會將查詢結果直接存進 store
   */
-  const initSearch = (data) => {
-    if (Array.isArray(data)) {
-      store.init(data.map(({ index1 }) => ({ index1 })))
-    }
+  const initSearch = () => {
+    // 如果有 key值 就呼叫取得表頭表身資料的 api
     if (store.index1) getSingleData()
   }
   /*
   @search="handleSearch" 觸發時機是查詢條件彈窗按下查詢按鈕時
-  參數 data 是資料陣列，並且已經檢查完不會是undefined，可以直接使用
-  store.search() 可以把資料交給store，跳轉到瀏覽頁面去做顯示
+  參數 filter 是查詢條件
+  store.search() 可以把查詢條件交給store，跳轉到瀏覽頁面去使用
   */
-  const handleSearch = (data) => {
-    store.search(router, data)
+  const handleSearch = (filter) => {
+    store.search(router, filter)
   }
 
   //查詢業主彈窗
@@ -809,11 +771,11 @@
     //   navigator.sendBeacon(url)
     // }
   }
-  onMounted(() => {
+  onMounted(async () => {
     //抓下拉選單
-    getTaxkindApi()
-    getEmpApi()
-    getUnitApi()
+    taxkindDDL.value = await getTaxkindDDL()
+    empDDL.value = await getEmpDDL()
+    unitDDL.value = await getUnitDDL()
 
     window.addEventListener('beforeunload', handleBeforeUnload)
     window.addEventListener('unload', handleUnload)
@@ -1386,7 +1348,7 @@
     :m_user="formData.m_user"
   />
 
-  <Filter v-model="filterDS" @init="initSearch" @search="handleSearch" />
+  <Filter v-model="filterDS" mode="detail" @init="initSearch" @search="handleSearch" />
   <search-cust
     v-model="searchCustDS"
     v-model:form="formData"
