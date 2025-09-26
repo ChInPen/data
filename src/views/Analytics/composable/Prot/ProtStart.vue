@@ -7,17 +7,25 @@
 
   const storeProt = useSearchProt()
   const model = defineModel<string>({ default: '' })
+  const abbrModel = defineModel<string>('abbr', { default: '' })
+  const allModel = defineModel<any>('all', { default: '' })
+
+  // script setup
   const props = withDefaults(
     defineProps<{
       alnumUpper?: boolean
       disabled?: boolean
       maxlength?: number
+      label?: string
     }>(),
     {
       alnumUpper: true,
-      maxlength: 16
+      maxlength: 16,
+      label: '工程編號(起)'
     }
   )
+  // 也可做個保險（去除空字串）
+  const labelText = computed(() => (props.label?.trim() ? props.label : '工程編號(起)'))
   const ownerPickOpen = ref<any>(null)
   const formData = ref({ protno_s: '' })
 
@@ -26,6 +34,8 @@
     set: (val: string) => {
       model.value = val
       formData.value.protno_s = val
+      if (!val) abbrModel.value = ''
+      allModel.value = null
     }
   })
   watch(
@@ -43,6 +53,8 @@
   const onPicked = (row: any) => {
     const val = String(row?.protno ?? '').trim()
     model.value = val
+    abbrModel.value = String(row?.protabbr ?? '').trim()
+    allModel.value = row
   }
 </script>
 
@@ -51,11 +63,12 @@
     <v-col class="u-wch w-10ch">
       <c-input
         v-model="ownerNoFromModel"
-        label="工程編號(起)"
+        :label="labelText"
         :disabled="props.disabled"
         :maxlength="props.maxlength"
         density="compact"
         :length-auto-width="false"
+        icon="fa-solid fa-helmet-safety"
         @button="openOwnerPicker"
         @keydown="
           (e: any) =>

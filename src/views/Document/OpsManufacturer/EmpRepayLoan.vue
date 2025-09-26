@@ -69,6 +69,8 @@
     })
     if (res?.status === 200) {
       tbData.value = res.data
+      sort.value = { key: 'date1', asc: false }
+      applySort()
     }
   }
   //新增按鈕
@@ -195,6 +197,54 @@
     if (sort.value.key !== key) return 'fa-solid fa-sort' // 中性
     return sort.value.asc ? 'fa-solid fa-arrow-up-wide-short' : 'fa-solid fa-arrow-down-wide-short'
   }
+  // 金額格式化（保留原樣：非數字就原字串顯示）
+  const nfTW = new Intl.NumberFormat('zh-TW', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0 // 保留整數
+  })
+  const formatMoney = (v: unknown) => {
+    if (v == null || v === '') return ''
+    const n = typeof v === 'number' ? v : Number(String(v).replace(/,/g, ''))
+    return Number.isFinite(n) ? nfTW.format(n) : String(v)
+  }
+  // 日期顯示用：把多種來源格式統一成「YYY/MM/DD」（民國年）
+  const formatDate1 = (v: unknown) => {
+    if (v == null) return ''
+    const s = String(v).trim()
+    if (!s) return ''
+
+    // 已是 114/09/01 這種
+    if (/^\d{3}\/\d{2}\/\d{2}$/.test(s)) return s
+
+    // ISO 或含分隔符：YYYY-MM-DD / YYYY/MM/DD
+    const iso = s.match(/^(\d{4})[-/](\d{2})[-/](\d{2})$/)
+    if (iso) {
+      const y = Number(iso[1]) - 1911
+      const m = iso[2]
+      const d = iso[3]
+      return `${String(y).padStart(3, '0')}/${m}/${d}`
+    }
+
+    // 純數字
+    const d = s.replace(/\D/g, '')
+    if (d.length === 8) {
+      // YYYYMMDD → 轉民國
+      const y = Number(d.slice(0, 4)) - 1911
+      const m = d.slice(4, 6)
+      const dd = d.slice(6, 8)
+      return `${String(y).padStart(3, '0')}/${m}/${dd}`
+    }
+    if (d.length === 7) {
+      // YYYMMDD（已是民國）→ 補斜線
+      const y = d.slice(0, 3)
+      const m = d.slice(3, 5)
+      const dd = d.slice(5, 7)
+      return `${y}/${m}/${dd}`
+    }
+
+    // 其他未知格式：原樣回傳以免誤轉
+    return s
+  }
 </script>
 
 <template>
@@ -313,10 +363,10 @@
       <th></th>
     </template>
     <template v-slot:body="{ scope }">
-      <td>{{ scope.date1 }}</td>
+      <td>{{ formatDate1(scope.date1) }}</td>
       <td>{{ scope.bno }}</td>
       <td>{{ scope.empname }}</td>
-      <td>{{ scope.borrpr }}</td>
+      <td class="num">{{ formatMoney(scope.borrpr) }}</td>
       <td>{{ scope.empokname }}</td>
       <td>{{ scope.empacname }}</td>
       <td>{{ scope.borrprmon }}</td>
@@ -359,5 +409,10 @@
 <style scoped>
   .v-card-text {
     padding: 12px;
+  }
+  .num {
+    text-align: right;
+    font-variant-numeric: tabular-nums; /* 讓數字對齊更好看，可留可不留 */
+    white-space: nowrap; /* 避免被換行 */
   }
 </style>

@@ -78,7 +78,12 @@ const menu: MenuEntry[] = [
       {
         title: '工地',
         children: [
-          // { title: '工作日誌', path: '' },
+          {
+            title: '工作日誌建檔',
+            path: 'WorkLogEntry',
+            name: '工作日誌建檔',
+            component: () => import('@/views/Base/ConstructionSite/WorkLogEntry.vue')
+          }
           // { title: '工程日誌(Web)', path: '' },
           // { title: '工程進度(Web)', path: '' },
           // { title: '工種進度', path: '' }

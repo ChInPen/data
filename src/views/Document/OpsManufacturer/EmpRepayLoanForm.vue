@@ -23,11 +23,11 @@
   }
   const formData = ref<Record<string, any>>({
     bno: '',
-    date1: '',
+    date1: rocToday(),
     empno: '',
     empname: '',
     borrpr: null,
-    borrprmon: null,
+    borrprmon: null, //借支總金額
     empokno: '',
     empokname: '',
     empacno: '',
@@ -76,6 +76,7 @@
   const employeeDDL = ref<{ empno: string; empname: string }[]>([])
   const getEmpApi = async () => {
     const res: any = await callApi({ method: 'POST', url: api.Emp.Emp_ListSimple })
+    console.log(res.data)
     if (res?.status === 200 && Array.isArray(res?.data)) {
       employeeDDL.value = res.data.map(({ empno, empname }: any) => ({ empno, empname }))
     }
@@ -275,6 +276,36 @@
       }
     })
   }
+  const onPickEmp = async (item: any) => {
+    console.log('item', item.empno)
+    if (item.empno) {
+      try {
+        const res = await callApi({
+          method: 'POST',
+          url: api.EmployeeAdvanceQuery.Search,
+          data: {
+            dates: {
+              begin: '0000101',
+              end: '9991231'
+            },
+            empNOs: {
+              begin: item.empno,
+              end: item.empno,
+              limiteds: []
+            },
+            pagination: {
+              start: 0,
+              length: 1000000,
+              draw: 1
+            }
+          }
+        })
+        console.log('res', res)
+      } catch (error) {
+        console.error(error)
+      }
+    }
+  }
 </script>
 
 <template>
@@ -457,6 +488,7 @@
     v-model:keyenter="isEnter"
     :setting="pickSetting"
     :search-text="searchText"
+    @pick="onPickEmp"
   />
 </template>
 

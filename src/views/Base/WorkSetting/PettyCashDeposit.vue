@@ -88,6 +88,7 @@
     isOpen.value = true
     isedit.value = true
   }
+  // 儲存邏輯
   const saveEdit = async () => {
     if (
       !editForm.value.date1 ||
@@ -97,15 +98,17 @@
       return message.alert({ type: 'error', message: '日期與金額不可為空，且金額需為數字！' })
     }
 
-    if (isedit.value) {
+    if (isHandleAdd.value) {
       working.value.push({ ...editForm.value })
     }
-    if (isHandleAdd.value) {
+    if (isedit.value) {
       editForm.value.m_date1 = toROCyyyymmdd()
       working.value.splice(editIndex.value, 1, { ...editForm.value })
     }
     if (isInsert.value) {
       working.value.splice(editIndex.value, 1, { ...editForm.value })
+      working.value[editIndex.value].empno = filter.value.empno
+      working.value[editIndex.value].empname = filter.value.empname
     }
     isOpen.value = false
     isHandleAdd.value = false
@@ -123,7 +126,56 @@
     } catch (error) {
       console.error(error)
       message.alert({ type: 'error', message: '儲存失敗' })
+    } finally {
+      editForm.value = {
+        empno: filter.value.empno,
+        empname: filter.value.empname,
+        date1: '',
+        date2: '',
+        date3: '',
+        deposa: null,
+        descrip: '',
+        m_date1: '',
+        m_date2: '',
+        m_date3: '',
+        m_user: ''
+      }
     }
+  }
+
+  // 取消邏輯
+  const saveEnd = () => {
+    if (isInsert.value) {
+      isInsert.value = false
+      working.value.splice(editIndex.value, 1)
+    }
+    isOpen.value = false
+    isHandleAdd.value = false
+    isedit.value = false
+    editIndex.value = null
+    editForm.value = {
+      empno: filter.value.empno,
+      empname: filter.value.empname,
+      date1: '',
+      date2: '',
+      date3: '',
+      deposa: null,
+      descrip: '',
+      m_date1: '',
+      m_date2: '',
+      m_date3: '',
+      m_user: ''
+    }
+  }
+  // 插入邏輯
+  const isInsert = ref(false)
+  const handleInsert = (row: PettyCashRow, index: number) => {
+    working.value.splice(index, 0, { ...editForm.value })
+
+    editIndex.value = index
+    console.log(working.value)
+    isOpen.value = true
+    isInsert.value = true
   }
   //查詢條件-清除按鈕
   const isClear = ref(false)
@@ -168,9 +220,6 @@
       if (res?.status === 200) {
         tbData.value = res.data
         working.value = res.data
-        if (working.value.length <= 0) {
-          console.log('查無資料')
-        }
       }
     } catch (err) {
       console.error('查詢失敗:', err)
@@ -298,18 +347,6 @@
   const sortIcon = (key: Exclude<SortKey, null>) => {
     if (sort.value.key !== key) return 'fa-solid fa-sort'
     return sort.value.asc ? 'fa-solid fa-arrow-down-wide-short' : 'fa-solid fa-arrow-up-wide-short'
-  }
-
-  // 插入邏輯
-  const isInsert = ref(false)
-  const handleInsert = (row: PettyCashRow, index: number) => {
-    working.value.splice(index, 0, { ...editForm.value })
-    working.value[index].empno = filter.value.empno
-    working.value[index].empname = filter.value.empname
-    editIndex.value = index
-    console.log(working.value)
-    isOpen.value = true
-    isInsert.value = true
   }
 </script>
 
@@ -451,7 +488,7 @@
           <c-button kind="print" icon="mdi-check-circle" @click="saveEdit">儲存</c-button>
         </v-col>
         <v-col cols="auto" class="mx-1">
-          <c-button kind="cancel" icon="mdi-close-circle" @click="isOpen = false">結束</c-button>
+          <c-button kind="cancel" icon="mdi-close-circle" @click="saveEnd">結束</c-button>
         </v-col>
       </v-row>
     </template>

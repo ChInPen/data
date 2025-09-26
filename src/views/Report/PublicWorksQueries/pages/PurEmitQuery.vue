@@ -50,7 +50,7 @@
     },
     pagination: {
       start: 0,
-      length: 100000000,
+      length: 10000000,
       draw: 1
     },
     feetNo: '20', // 表尾註腳編號
@@ -210,7 +210,7 @@
             :item-title="printTypeDDL.title"
             :item-value="printTypeDDL.value"
             hide-search
-            width="240"
+            width="300"
           />
         </v-col>
       </v-row>

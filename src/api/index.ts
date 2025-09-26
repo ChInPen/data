@@ -356,5 +356,14 @@ export default {
     Search: '/api/Pecash/Pecashlist',
     Save: '/api/Pecash/Pecash_Save',
     Data: '/api/Pecash/Pecash_Data'
+  },
+  //工作日誌建檔
+  WorkLogEntry: {
+    Search: '/api/Diary/Diary_Search',
+    SearchOne: '/api/Diary/Diary_Get',
+    Set: '/api/Diary/Diary_Set',
+    Add: '/api/Diary/Diary_Add',
+    Print: '/api/Diary/Diary_Print',
+    Delete: '/api/Diary/Diary_Del_WithPhoto'
   }
 }

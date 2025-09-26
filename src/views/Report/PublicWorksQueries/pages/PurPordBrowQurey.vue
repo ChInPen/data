@@ -206,7 +206,7 @@
             :item-title="printTypeDDL.title"
             :item-value="printTypeDDL.value"
             hide-search
-            width="240"
+            width="300"
           />
         </v-col>
       </v-row>

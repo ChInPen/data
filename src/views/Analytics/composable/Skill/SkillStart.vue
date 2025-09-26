@@ -1,73 +1,62 @@
-<!-- SuppStart.vue：廠商搜尋框(起) -->
+<!-- CustStart.vue：業主搜尋框(起) -->
 <script lang="ts" setup>
   import { computed, ref, watch } from 'vue'
   import { cInput } from '@/components/Common'
-  import { searchSupp } from '@/components/SearchSupp' // 廠商彈窗元件查詢
-  import { useSearchSupp } from '@/store/searchSupp'
-  const storeSupp = useSearchSupp()
+  import { searchSkill } from '@/components/SearchSkill' // 廠商彈窗元件查詢
+  import { useSearchSkill } from '@/store/searchSkill'
+  const storeSkill = useSearchSkill()
   const model = defineModel<string>({ default: '' })
   const abbrModel = defineModel<string>('abbr', { default: '' })
-
   const props = withDefaults(
     defineProps<{
       alnumUpper?: boolean
       disabled?: boolean
       maxlength?: number
       label?: string
-      width?: string | number
     }>(),
     {
       alnumUpper: true,
       maxlength: 10,
-      label: '廠商編號(起)',
-      width: 343
+      label: '工種編號(起)'
     }
   )
-
-  // 正規化寬度
-  const inputWidth = computed(() => {
-    const w = props.width
-    if (w == null || w === '') return ''
-    if (typeof w === 'number') return `${w}px`
-    return /^\d+$/.test(w) ? `${w}px` : w
-  })
-
   const ownerPickOpen = ref<any>(null)
-  const formData = ref({ suppno: '' })
+  const formData = ref({ skillno: '' })
 
-  const NoFromModel = computed({
+  const ownerNoFromModel = computed({
     get: () => model.value,
     set: (val: string) => {
       model.value = val
-      formData.value.suppno = val
+      formData.value.skillno = val
+      if (!val) abbrModel.value = ''
     }
   })
 
   watch(
     () => model.value,
     (v) => {
-      formData.value.suppno = v ?? ''
+      formData.value.skillno = v ?? ''
     },
     { immediate: true }
   )
 
   const openOwnerPicker = () => {
-    storeSupp.set(formData, [{ from: 'suppno', to: 'suppno' }], {
+    storeSkill.set(formData, [{ from: 'skillno', to: 'skillno' }], {
       open: ownerPickOpen.value?.open
     })
   }
   const onPicked = (row: any) => {
-    const val = String(row?.suppno ?? '').trim()
-    model.value = val
-    abbrModel.value = String(row?.suppabbr ?? '').trim()
+    const no = String(row?.skillno ?? '').trim()
+    const abbr = String(row?.skillname ?? '').trim()
+    model.value = no
+    abbrModel.value = abbr
   }
 </script>
 
 <template>
   <c-input
-    v-model="NoFromModel"
+    v-model="ownerNoFromModel"
     :label="label"
-    :width="inputWidth"
     :disabled="props.disabled"
     :maxlength="props.maxlength"
     density="compact"
@@ -75,14 +64,13 @@
     @button="openOwnerPicker"
     @keydown="
       (e: any) =>
-        storeSupp.keyEnter(e, formData, [{ from: 'suppno', to: 'suppno' }], NoFromModel, {
+        storeSkill.keyEnter(e, formData, [{ from: 'skillno', to: 'skillno' }], ownerNoFromModel, {
           open: openOwnerPicker
         })
     "
   />
-
   <!-- 單選彈窗 -->
-  <search-supp ref="ownerPickOpen" @pick="onPicked" />
+  <search-skill ref="ownerPickOpen" @pick="onPicked" />
 </template>
 
 <style scoped>
@@ -91,5 +79,8 @@
     min-width: var(--wch);
     max-width: var(--wch);
     flex: 0 0 var(--wch);
+  }
+  .w-10ch {
+    --wch: calc(343px);
   }
 </style>

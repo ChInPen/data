@@ -6,17 +6,22 @@
   import { useSearchCust } from '@/store/searchCust'
   const storeCust = useSearchCust()
   const model = defineModel<string>({ default: '' })
+  const abbrModel = defineModel<string>('abbr', { default: '' })
   const props = withDefaults(
     defineProps<{
       alnumUpper?: boolean
       disabled?: boolean
       maxlength?: number
+      label?: string
     }>(),
     {
       alnumUpper: true,
-      maxlength: 10
+      maxlength: 10,
+      label: '業主編號(起)'
     }
   )
+  // 也可做個保險（去除空字串）
+  const labelText = computed(() => (props.label?.trim() ? props.label : '業主編號(起)'))
   const ownerPickOpen = ref<any>(null)
   const formData = ref({ custno_s: '' })
 
@@ -25,6 +30,7 @@
     set: (val: string) => {
       model.value = val
       formData.value.custno_s = val
+      if (!val) abbrModel.value = ''
     }
   })
 
@@ -42,8 +48,10 @@
     })
   }
   const onPicked = (row: any) => {
-    const val = String(row?.custno ?? '').trim()
-    model.value = val
+    const no = String(row?.custno ?? '').trim()
+    const abbr = String(row?.custabbr ?? row?.custname ?? '').trim()
+    model.value = no
+    abbrModel.value = abbr
   }
 </script>
 
@@ -52,12 +60,13 @@
     <v-col class="u-wch w-10ch">
       <c-input
         v-model="ownerNoFromModel"
-        label="業主編號(起)"
+        :label="labelText"
         :disabled="props.disabled"
         :maxlength="props.maxlength"
         density="compact"
         :length-auto-width="false"
         @button="openOwnerPicker"
+        icon="fa-solid fa-user"
         @keydown="
           (e: any) =>
             storeCust.keyEnter(

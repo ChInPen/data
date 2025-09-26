@@ -23,7 +23,7 @@
   }
   const formData = ref<Record<string, any>>({
     bno: '',
-    date1: '',
+    date1: rocToday(),
     empno: '',
     empname: '',
     borrpr: null,
@@ -69,6 +69,7 @@
       }
     } catch (error) {}
   }
+
   //取消&返回 按鈕
   const handleCancel = () => {
     router.push({ path: '/menu/EmpLoan' })

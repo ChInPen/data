@@ -49,6 +49,8 @@
   const loadingPrint = ref(false)
   const loadingExcel = ref(false)
   const onSubmitPrint = async (t: any) => {
+    console.log(JSON.stringify(formData.value, null, 2))
+
     if (loadingPrint.value || loadingExcel.value) return
     if (!formData.value.dates.begin || !formData.value.dates.end) {
       message.alert({
