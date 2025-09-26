@@ -27,7 +27,11 @@
       default: []
     },
     emptyData: Object as PropType<tableData>,
-    disabled: Boolean
+    disabled: Boolean,
+    addWithPick: {
+      type: Boolean,
+      default: true
+    }
   })
   const emit = defineEmits(['save'])
 
@@ -45,18 +49,23 @@
   const unitDDL = ref<{ content1: string }[]>([])
 
   const handleAdd = () => {
-    if (props.emptyData) {
-      pickItemStore.set(
-        tbData,
-        [
-          { from: 'itemno' },
-          { from: 'itemname' },
-          { from: 'stkunit', to: 'unit' },
-          { from: 'ibompqty', to: 'stkqty' }
-        ],
-        { mode: 'add', empty: { ...props.emptyData } }
-      )
-      pickitemRef.value?.open()
+    if (props.addWithPick) {
+      if (props.emptyData) {
+        pickItemStore.set(
+          tbData,
+          [
+            { from: 'itemno' },
+            { from: 'itemname' },
+            { from: 'stkunit', to: 'unit' },
+            { from: 'ibompqty', to: 'stkqty' }
+          ],
+          { mode: 'add', empty: { ...props.emptyData } }
+        )
+        pickitemRef.value?.open()
+      }
+    } else {
+      tbData.value.push({ ...props.emptyData })
+      GenerateRec(tbData.value)
     }
   }
   const handleIns = () => {
@@ -131,38 +140,40 @@
   //勾選工料彈窗
   const pickitemRef = ref()
   const bomsItemSet = (index: number) => {
-    if (props.emptyData) {
-      pickItemStore.set(
-        tbData,
-        [
-          { from: 'itemno' },
-          { from: 'itemname' },
-          { from: 'stkunit', to: 'unit' },
-          { from: 'ibompqty', to: 'stkqty' }
-        ],
-        { row: index, mode: 'insert', empty: { ...props.emptyData } }
-      )
-      pickitemRef.value?.open()
+    if (props.addWithPick) {
+      if (props.emptyData) {
+        pickItemStore.set(
+          tbData,
+          [
+            { from: 'itemno' },
+            { from: 'itemname' },
+            { from: 'stkunit', to: 'unit' },
+            { from: 'ibompqty', to: 'stkqty' }
+          ],
+          { row: index, mode: 'insert', empty: { ...props.emptyData } }
+        )
+        pickitemRef.value?.open()
+      }
+    } else {
+      searchitemRow.value = index
+      searchitemRef.value?.open()
     }
   }
-  const pickitemPick = (data: any[]) => {
-    pickItemStore.pick(data)
+  const pickitemPick = () => {
     GenerateRec(tbData.value)
     countTotal()
   }
 
   //查詢工料彈窗
   const searchitemRef = ref()
-  const bomsItemKeyEnter = (e: KeyboardEvent, searchText: string, index: number) => {
-    if (props.emptyData) {
-      searchItemStore.keyEnter(
-        e,
-        tbData,
-        [{ from: 'itemno' }, { from: 'itemname' }, { from: 'stkunit', to: 'unit' }],
-        searchText,
-        { row: index, open: searchitemRef.value?.open }
-      )
-    }
+  const searchitemKeyEnter = ref(false)
+  const searchitemRow = ref()
+  const searchitemText = ref('')
+  const bomsItemKeyEnter = (searchText: string, index: number) => {
+    searchitemKeyEnter.value = true
+    searchitemRow.value = index
+    searchitemText.value = searchText
+    searchitemRef.value?.open()
   }
 </script>
 
@@ -242,7 +253,7 @@
             v-model="scope.itemno"
             :disabled="disabled"
             @button="bomsItemSet(index)"
-            @keydown="(e) => bomsItemKeyEnter(e, scope.itemno, index)"
+            @keyEnter="bomsItemKeyEnter(scope.itemno, index)"
             :maxlength="20"
             condensed
           />
@@ -303,7 +314,14 @@
   </c-dialog>
 
   <pick-item ref="pickitemRef" :show-ikind="true" @pick="pickitemPick" />
-  <search-item ref="searchitemRef" @pick="searchItemStore.pick" />
+  <search-item
+    ref="searchitemRef"
+    v-bind:form="tbData"
+    v-model:keyenter="searchitemKeyEnter"
+    :row="searchitemRow"
+    :setting="[{ from: 'itemno' }, { from: 'itemname' }, { from: 'stkunit', to: 'unit' }]"
+    :search-text="searchitemText"
+  />
 </template>
 
 <style>

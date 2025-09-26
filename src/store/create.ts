@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import type { Router } from 'vue-router'
+import { distinctBy } from '@/utils/ucommon'
 
 /* 建立查詢頁和明細頁之間的狀態控制 store 方法 (用 persist 可將狀態存至 storage) */
 export const createCrudStore = <K extends string>(options: {
@@ -212,10 +213,13 @@ export const createDocStore = <K extends string>(options: {
        * @param list 單據清單，ex: [{ ono: '1' }, { ono: '2' }]
        */
       init(list: any[]) {
-        this.list = list
+        // this.list = list
+        this.list = distinctBy(list, (x) => x[options.keyName])
         if (this.list.length > 0) {
-          const lastItem = this.list[this.list.length - 1]
-          if (options.keyName in lastItem) this[options.keyName] = lastItem[options.keyName]
+          // const lastItem = this.list[this.list.length - 1]
+          // if (options.keyName in lastItem) this[options.keyName] = lastItem[options.keyName]
+          const firstItem = this.list[0]
+          if (options.keyName in firstItem) this[options.keyName] = firstItem[options.keyName]
         }
       },
       create() {
@@ -258,7 +262,8 @@ export const createDocStore = <K extends string>(options: {
        * @param value 可選參數，當有點選某一筆單據時，傳入該單據的鍵值
        */
       goback(router: Router, list: any[], value?: string) {
-        this.list = list
+        // this.list = list
+        this.list = distinctBy(list, (x) => x[options.keyName])
         if (value) {
           this[options.keyName] = value as any
         } else {

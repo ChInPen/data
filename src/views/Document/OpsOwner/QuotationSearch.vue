@@ -5,7 +5,7 @@
   import { useQuotationStore } from '@/store/quotation'
   import { useRouter } from 'vue-router'
   import Filter from './Components/QuotationFilter.vue'
-  import { numberFormat } from '@/utils/uformat'
+  import { numberFormat, dateFormat } from '@/utils/uformat'
 
   const store = useQuotationStore()
   const router = useRouter()
@@ -27,9 +27,9 @@
     { key: 'qno', title: '報價單號' },
     { key: 'date1', title: '報價日期' },
     { key: 'custabbr', title: '客戶簡稱' },
-    { key: 'sum1', title: '稅前合計' },
-    { key: 'tax', title: '營業稅額' },
-    { key: 'amount', title: '報價總額' },
+    { key: 'sum1', title: '稅前合計', width: 150, align: 'end' },
+    { key: 'tax', title: '營業稅額', width: 150, align: 'end' },
+    { key: 'amount', title: '報價總額', width: 150, align: 'end' },
     { key: 'empname', title: '報價人員姓名' }
   ]
   const tableRef = ref()
@@ -94,6 +94,9 @@
         selectable
         header-align="center"
       >
+        <template v-slot:item.date1="{ scope }">
+          {{ dateFormat(scope.date1, { dateTW: true }) }}
+        </template>
         <template v-slot:item.sum1="{ scope }">
           {{ numberFormat(scope.sum1, { thousands: true }) }}
         </template>

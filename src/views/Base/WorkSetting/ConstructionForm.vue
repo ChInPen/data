@@ -145,13 +145,11 @@
       protabbr: formData.value.protabbr ?? ''
     }))
     //大中細項目
-    const headitems = headItemList.value.map(({ headitemno1, ...other }) => ({ ...other }))
-    const detitems = detItemList.value.map(({ headitemno1, detitemno1, ...other }) => ({
-      ...other
-    }))
-    const secitems = secItemList.value.map(({ headitemno1, detitemno1, secitemno1, ...other }) => ({
-      ...other
-    }))
+    const headitems = headItemList.value.map(({ headitemno1, ...other }) => other)
+    const detitems = detItemList.value.map(({ headitemno1, detitemno1, ...other }) => other)
+    const secitems = secItemList.value.map(
+      ({ headitemno1, detitemno1, secitemno1, ...other }) => other
+    )
     const headDetSecItem = { headitems, detitems, secitems }
 
     return { project, projectdets, plledets, protIkinds, headDetSecItem }

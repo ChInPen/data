@@ -107,8 +107,8 @@
   檢查鎖定
   在編輯或刪除前先檢查當前單據是否有其他人再編輯中
   或單據狀態是不可再被異動的
-  flag為1代表要鎖定:當我們要做編輯和刪除前，檢查後會順便鎖定
-  flag為0代表要解鎖:當我們取消刪除或取消編輯要記得解鎖
+  flag為1代表要鎖定:當我們要做編輯前，檢查後會順便鎖定
+  flag為0代表要解鎖:當我們取消編輯要記得解鎖
   */
   const checkExecApi = async (flag: 1 | 0) => {
     const qno = formData.value.qno
@@ -167,66 +167,48 @@
     store.copy()
   }
   //刪除
-  //刪除前先用 checkExecApi 檢查能不能刪除，flag 要設為 1
-  //檢查後如果能刪除，彈出 message 窗詢再度確認要不要刪除
-  //如果使用者取消刪除，要再用 checkExecApi 取消鎖定(flag 要設為 0)
+  //彈出 message 窗詢再度確認要不要刪除
   const del = async () => {
     if (store.index1) {
-      const check = await checkExecApi(1)
-      if (check == '已有其他工作站修改中' || check == '單據已請款') {
-        message.alert({
-          type: 'error',
-          message: `${check}不可刪除,請確認`
-        })
-      } else if (check == '無此單據號碼') {
-        message.alert({
-          type: 'error',
-          message: check
-        })
-        const val = store.index1 as string
-        if (!store.isFirst) onoChange('previous')
-        else if (!store.isLast) onoChange('next')
-        store.delete(val)
-      } else if (check == '成功') {
-        message.confirm({
-          type: 'question',
-          message: `確定要刪除「${formData.value.qno}」報價單？`,
-          onConfirm: () => {
-            //刪除
-            callApi({
-              method: 'POST',
-              url: api.Sqte.Sqte_DEL,
-              params: { index1: store.index1 }
-            }).then((res) => {
-              if (res?.status === 200) {
-                const data = res?.data
-                if (data.success === true) {
-                  message.alert({
-                    type: 'success',
-                    message: '刪除成功',
-                    autoClose: 2,
-                    onConfirm: () => {
-                      const val = store.index1 as string
-                      if (!store.isFirst) onoChange('previous')
-                      else if (!store.isLast) onoChange('next')
-                      store.delete(val)
-                    }
-                  })
-                } else {
-                  message.alert({
-                    type: 'error',
-                    message: `刪除失敗：${data.message}`
-                  })
-                  checkExecApi(0) //解除鎖定
-                }
+      message.confirm({
+        type: 'question',
+        message: `確定要刪除「${formData.value.qno}」報價單？`,
+        onConfirm: () => {
+          //刪除
+          callApi({
+            method: 'POST',
+            url: api.Sqte.Sqte_DEL,
+            params: { index1: store.index1 }
+          }).then((res) => {
+            if (res?.status === 200) {
+              const data = res?.data
+              if (data.success === true) {
+                message.alert({
+                  type: 'success',
+                  message: '刪除成功',
+                  autoClose: 2,
+                  onConfirm: () => {
+                    const val = store.index1 as string
+                    if (!store.isFirst) onoChange('previous')
+                    else if (!store.isLast) onoChange('next')
+                    store.delete(val)
+                  }
+                })
+              } else {
+                message.alert({
+                  type: 'error',
+                  message: `刪除失敗：${data.message}`
+                })
               }
-            })
-          },
-          onCancel: () => {
-            checkExecApi(0) //解除鎖定
-          }
-        })
-      }
+            } else {
+              message.alert({
+                type: 'error',
+                message: `刪除失敗：${res.message}`
+              })
+            }
+          })
+        }
+      })
     }
   }
   //放棄
@@ -309,21 +291,27 @@
         }
       }
     })
-    headItemList.value.forEach((item, i) => {
-      for (const key in item) {
-        formdata.append(`_HeaderItems[${i}].${key}`, item[key])
-      }
-    })
-    detItemList.value.forEach((item, i) => {
-      for (const key in item) {
-        formdata.append(`_DetailItem[${i}].${key}`, item[key])
-      }
-    })
-    secItemList.value.forEach((item, i) => {
-      for (const key in item) {
-        formdata.append(`_SubSubItem[${i}].${key}`, item[key])
-      }
-    })
+    headItemList.value
+      .filter((x) => x.headitemno)
+      .forEach((item, i) => {
+        for (const key in item) {
+          formdata.append(`_HeaderItems[${i}].${key}`, item[key])
+        }
+      })
+    detItemList.value
+      .filter((x) => x.headitemno && x.detitemno)
+      .forEach((item, i) => {
+        for (const key in item) {
+          formdata.append(`_DetailItem[${i}].${key}`, item[key])
+        }
+      })
+    secItemList.value
+      .filter((x) => x.headitemno && x.detitemno && x.secitemno)
+      .forEach((item, i) => {
+        for (const key in item) {
+          formdata.append(`_SubSubItem[${i}].${key}`, item[key])
+        }
+      })
 
     return formdata
   }
@@ -360,7 +348,6 @@
       data: saveData()
     }).then((res: any) => {
       if (res?.status === 200) {
-        console.log(res)
         const data = res?.data
         if (data && data.success === true) {
           message.alert({
@@ -529,7 +516,9 @@
   const pickItemDS = ref(false)
   const pickItemRow = ref()
   const pickItemMode = ref()
-  const sqtedetItemPick = () => {
+  const sqtedetItemPick = async (data) => {
+    const itemnoList = Array.isArray(data) ? data.map((x) => x.itemno) : [data?.itemno ?? '']
+    await getOpenItemPrice(itemnoList)
     sqtedetList.value.sort((a: any, b: any) => {
       const trans = (val: any) => (Number.isNaN(val) ? 0 : Number(val))
       return (
@@ -540,6 +529,26 @@
     })
     GenerateRec(sqtedetList.value, 'rec1', 4)
     countTotal()
+  }
+  const getOpenItemPrice = async (itemnoList: string[]) => {
+    // 用工程編號+業主編號+工料編號取得單價
+    const res = await callApi({
+      method: 'POST',
+      url: api.Sqte.Sqtedet_OpenItemPrice,
+      data: {
+        itemno: itemnoList,
+        protno: formData.value.protno ?? '',
+        custno: formData.value.custno ?? ''
+      }
+    })
+    if (res.status === 200) {
+      const data: { itemno: string; price: number }[] = res.data ?? []
+      data.forEach((x) => {
+        sqtedetList.value.forEach((y) => {
+          if (y.itemno === x.itemno) y.price = Math.round(x.price)
+        })
+      })
+    }
   }
 
   //大項目
@@ -718,7 +727,11 @@
   const pjtDS = ref(false)
   const pjtItems = computed(() => {
     const selectIndex = sqtedetTable.value?.selectIndex?.[0]
-    if (typeof selectIndex === 'number' && selectIndex >= 0) {
+    if (
+      typeof selectIndex === 'number' &&
+      selectIndex >= 0 &&
+      selectIndex <= sqtedetList.value.length - 1
+    ) {
       const { pjt1, pjt2, pjt3, pjt4, pjt5, pjt6, pjt7, pjt8, pjt9, pjt10 } =
         sqtedetList.value[selectIndex]
       return { pjt1, pjt2, pjt3, pjt4, pjt5, pjt6, pjt7, pjt8, pjt9, pjt10 }
@@ -1404,7 +1417,6 @@
       { from: 'itemname' },
       { from: 'ibompqty', to: 'qty' },
       { from: 'stkunit', to: 'unit' },
-      { from: 'stksalpc', to: 'price' },
       { from: 'mkindno' },
       { from: 'mkindno1' }
     ]"
@@ -1439,7 +1451,6 @@
       { from: 'itemno' },
       { from: 'itemname' },
       { from: 'stkunit', to: 'unit' },
-      { from: 'stksalpc', to: 'price' },
       { from: 'mkindname', to: 'mkindno1' }
     ]"
     :row="detSearchItemRow"

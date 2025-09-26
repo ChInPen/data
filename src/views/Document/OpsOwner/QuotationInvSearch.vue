@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-  import { ref, onMounted } from 'vue'
+  import { ref } from 'vue'
   import { cButton, cBread, cDataTable } from '@/components/Common' //共用元件
   import type { DataTableHeader } from 'vuetify'
   import { useQuotationInvStore } from '@/store/quotationinv'
@@ -103,12 +103,6 @@
   const handleInit = (data: any[]) => {
     if (data && data.length > 0) tbData.value = data
   }
-
-  onMounted(() => {
-    if (store.list && store.list.length > 0) {
-      tbData.value = store.list as any[]
-    }
-  })
 </script>
 
 <template>
@@ -150,5 +144,5 @@
     </v-card-text>
   </v-card>
 
-  <Filter v-model="filterDS" @init="handleInit" @search="handleSearch" />
+  <Filter v-model="filterDS" mode="search" @init="handleInit" @search="handleSearch" />
 </template>
