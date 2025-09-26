@@ -2,6 +2,7 @@
   import { ref, onMounted, computed } from 'vue'
   import { cButton, cInput, cSelect, cTable, cBread } from '@/components/Common' //共用元件
   import api from '@/api' //api路徑設定檔
+  import { getUnitDDL } from '@/api/ddl'
   import { callApi } from '@/utils/uapi' //呼叫api的方法
   import { message } from '@/components/Message/service' //訊息窗元件
   import { GenerateRec } from '@/utils/ucommon'
@@ -63,21 +64,6 @@
 
   //下拉選單
   const unitDDL = ref<{ content1: string }[]>([])
-  //抓單位下拉選單資料
-  const getUnitApi = async () => {
-    callApi({
-      method: 'POST',
-      url: api.Phr.UnitBrow,
-      params: { indexValue: '' }
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const data = res?.data
-        if (data && Array.isArray(data)) {
-          unitDDL.value = data
-        }
-      }
-    })
-  }
 
   //抓單筆資料
   const getSingleData = () => {
@@ -390,14 +376,11 @@
 
   //查詢條件
   const filterDS = ref(false)
-  const initSearch = (data) => {
-    if (Array.isArray(data)) {
-      store.init(data.map(({ ono }) => ({ ono })))
-    }
+  const initSearch = () => {
     if (store.ono) getSingleData()
   }
-  const handleSearch = (data) => {
-    store.search(router, data)
+  const handleSearch = (filter) => {
+    store.search(router, filter)
   }
 
   //查詢人員彈窗
@@ -487,9 +470,9 @@
     }
   }
 
-  onMounted(() => {
+  onMounted(async () => {
     //抓下拉選單
-    getUnitApi()
+    unitDDL.value = await getUnitDDL()
   })
 </script>
 
@@ -932,7 +915,7 @@
     :m_user="formData.m_user"
   />
 
-  <Filter v-model="filterDS" @init="initSearch" @search="handleSearch" />
+  <Filter v-model="filterDS" mode="detail" @init="initSearch" @search="handleSearch" />
   <search-emp
     v-model="searchEmpDS"
     v-model:form="formData"

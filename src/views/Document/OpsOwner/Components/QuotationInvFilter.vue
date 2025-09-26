@@ -1,5 +1,6 @@
 <script lang="ts" setup>
   import { ref, onMounted } from 'vue'
+  import type { PropType } from 'vue'
   import { cButton, cInput, cDialog } from '@/components/Common' //共用元件
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
@@ -9,6 +10,10 @@
   import { searchProt } from '@/components/SearchProt'
 
   const model = defineModel<boolean>({ default: false })
+  const props = defineProps({
+    // 用來判別是表單頁還是清單頁的查詢條件彈窗
+    mode: String as PropType<'detail' | 'search'>
+  })
   const emit = defineEmits(['init', 'search'])
 
   //查詢條件
@@ -22,15 +27,18 @@
     billud1: ''
   })
   const searchApi = async () => {
+    let data = {
+      ...filter.value,
+      pageNumber: 1,
+      pageSize: 1000,
+      top: 1000
+    }
+    if (props.mode === 'search') data = { ...data, ...store.filter }
+
     const res = await callApi({
       method: 'POST',
       url: api.Bill2.Bill2_List,
-      data: {
-        ...filter.value,
-        pageNumber: 1,
-        pageSize: 1000,
-        top: 1000
-      }
+      data
     })
     if (res?.status === 200) {
       const { data } = res?.data
@@ -38,10 +46,14 @@
     }
   }
   const handleSearch = async () => {
-    const data = await searchApi()
-    if (Array.isArray(data)) {
-      emit('search', data)
-      model.value = false
+    if (props.mode === 'detail') {
+      emit('search', { ...filter.value })
+    } else {
+      const data = await searchApi()
+      if (Array.isArray(data)) {
+        emit('search', data)
+        model.value = false
+      }
     }
   }
   const handleClear = () => {
@@ -62,11 +74,18 @@
   //起始動作
   onMounted(async () => {
     let data
-    if (!['search', 'goback'].includes(store.action)) {
+    if (store.action === 'goback') {
+      data = [...store.list]
+    } else {
       data = await searchApi()
+      if (props.mode === 'detail' && Array.isArray(data)) {
+        data = data.map(({ ono }) => ({ ono }))
+        store.init(data)
+      }
     }
     emit('init', data)
     store.cancel()
+    store.filter = {}
   })
 
   //查詢業主彈窗

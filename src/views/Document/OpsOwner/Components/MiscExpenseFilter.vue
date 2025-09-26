@@ -1,18 +1,18 @@
 <script lang="ts" setup>
   import { ref, onMounted } from 'vue'
+  import type { PropType } from 'vue'
   import { cButton, cInput, cDialog } from '@/components/Common' //共用元件
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
   import { useMiscExpenseStore } from '@/store/miscexpense'
   const store = useMiscExpenseStore()
   import { searchProt } from '@/components/SearchProt'
-  import { useSearchProt } from '@/store/searchProt'
-  const searchProtStore = useSearchProt()
   import { searchItem } from '@/components/SearchItem'
-  import { useSearchItem } from '@/store/searchItem'
-  const searchItemStore = useSearchItem()
 
   const model = defineModel<boolean>({ default: false })
+  const props = defineProps({
+    mode: String as PropType<'detail' | 'search'>
+  })
   const emit = defineEmits(['init', 'search'])
 
   //查詢條件
@@ -26,15 +26,18 @@
     acno: ''
   })
   const searchApi = async () => {
+    let data = {
+      ...filter.value,
+      data_Count: '1000',
+      start: 0,
+      length: 1000
+    }
+    if (props.mode === 'search') data = { ...data, ...store.filter }
+
     const res = await callApi({
       method: 'POST',
       url: api.Exes.Exeslist,
-      data: {
-        ...filter.value,
-        data_Count: '1000',
-        start: 0,
-        length: 1000
-      }
+      data
     })
     if (res?.status === 200) {
       const { _Lists } = res?.data
@@ -42,10 +45,14 @@
     }
   }
   const handleSearch = async () => {
-    const data = await searchApi()
-    if (Array.isArray(data)) {
-      emit('search', data)
-      model.value = false
+    if (props.mode === 'detail') {
+      emit('search', { ...filter.value })
+    } else {
+      const data = await searchApi()
+      if (Array.isArray(data)) {
+        emit('search', data)
+        model.value = false
+      }
     }
   }
   const handleClear = () => {
@@ -66,35 +73,40 @@
   //起始動作
   onMounted(async () => {
     let data
-    if (!['search', 'goback'].includes(store.action)) {
+    if (store.action === 'goback') {
+      data = [...store.list]
+    } else {
       data = await searchApi()
+      if (props.mode === 'detail' && Array.isArray(data)) {
+        data = data.map(({ ono }) => ({ ono }))
+        store.init(data)
+      }
     }
     emit('init', data)
     store.cancel()
+    store.filter = {}
   })
 
   //查詢工程彈窗
-  const searchProtRef = ref()
+  const searchProtDS = ref(false)
+  const searchProtKeyEnter = ref(false)
   const protset = () => {
-    searchProtStore.set(filter, [{ from: 'protno' }])
-    searchProtRef.value?.open()
+    searchProtDS.value = true
   }
-  const protkeyenter = (e: KeyboardEvent) => {
-    searchProtStore.keyEnter(e, filter, [{ from: 'protno' }], filter.value.protno, {
-      open: searchProtRef.value?.open
-    })
+  const protkeyenter = () => {
+    searchProtKeyEnter.value = true
+    searchProtDS.value = true
   }
 
   //查詢工料彈窗
-  const searchItemRef = ref()
+  const searchItemDS = ref(false)
+  const searchItemKeyEnter = ref(false)
   const itemset = () => {
-    searchItemStore.set(filter, [{ from: 'itemno' }])
-    searchItemRef.value?.open()
+    searchItemDS.value = true
   }
-  const itemkeyenter = (e: KeyboardEvent) => {
-    searchItemStore.keyEnter(e, filter, [{ from: 'itemno' }], filter.value.itemno, {
-      open: searchItemRef.value?.open
-    })
+  const itemkeyenter = () => {
+    searchItemKeyEnter.value = true
+    searchItemDS.value = true
   }
 </script>
 
@@ -115,7 +127,7 @@
           label="工程編號"
           icon="fa-solid fa-helmet-safety"
           @button="protset"
-          @keydown="protkeyenter"
+          @keyEnter="protkeyenter"
           :maxlength="16"
         />
       </v-col>
@@ -125,7 +137,7 @@
           label="雜項編號"
           icon="fa-solid fa-wrench"
           @button="itemset"
-          @keydown="itemkeyenter"
+          @keyEnter="itemkeyenter"
           :maxlength="20"
         />
       </v-col>
@@ -178,6 +190,18 @@
     </v-row>
   </c-dialog>
 
-  <search-prot ref="searchProtRef" @pick="searchProtStore.pick" />
-  <search-item ref="searchItemRef" @pick="searchItemStore.pick" />
+  <search-prot
+    v-model="searchProtDS"
+    v-model:form="filter"
+    v-model:keyenter="searchProtKeyEnter"
+    :setting="[{ from: 'protno' }]"
+    :search-text="filter.protno"
+  />
+  <search-item
+    v-model="searchItemDS"
+    v-model:form="filter"
+    v-model:keyenter="searchItemKeyEnter"
+    :setting="[{ from: 'itemno' }]"
+    :search-text="filter.itemno"
+  />
 </template>

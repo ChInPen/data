@@ -5,7 +5,7 @@
   import type { DataTableHeader } from 'vuetify'
   import { callApi } from '@/utils/uapi'
   import api from '@/api'
-  import { numberFormat } from '@/utils/uformat'
+  import { numberFormat, dateFormat } from '@/utils/uformat'
   import type { PickSetting } from '@/store/create'
   // import { usePickItem } from '@/store/pickItem'
   // const store = usePickItem()
@@ -58,39 +58,32 @@
   const detTableRef = ref()
   //表格設定
   const headers: DataTableHeader[] = [
-    { title: '報價單號', key: 'qno', sortable: false, align: 'center' },
+    { title: '報價單號', key: 'qno1', sortable: false, align: 'center' },
     { title: '報價日期', key: 'date1', sortable: false },
     { title: '業主簡稱', key: 'custabbr', sortable: false },
-    { title: '工程簡稱', key: 'custabbr', sortable: false },
-    { title: '報價總額', key: 'amount', sortable: false },
-    { title: '報價人員', key: 'empname', sortable: false }
+    { title: '工程簡稱', key: 'protabbr', sortable: false },
+    { title: '報價總額', key: 'amount1', sortable: false },
+    { title: '報價人員', key: 'empname1', sortable: false }
   ]
   const detheaders: DataTableHeader[] = [
     { title: '工料編號', key: 'itemno', width: 200, sortable: false, align: 'center' },
     { title: '工料名稱', key: 'itemname', sortable: false },
     { title: '數量', key: 'qty', width: 200, sortable: false },
     { title: '單位', key: 'unit', width: 80, sortable: false },
-    { title: '未轉數量', key: 'nqty', width: 130, sortable: false }
+    { title: '未轉數量', key: 'nqty', width: 130, sortable: false, align: 'end' }
   ]
 
   // 查詢
   const handleSearch = async () => {
     await callApi({
       method: 'POST',
-      url: api.Sqte.Sqte_List,
+      url: api.Sqte.Sqte_Query,
       data: {
-        date1_start: '',
-        date1_end: '',
-        qno_start: filter.value.qno,
-        qno_end: filter.value.qno,
-        memo1: '',
-        custno_start: filter.value.custno,
-        custno_end: filter.value.custno,
-        empno: '',
-        itemno: '',
         pageNumber: 1,
-        pageSize: 1000,
-        top: 1000
+        pageSize: 10000,
+        qno: filter.value.qno,
+        protno: filter.value.protno,
+        custno: filter.value.custno
       }
     }).then((res: any) => {
       if (res?.status === 200) {
@@ -102,17 +95,21 @@
       }
     })
   }
-  const handleDetSearch = async (data) => {
-    if (data.index1) {
+  const handleDetSearch = async (data: HeadTbData) => {
+    if (data.qno1) {
       await callApi({
         method: 'POST',
-        url: api.Sqte.Sqte_Data,
-        data: { index1: data.index1 }
+        url: api.Sqte.Sqtedet_Query,
+        data: {
+          pageNumber: 1,
+          pageSize: 10000,
+          qno: data.qno1
+        }
       }).then((res: any) => {
         if (res?.status === 200) {
-          const { sqtedet_chinesenum_list } = res?.data ?? []
-          if (sqtedet_chinesenum_list && Array.isArray(sqtedet_chinesenum_list)) {
-            detTbData.value = sqtedet_chinesenum_list
+          const { data } = res?.data ?? []
+          if (data && Array.isArray(data)) {
+            detTbData.value = data
             handleCancelAll()
           }
         }
@@ -264,6 +261,7 @@
         </div>
       </v-card-text>
     </v-card>
+    <!-- 表頭Table -->
     <c-data-table
       class="mt-3"
       ref="headTableRef"
@@ -276,10 +274,14 @@
       :pagination="false"
       @rowselect="handleDetSearch"
     >
-      <template v-slot:item.amount="{ scope }">
-        {{ numberFormat(scope.amount, { thousands: true }) }}
+      <template v-slot:item.date1="{ scope }">
+        {{ dateFormat(scope.date1, { dateTW: true }) }}
+      </template>
+      <template v-slot:item.amount1="{ scope }">
+        {{ numberFormat(scope.amount1, { thousands: true }) }}
       </template>
     </c-data-table>
+    <!-- 表身Table -->
     <c-data-table
       class="mt-3"
       ref="detTableRef"

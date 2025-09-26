@@ -2,6 +2,7 @@
   import { ref, onMounted, computed } from 'vue'
   import { cButton, cInput, cSelect, cTable, cBread } from '@/components/Common' //共用元件
   import api from '@/api' //api路徑設定檔
+  import { getTaxkindDDL, getEmpDDL } from '@/api/ddl'
   import { callApi } from '@/utils/uapi' //呼叫api的方法
   import { message } from '@/components/Message/service' //訊息窗元件
   import { GenerateRec, deepClone } from '@/utils/ucommon'
@@ -11,7 +12,7 @@
   import { useRouter } from 'vue-router'
   import { auditInfo } from '@/components/AuditInfo'
   import Filter from './Components/QuotationInvFilter.vue'
-  import Print from './Components/QuotationPrint.vue'
+  import Print from './Components/QuotationInvPrint.vue'
   import { searchProt } from '@/components/SearchProt'
   import { pickPayterm } from '@/components/PickPayterm'
   import { pickMemo } from '@/components/PickMemo'
@@ -30,35 +31,6 @@
   //下拉選單
   const taxkindDDL = ref<{ taxkind: string; taxkindc: string }[]>([])
   const empDDL = ref<{ empno: string; empname: string }[]>([])
-  //抓營業稅下拉選單資料
-  const getTaxkindApi = async () => {
-    callApi({
-      method: 'POST',
-      url: api.Taxkind.Taxkind_List,
-      params: { indexValue: '' }
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const data = res?.data as any[] | undefined
-        if (data && Array.isArray(data)) {
-          taxkindDDL.value = data
-        }
-      }
-    })
-  }
-  //抓報價人員下拉選單資料
-  const getEmpApi = async () => {
-    callApi({
-      method: 'POST',
-      url: api.Emp.Emp_ListSimple
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const data = res?.data as any[] | undefined
-        if (data && Array.isArray(data)) {
-          empDDL.value = data.map(({ empno, empname }) => ({ empno, empname }))
-        }
-      }
-    })
-  }
 
   //抓單筆資料
   const getSingleData = () => {
@@ -94,7 +66,7 @@
   const getRenewData = () => {
     callApi({
       method: 'POST',
-      url: api.Sqte.Sqte_Renew
+      url: api.Bill2.Bill2_Renew
     }).then((res) => {
       if (res.status === 200) {
         const data = res.data
@@ -110,14 +82,17 @@
   }
   //檢查鎖定
   const checkExecApi = async (flag: 1 | 0) => {
-    const qno = formData.value.qno
+    const ono = store.ono
     const res = await callApi({
       method: 'POST',
-      url: api.Sqte.Sqte_ExecChk,
-      params: { flag, qno }
+      url: api.Bill2.Bill2_ExecChk,
+      data: { flag, ono }
     })
     if (res.status === 200) {
       return res.data ?? ''
+    } else if (res.status === 404) {
+      if (res.message.startsWith('此單據已傳輸')) return '此單據已傳輸'
+      return res.message ?? ''
     } else {
       return 'error'
     }
@@ -138,80 +113,64 @@
   //編輯
   const edit = async () => {
     if (store.ono) {
-      // const check = await checkExecApi(1)
-      // if (check == '已有其他工作站修改中' || check == '單據已請款') {
-      //   message.alert({
-      //     type: 'error',
-      //     message: `${check}不可修改,請確認`
-      //   })
-      // } else if (check == '無此單據號碼') {
-      //   message.alert({
-      //     type: 'error',
-      //     message: check
-      //   })
-      // } else if (check == '成功') {
-      store.edit()
-      // }
-    }
-  }
-  //刪除
-  const del = async () => {
-    if (store.index1) {
       const check = await checkExecApi(1)
-      if (check == '已有其他工作站修改中' || check == '單據已請款') {
+      if (check == '已有其他工作站修改中' || check == '此單據已傳輸') {
         message.alert({
           type: 'error',
-          message: `${check}不可刪除,請確認`
+          message: `${check}不可修改,請確認`
         })
       } else if (check == '無此單據號碼') {
         message.alert({
           type: 'error',
           message: check
         })
-        const val = store.index1 as string
-        if (!store.isFirst) onoChange('previous')
-        else if (!store.isLast) onoChange('next')
-        store.delete(val)
       } else if (check == '成功') {
-        message.confirm({
-          type: 'question',
-          message: `確定要刪除「${formData.value.qno}」報價單？`,
-          onConfirm: () => {
-            //刪除
-            callApi({
-              method: 'POST',
-              url: api.Sqte.Sqte_DEL,
-              params: { index1: store.index1 }
-            }).then((res) => {
-              if (res?.status === 200) {
-                const data = res?.data
-                if (data.success === true) {
-                  message.alert({
-                    type: 'success',
-                    message: '刪除成功',
-                    autoClose: 2,
-                    onConfirm: () => {
-                      const val = store.index1 as string
-                      if (!store.isFirst) onoChange('previous')
-                      else if (!store.isLast) onoChange('next')
-                      store.delete(val)
-                    }
-                  })
-                } else {
-                  message.alert({
-                    type: 'error',
-                    message: `刪除失敗：${data.message}`
-                  })
-                  checkExecApi(0) //解除鎖定
-                }
-              }
-            })
-          },
-          onCancel: () => {
-            checkExecApi(0) //解除鎖定
-          }
-        })
+        store.edit()
       }
+    }
+  }
+  //刪除
+  const del = async () => {
+    if (store.ono) {
+      message.confirm({
+        type: 'question',
+        message: `確定要刪除「${formData.value.ono}」報價請款單？`,
+        onConfirm: () => {
+          //刪除
+          callApi({
+            method: 'POST',
+            url: api.Bill2.Bill2_DEL,
+            params: { ono: store.ono }
+          }).then((res) => {
+            if (res?.status === 200) {
+              const data = res?.data
+              if (data.success === true) {
+                message.alert({
+                  type: 'success',
+                  message: '刪除成功',
+                  autoClose: 2,
+                  onConfirm: () => {
+                    const val = store.index1 as string
+                    if (!store.isFirst) onoChange('previous')
+                    else if (!store.isLast) onoChange('next')
+                    store.delete(val)
+                  }
+                })
+              } else {
+                message.alert({
+                  type: 'error',
+                  message: `刪除失敗：${data.message}`
+                })
+              }
+            } else {
+              message.alert({
+                type: 'error',
+                message: `刪除失敗：${res.message}`
+              })
+            }
+          })
+        }
+      })
     }
   }
   //放棄
@@ -225,19 +184,16 @@
 
   //檢查欄位規則
   const checkData = () => {
-    //必填:qno, date1, protno, protname, custno, custabbr, taxkind
+    //必填:ono, date1, adate1, qno, protno, taxkind
     const requiredFields = [
-      { key: 'date1', label: '報價日期' },
-      { key: 'protname', label: '工程名稱' },
-      { key: 'custno', label: '業主編號' },
-      { key: 'custabbr', label: '業主簡稱' },
+      { key: 'date1', label: '請款日期' },
+      { key: 'adate1', label: '帳款日期' },
+      { key: 'qno', label: '報價單號' },
+      { key: 'protno', label: '工程編號' },
       { key: 'taxkind', label: '營業稅' }
     ]
 
-    if (!formData.value.protno && !formData.value.protname) {
-      requiredFields.splice(1, 0, { key: 'protno', label: '工程編號' })
-    }
-    if (store.action == 'edit') requiredFields.unshift({ key: 'qno', label: '報價單號' })
+    if (store.action == 'edit') requiredFields.unshift({ key: 'ono', label: '請款單號' })
 
     let missing = requiredFields
       .filter((field) => !formData.value?.[field.key])
@@ -250,66 +206,37 @@
   const saveData = () => {
     //存檔需要的欄位
     const create = { ...formData.value }
-    const _sqte = Object.fromEntries(
+    const header = Object.fromEntries(
       Object.keys(create ?? {}).map((key) => [key, create?.[key] ?? ''])
     )
     //數字欄位
-    _sqte.sum1 = formData.value?.sum1 ?? 0
-    _sqte.taxrate = formData.value?.taxrate ?? 5
-    _sqte.tax = formData.value?.tax ?? 0
-    _sqte.amount = formData.value?.amount ?? 0
-    _sqte.execflag = 0
-    _sqte.sqtememo1 = formData.value?.sqtememo1 ?? 0
-    _sqte.retain = 0
-    _sqte.remretain = formData.value?.remretain ?? 0
-    //建檔資料 (因為 renew 會給要傳)
-    _sqte.a_date1 = store.action === 'create' ? (formData.value?.a_date1 ?? '') : ''
-    _sqte.a_date2 = store.action === 'create' ? (formData.value?.a_date2 ?? '') : ''
-    _sqte.a_user = store.action === 'create' ? (formData.value?.a_user ?? '') : ''
-    _sqte.m_date1 = store.action === 'create' ? (formData.value?.m_date1 ?? '') : ''
-    _sqte.m_date2 = store.action === 'create' ? (formData.value?.m_date2 ?? '') : ''
-    _sqte.m_user = store.action === 'create' ? (formData.value?.m_user ?? '') : ''
+    header.sum1 = formData.value?.sum1 ?? 0
+    header.taxrate = formData.value?.taxrate ?? 5
+    header.tax = formData.value?.tax ?? 0
+    header.amount = formData.value?.amount ?? 0
+    header.billmo3 = 0
+    header.bsrcvpay = formData.value?.bsrcvpay ?? 0
+    header.invoamount = formData.value?.invoamount ?? 0
+    header.rcvpay = formData.value?.rcvpay ?? 0
+    header.bsarpay = formData.value?.bsarpay ?? 0
+    header.retain = formData.value?.retain ?? 0
+    header.bretain = formData.value?.bretain ?? 0
+    //其他
+    header.convei = false
 
-    //轉成form-data type
-    const formdata = new FormData()
-    for (const key in _sqte) {
-      if (_sqte.hasOwnProperty(key)) {
-        // 過濾掉繼承屬性
-        formdata.append(`_sqte.${key}`, _sqte[key])
-      }
-    }
     //明細
-    // sqtedetList.value.forEach((item, i) => {
-    //   for (const key in item) {
-    //     if (key !== 'listBom') {
-    //       formdata.append(`_sqtedet[${i}].${key}`, item[key])
-    //     } else {
-    //       const listBom = item['listBom'] as any[]
-    //       listBom.forEach((bom, j) => {
-    //         for (const bomkey in bom) {
-    //           formdata.append(`_sqtedet[${i}].listBom[${j}].${bomkey}`, bom[bomkey])
-    //         }
-    //       })
-    //     }
-    //   }
-    // })
-    headItemList.value.forEach((item, i) => {
-      for (const key in item) {
-        formdata.append(`_HeaderItems[${i}].${key}`, item[key])
-      }
-    })
-    detItemList.value.forEach((item, i) => {
-      for (const key in item) {
-        formdata.append(`_DetailItem[${i}].${key}`, item[key])
-      }
-    })
-    secItemList.value.forEach((item, i) => {
-      for (const key in item) {
-        formdata.append(`_SubSubItem[${i}].${key}`, item[key])
-      }
-    })
+    let items = deepClone(billdetList.value)
+    items = items.map((obj: any) => ({
+      ...obj,
+      ono: formData.value.ono ?? ''
+    }))
 
-    return formdata
+    //大中細項目
+    const bill2_HeaderItem = [...headItemList.value]
+    const bill2_DetailItem = detItemList.value.map(({ headitemno1, ...other }) => other)
+    const bill2_SubSubItem = secItemList.value.map(({ headitemno1, detitemno1, ...other }) => other)
+
+    return { header, items, bill2_HeaderItem, bill2_DetailItem, bill2_SubSubItem }
   }
   const callCreateApi = () => {
     callApi({
@@ -340,11 +267,10 @@
   const callEditApi = () => {
     callApi({
       method: 'POST',
-      url: api.Sqte.Sqte_EDIT,
+      url: api.Bill2.Bill2_EDIT,
       data: saveData()
     }).then((res: any) => {
       if (res?.status === 200) {
-        console.log(res)
         const data = res?.data
         if (data && data.success === true) {
           message.alert({
@@ -370,12 +296,12 @@
     }
     message.confirm({
       type: 'question',
-      message: `確定要送出報價單資料？`,
+      message: `確定要送出報價請款單資料？`,
       onConfirm: () => {
         if (store.action === 'edit') {
           callEditApi()
         } else {
-          callCreateApi()
+          // callCreateApi()
         }
       }
     })
@@ -553,14 +479,11 @@
 
   //查詢條件
   const filterDS = ref(false)
-  const initSearch = (data) => {
-    if (Array.isArray(data)) {
-      store.init(data.map(({ ono }) => ({ ono })))
-    }
+  const initSearch = () => {
     if (store.ono) getSingleData()
   }
-  const handleSearch = (data) => {
-    store.search(router, data)
+  const handleSearch = (filter) => {
+    store.search(router, filter)
   }
 
   //查詢工程彈窗
@@ -610,7 +533,11 @@
   const pjtDS = ref(false)
   const pjtItems = computed(() => {
     const selectIndex = billdetTable.value?.selectIndex?.[0]
-    if (typeof selectIndex === 'number' && selectIndex >= 0) {
+    if (
+      typeof selectIndex === 'number' &&
+      selectIndex >= 0 &&
+      selectIndex <= billdetList.value.length - 1
+    ) {
       const { pjt1, pjt2, pjt3, pjt4, pjt5, pjt6, pjt7, pjt8, pjt9, pjt10 } =
         billdetList.value[selectIndex]
       return { pjt1, pjt2, pjt3, pjt4, pjt5, pjt6, pjt7, pjt8, pjt9, pjt10 }
@@ -636,15 +563,15 @@
   //列印
   const printDS = ref(false)
   const printOpen = () => {
-    if (store.index1) {
+    if (store.ono) {
       printDS.value = true
     }
   }
 
-  onMounted(() => {
+  onMounted(async () => {
     //抓下拉選單
-    getTaxkindApi()
-    getEmpApi()
+    taxkindDDL.value = await getTaxkindDDL()
+    empDDL.value = await getEmpDDL()
   })
 </script>
 
@@ -1200,7 +1127,7 @@
     :m_user="formData.m_user"
   />
 
-  <Filter v-model="filterDS" @init="initSearch" @search="handleSearch" />
+  <Filter v-model="filterDS" mode="detail" @init="initSearch" @search="handleSearch" />
   <search-prot
     v-model="searchProtDS"
     v-model:form="formData"
@@ -1257,6 +1184,7 @@
     :empty-data="emptyBoms"
     @save="handleBomsSave"
     :disabled="store.isDetail"
+    :add-with-pick="false"
   />
   <project-type
     v-model="pjtDS"
@@ -1264,7 +1192,7 @@
     @save="handlePJTsave"
     :disabled="store.isDetail"
   />
-  <Print v-model="printDS" :no="`${formData.qno}`" />
+  <Print v-model="printDS" :no="`${formData.ono}`" />
 </template>
 
 <style scoped>

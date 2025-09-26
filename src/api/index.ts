@@ -107,20 +107,21 @@ export default {
     Sqte_Renew: `${apiuridoc}/api/Sqte/Renew`,
     Sqte_ExecChk: `${apiuridoc}/api/Sqte/ExecChk`,
     DescriptBrow: `${apiuridoc}/api/Sqte/descript`,
-    Sqte_Print: `${apiuridoc}/api/Sqte/_Print`
+    Sqte_Print: `${apiuridoc}/api/Sqte/_Print`,
+    Sqte_Query: `${apiuridoc}/api/Sqte/Sqte_Query`,
+    Sqtedet_Query: `${apiuridoc}/api/Sqte/Sqtedet_Query`,
+    Sqtedet_OpenItemPrice: `${apiuridoc}/api/Sqte/Sqtedet_OpenItemPrice`
   },
   //報價請款
   Bill2: {
     Bill2_List: `${apiuridoc}/api/Bill2/Bill2_List`,
     // Sqte_Create: `${apiuridoc}/api/Sqte/Sqte_Insert`,
-    // Sqte_EDIT: `${apiuridoc}/api/Sqte/Sqte_update`,
-    // Sqte_DEL: `${apiuridoc}/api/Sqte/Sqte_delete`,
-    Bill2_Data: `${apiuridoc}/api/Bill2/Bill2_Load`
-    // Sqte_Item: `${apiuridoc}/api/Sqte/Sqte_Item`,
-    // Sqte_Renew: `${apiuridoc}/api/Sqte/Renew`,
-    // Sqte_ExecChk: `${apiuridoc}/api/Sqte/ExecChk`,
-    // DescriptBrow: `${apiuridoc}/api/Sqte/descript`,
-    // Sqte_Print: `${apiuridoc}/api/Sqte/_Print`
+    Bill2_EDIT: `${apiuridoc}/api/Bill2/Save_Update`,
+    Bill2_DEL: `${apiuridoc}/api/Bill2/Delete`,
+    Bill2_Data: `${apiuridoc}/api/Bill2/Bill2_Load`,
+    Bill2_Renew: `${apiuridoc}/api/Bill2/Renew`,
+    Bill2_ExecChk: `${apiuridoc}/api/Bill2/ExecChk`,
+    Bill2_Print: `${apiuridoc}/api/Bill2/_Print`
   },
   //採購
   Pord: {

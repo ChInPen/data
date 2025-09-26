@@ -10,6 +10,7 @@
     cTextarea
   } from '@/components/Common' //共用元件
   import api from '@/api' //api路徑設定檔
+  import { getTaxkindDDL, getEmpDDL, getUnitDDL } from '@/api/ddl'
   import { callApi } from '@/utils/uapi' //呼叫api的方法
   import { message } from '@/components/Message/service' //訊息窗元件
   import { GenerateRec, deepClone } from '@/utils/ucommon'
@@ -31,61 +32,24 @@
   import protTrade from './Components/QuotationProtTrade.vue'
   import { searchItem } from '@/components/SearchItem'
 
+  // store 控制狀態，包含:
+  // 1.當前單據單號
+  // 2.單據清單(可供上一筆/下一筆切換)
+  // 3.新增/編輯/複製 等狀態
+  // 4.查詢條件(由 Filter 元件取得後傳進 store，再跳轉至查詢頁使用)
   const store = useQuotationStore()
   const router = useRouter()
+  // 表頭資料
   const formData = ref<Record<string, any>>({})
-  const tabpage = ref('normal') //頁籤
+  // 頁籤
+  const tabpage = ref('normal')
 
-  //下拉選單
+  // 下拉選單
   const taxkindDDL = ref<{ taxkind: string; taxkindc: string }[]>([])
   const empDDL = ref<{ empno: string; empname: string }[]>([])
   const unitDDL = ref<{ content1: string }[]>([])
-  //抓營業稅下拉選單資料
-  const getTaxkindApi = async () => {
-    callApi({
-      method: 'POST',
-      url: api.Taxkind.Taxkind_List,
-      params: { indexValue: '' }
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const data = res?.data as any[] | undefined
-        if (data && Array.isArray(data)) {
-          taxkindDDL.value = data
-        }
-      }
-    })
-  }
-  //抓報價人員下拉選單資料
-  const getEmpApi = async () => {
-    callApi({
-      method: 'POST',
-      url: api.Emp.Emp_ListSimple
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const data = res?.data as any[] | undefined
-        if (data && Array.isArray(data)) {
-          empDDL.value = data.map(({ empno, empname }) => ({ empno, empname }))
-        }
-      }
-    })
-  }
-  //抓單位下拉選單資料
-  const getUnitApi = async () => {
-    callApi({
-      method: 'POST',
-      url: api.Phr.UnitBrow,
-      params: { indexValue: '' }
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const data = res?.data
-        if (data && Array.isArray(data)) {
-          unitDDL.value = data
-        }
-      }
-    })
-  }
 
-  //抓單筆資料
+  // 取得單據 表頭 & 表身 資料 api
   const getSingleData = () => {
     if (store.index1) {
       callApi({
@@ -121,7 +85,7 @@
       })
     }
   }
-  //Renew
+  // 新增時取得預設值資料 api
   const getRenewData = () => {
     callApi({
       method: 'POST',
@@ -143,8 +107,8 @@
   檢查鎖定
   在編輯或刪除前先檢查當前單據是否有其他人再編輯中
   或單據狀態是不可再被異動的
-  flag為1代表要鎖定:當我們要做編輯和刪除前，檢查後會順便鎖定
-  flag為0代表要解鎖:當我們取消刪除或取消編輯要記得解鎖
+  flag為1代表要鎖定:當我們要做編輯前，檢查後會順便鎖定
+  flag為0代表要解鎖:當我們取消編輯要記得解鎖
   */
   const checkExecApi = async (flag: 1 | 0) => {
     const qno = formData.value.qno
@@ -203,66 +167,48 @@
     store.copy()
   }
   //刪除
-  //刪除前先用 checkExecApi 檢查能不能刪除，flag 要設為 1
-  //檢查後如果能刪除，彈出 message 窗詢再度確認要不要刪除
-  //如果使用者取消刪除，要再用 checkExecApi 取消鎖定(flag 要設為 0)
+  //彈出 message 窗詢再度確認要不要刪除
   const del = async () => {
     if (store.index1) {
-      const check = await checkExecApi(1)
-      if (check == '已有其他工作站修改中' || check == '單據已請款') {
-        message.alert({
-          type: 'error',
-          message: `${check}不可刪除,請確認`
-        })
-      } else if (check == '無此單據號碼') {
-        message.alert({
-          type: 'error',
-          message: check
-        })
-        const val = store.index1 as string
-        if (!store.isFirst) onoChange('previous')
-        else if (!store.isLast) onoChange('next')
-        store.delete(val)
-      } else if (check == '成功') {
-        message.confirm({
-          type: 'question',
-          message: `確定要刪除「${formData.value.qno}」報價單？`,
-          onConfirm: () => {
-            //刪除
-            callApi({
-              method: 'POST',
-              url: api.Sqte.Sqte_DEL,
-              params: { index1: store.index1 }
-            }).then((res) => {
-              if (res?.status === 200) {
-                const data = res?.data
-                if (data.success === true) {
-                  message.alert({
-                    type: 'success',
-                    message: '刪除成功',
-                    autoClose: 2,
-                    onConfirm: () => {
-                      const val = store.index1 as string
-                      if (!store.isFirst) onoChange('previous')
-                      else if (!store.isLast) onoChange('next')
-                      store.delete(val)
-                    }
-                  })
-                } else {
-                  message.alert({
-                    type: 'error',
-                    message: `刪除失敗：${data.message}`
-                  })
-                  checkExecApi(0) //解除鎖定
-                }
+      message.confirm({
+        type: 'question',
+        message: `確定要刪除「${formData.value.qno}」報價單？`,
+        onConfirm: () => {
+          //刪除
+          callApi({
+            method: 'POST',
+            url: api.Sqte.Sqte_DEL,
+            params: { index1: store.index1 }
+          }).then((res) => {
+            if (res?.status === 200) {
+              const data = res?.data
+              if (data.success === true) {
+                message.alert({
+                  type: 'success',
+                  message: '刪除成功',
+                  autoClose: 2,
+                  onConfirm: () => {
+                    const val = store.index1 as string
+                    if (!store.isFirst) onoChange('previous')
+                    else if (!store.isLast) onoChange('next')
+                    store.delete(val)
+                  }
+                })
+              } else {
+                message.alert({
+                  type: 'error',
+                  message: `刪除失敗：${data.message}`
+                })
               }
-            })
-          },
-          onCancel: () => {
-            checkExecApi(0) //解除鎖定
-          }
-        })
-      }
+            } else {
+              message.alert({
+                type: 'error',
+                message: `刪除失敗：${res.message}`
+              })
+            }
+          })
+        }
+      })
     }
   }
   //放棄
@@ -345,21 +291,27 @@
         }
       }
     })
-    headItemList.value.forEach((item, i) => {
-      for (const key in item) {
-        formdata.append(`_HeaderItems[${i}].${key}`, item[key])
-      }
-    })
-    detItemList.value.forEach((item, i) => {
-      for (const key in item) {
-        formdata.append(`_DetailItem[${i}].${key}`, item[key])
-      }
-    })
-    secItemList.value.forEach((item, i) => {
-      for (const key in item) {
-        formdata.append(`_SubSubItem[${i}].${key}`, item[key])
-      }
-    })
+    headItemList.value
+      .filter((x) => x.headitemno)
+      .forEach((item, i) => {
+        for (const key in item) {
+          formdata.append(`_HeaderItems[${i}].${key}`, item[key])
+        }
+      })
+    detItemList.value
+      .filter((x) => x.headitemno && x.detitemno)
+      .forEach((item, i) => {
+        for (const key in item) {
+          formdata.append(`_DetailItem[${i}].${key}`, item[key])
+        }
+      })
+    secItemList.value
+      .filter((x) => x.headitemno && x.detitemno && x.secitemno)
+      .forEach((item, i) => {
+        for (const key in item) {
+          formdata.append(`_SubSubItem[${i}].${key}`, item[key])
+        }
+      })
 
     return formdata
   }
@@ -396,7 +348,6 @@
       data: saveData()
     }).then((res: any) => {
       if (res?.status === 200) {
-        console.log(res)
         const data = res?.data
         if (data && data.success === true) {
           message.alert({
@@ -565,7 +516,9 @@
   const pickItemDS = ref(false)
   const pickItemRow = ref()
   const pickItemMode = ref()
-  const sqtedetItemPick = () => {
+  const sqtedetItemPick = async (data) => {
+    const itemnoList = Array.isArray(data) ? data.map((x) => x.itemno) : [data?.itemno ?? '']
+    await getOpenItemPrice(itemnoList)
     sqtedetList.value.sort((a: any, b: any) => {
       const trans = (val: any) => (Number.isNaN(val) ? 0 : Number(val))
       return (
@@ -576,6 +529,26 @@
     })
     GenerateRec(sqtedetList.value, 'rec1', 4)
     countTotal()
+  }
+  const getOpenItemPrice = async (itemnoList: string[]) => {
+    // 用工程編號+業主編號+工料編號取得單價
+    const res = await callApi({
+      method: 'POST',
+      url: api.Sqte.Sqtedet_OpenItemPrice,
+      data: {
+        itemno: itemnoList,
+        protno: formData.value.protno ?? '',
+        custno: formData.value.custno ?? ''
+      }
+    })
+    if (res.status === 200) {
+      const data: { itemno: string; price: number }[] = res.data ?? []
+      data.forEach((x) => {
+        sqtedetList.value.forEach((y) => {
+          if (y.itemno === x.itemno) y.price = Math.round(x.price)
+        })
+      })
+    }
   }
 
   //大項目
@@ -673,21 +646,19 @@
   /*
   @init="initSearch" 觸發時機是查詢條件彈窗的 onMounted()
   因為我把 查詢api 的 function 放在查詢條件彈窗的 component
-  參數 data 是資料陣列，但有可能是 undefined，所以還是要先判斷再使用
+  查詢條件彈窗的 component 會將查詢結果直接存進 store
   */
-  const initSearch = (data) => {
-    if (Array.isArray(data)) {
-      store.init(data.map(({ index1 }) => ({ index1 })))
-    }
+  const initSearch = () => {
+    // 如果有 key值 就呼叫取得表頭表身資料的 api
     if (store.index1) getSingleData()
   }
   /*
   @search="handleSearch" 觸發時機是查詢條件彈窗按下查詢按鈕時
-  參數 data 是資料陣列，並且已經檢查完不會是undefined，可以直接使用
-  store.search() 可以把資料交給store，跳轉到瀏覽頁面去做顯示
+  參數 filter 是查詢條件
+  store.search() 可以把查詢條件交給store，跳轉到瀏覽頁面去使用
   */
-  const handleSearch = (data) => {
-    store.search(router, data)
+  const handleSearch = (filter) => {
+    store.search(router, filter)
   }
 
   //查詢業主彈窗
@@ -756,7 +727,11 @@
   const pjtDS = ref(false)
   const pjtItems = computed(() => {
     const selectIndex = sqtedetTable.value?.selectIndex?.[0]
-    if (typeof selectIndex === 'number' && selectIndex >= 0) {
+    if (
+      typeof selectIndex === 'number' &&
+      selectIndex >= 0 &&
+      selectIndex <= sqtedetList.value.length - 1
+    ) {
       const { pjt1, pjt2, pjt3, pjt4, pjt5, pjt6, pjt7, pjt8, pjt9, pjt10 } =
         sqtedetList.value[selectIndex]
       return { pjt1, pjt2, pjt3, pjt4, pjt5, pjt6, pjt7, pjt8, pjt9, pjt10 }
@@ -809,11 +784,11 @@
     //   navigator.sendBeacon(url)
     // }
   }
-  onMounted(() => {
+  onMounted(async () => {
     //抓下拉選單
-    getTaxkindApi()
-    getEmpApi()
-    getUnitApi()
+    taxkindDDL.value = await getTaxkindDDL()
+    empDDL.value = await getEmpDDL()
+    unitDDL.value = await getUnitDDL()
 
     window.addEventListener('beforeunload', handleBeforeUnload)
     window.addEventListener('unload', handleUnload)
@@ -1386,7 +1361,7 @@
     :m_user="formData.m_user"
   />
 
-  <Filter v-model="filterDS" @init="initSearch" @search="handleSearch" />
+  <Filter v-model="filterDS" mode="detail" @init="initSearch" @search="handleSearch" />
   <search-cust
     v-model="searchCustDS"
     v-model:form="formData"
@@ -1442,7 +1417,6 @@
       { from: 'itemname' },
       { from: 'ibompqty', to: 'qty' },
       { from: 'stkunit', to: 'unit' },
-      { from: 'stksalpc', to: 'price' },
       { from: 'mkindno' },
       { from: 'mkindno1' }
     ]"
@@ -1477,7 +1451,6 @@
       { from: 'itemno' },
       { from: 'itemname' },
       { from: 'stkunit', to: 'unit' },
-      { from: 'stksalpc', to: 'price' },
       { from: 'mkindname', to: 'mkindno1' }
     ]"
     :row="detSearchItemRow"

@@ -1,5 +1,6 @@
 <script lang="ts" setup>
   import { ref, onMounted } from 'vue'
+  import type { PropType } from 'vue'
   import { cButton, cInput, cDialog } from '@/components/Common' //共用元件
   import api from '@/api' //api路徑設定檔
   import { callApi } from '@/utils/uapi' //呼叫api的方法
@@ -10,6 +11,10 @@
   import { searchItem } from '@/components/SearchItem'
 
   const model = defineModel<boolean>({ default: false })
+  const props = defineProps({
+    // 用來判別是表單頁還是清單頁的查詢條件彈窗
+    mode: String as PropType<'detail' | 'search'>
+  })
   const emit = defineEmits(['init', 'search'])
 
   //查詢條件
@@ -25,27 +30,39 @@
     itemno: '',
     memo1: ''
   })
+  /** 呼叫查詢 api (並非查詢按鈕) */
   const searchApi = async () => {
+    let data = {
+      ...filter.value,
+      pageNumber: 1,
+      pageSize: 1000,
+      top: 1000
+    }
+    // 如果是查詢頁，將 store 中的查詢條件加入
+    // store 中的查詢條件會在 onMounted() 時重置
+    if (props.mode === 'search') data = { ...data, ...store.filter }
+
     const res = await callApi({
       method: 'POST',
       url: api.Sqte.Sqte_List,
-      data: {
-        ...filter.value,
-        pageNumber: 1,
-        pageSize: 1000,
-        top: 1000
-      }
+      data
     })
     if (res?.status === 200) {
       const { data } = res?.data
       return data
     }
   }
+  /** 查詢按鈕 */
   const handleSearch = async () => {
-    const data = await searchApi()
-    if (Array.isArray(data)) {
-      emit('search', data)
-      model.value = false
+    if (props.mode === 'detail') {
+      // 如果是表單頁則不查詢，將查詢條件 emit 給父層
+      emit('search', { ...filter.value })
+    } else {
+      const data = await searchApi()
+      if (Array.isArray(data)) {
+        emit('search', data)
+        model.value = false
+      }
     }
   }
   const handleClear = () => {
@@ -69,11 +86,23 @@
   //起始動作
   onMounted(async () => {
     let data
-    if (!['search', 'goback'].includes(store.action)) {
+    if (store.action === 'goback') {
+      // 如果是從清單頁返回表單頁，則使用清單頁查詢出的結果
+      data = [...store.list]
+    } else {
       data = await searchApi()
+      if (props.mode === 'detail' && Array.isArray(data)) {
+        // 如果是表單頁，執行 store.init() 做表單頁初始化
+        data = data.map(({ index1 }) => ({ index1 }))
+        store.init(data)
+      }
     }
+    // 將清單 emit 給父層
     emit('init', data)
+    // 將狀態改回 detail
     store.cancel()
+    // 將查詢條件重置(因為已使用過)
+    store.filter = {}
   })
 
   //查詢業主彈窗

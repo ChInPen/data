@@ -10,6 +10,7 @@
     cSelectInput
   } from '@/components/Common' //共用元件
   import api from '@/api' //api路徑設定檔
+  import { DDL } from '@/api/ddl'
   import { callApi } from '@/utils/uapi' //呼叫api的方法
   import { useEmployeeStore } from '@/store/employee'
   import { useRouter } from 'vue-router'
@@ -43,6 +44,9 @@
   }
 
   //下拉選單
+  const departDDL = ref<{ deparno: string; deparname: string }[]>([])
+  const employeeDDL = ref<{ empno: string; empname: string }[]>([])
+  const skillDDL = ref<{ skillno: string; skillname: string }[]>([])
   const empsexDDL = ref([
     {
       empsex: '1',
@@ -63,52 +67,6 @@
       empmarrName: '未婚'
     }
   ])
-  const departDDL = ref<{ deparno: string; deparname: string }[]>([])
-  const employeeDDL = ref<{ empno: string; empname: string }[]>([])
-  const skillDDL = ref<{ skillno: string; skillname: string }[]>([])
-  //抓部門下拉選單資料
-  const getDepartApi = async () => {
-    callApi({
-      method: 'GET',
-      url: api.Depar.GetAllDep
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const { data } = res?.data
-        if (Array.isArray(data)) {
-          departDDL.value = data
-        }
-      }
-    })
-  }
-  //抓人員下拉選單資料
-  const getEmpApi = async () => {
-    callApi({
-      method: 'POST',
-      url: api.Emp.Emp_ListSimple
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const data = res?.data as any[] | undefined
-        if (data && Array.isArray(data)) {
-          employeeDDL.value = data.map(({ empno, empname }) => ({ empno, empname }))
-        }
-      }
-    })
-  }
-  //抓工種下拉選單資料
-  const getSkillApi = async () => {
-    callApi({
-      method: 'POST',
-      url: api.Skill.Skilllist,
-      data: {}
-    }).then((res: any) => {
-      if (res?.status == 200) {
-        const { _Lists } = res?.data
-        if (Array.isArray(_Lists)) {
-          skillDDL.value = _Lists
-        }
-      }
-    })
-  }
 
   //人員資料
   const formData = ref<Record<string, any>>({})
@@ -291,11 +249,11 @@
   }
 
   //起始動作
-  onMounted(() => {
+  onMounted(async () => {
     //抓下拉選單資料
-    getDepartApi()
-    getEmpApi()
-    getSkillApi()
+    departDDL.value = await DDL.getDepartDDL()
+    employeeDDL.value = await DDL.getEmpDDL()
+    skillDDL.value = await DDL.getSkillDDL()
     //抓單筆資料
     if (store.action === 'create') {
       getRenewApi()

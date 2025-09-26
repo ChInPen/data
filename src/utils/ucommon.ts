@@ -19,3 +19,34 @@ export const GenerateRec = (list: any[], key: string = 'rec1', len: number = 3) 
 export const deepClone = <T>(obj: T): T => {
   return JSON.parse(JSON.stringify(obj)) as T
 }
+
+/**
+ * 將物件陣列過濾重複元素(依據屬性)
+ * @param arr 目標陣列
+ * @param keySelector 判斷規則
+ * @returns 過濾後陣列
+ */
+export const distinctBy = <T, K>(arr: T[], keySelector: (item: T) => K): T[] => {
+  const seen = new Set<K>()
+  return arr.filter((item) => {
+    const key = keySelector(item)
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
+/**
+ * 將物件陣列過濾重複元素(全屬性)
+ * @param arr 目標陣列
+ * @returns 過濾後陣列
+ */
+export const distinctByAll = <T>(arr: T[]): T[] => {
+  const seen = new Set<string>()
+  return arr.filter((item) => {
+    const key = JSON.stringify(item) // 序列化整個物件
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}

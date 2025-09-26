@@ -83,7 +83,6 @@
       //用 v-bind:mkindno 控制要查的類別
       obj.mkindno = props.mkindno.join(',')
     }
-    console.log('obj', obj)
     await callApi({
       method: 'POST',
       url: api.Item.Item_List,
