@@ -336,6 +336,7 @@
   }
   // 表格插入
   const exesdetIns = () => {
+    console.log(exesdetTable.value?.selectIndex)
     const selectIndex = exesdetTable.value?.selectIndex?.[0]
     const idx =
       typeof selectIndex === 'number' && selectIndex >= 0 ? selectIndex : formDataBody.value.length
